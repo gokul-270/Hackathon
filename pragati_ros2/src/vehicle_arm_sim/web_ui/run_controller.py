@@ -7,10 +7,13 @@ recording truth monitor observations, and generating a JSON run summary.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from arm_runtime import ArmRuntime
 from baseline_mode import BaselineMode
 from json_reporter import JsonReporter, StepReport
 from peer_transport import LocalPeerTransport
+from run_step_executor import RunStepExecutor
 from scenario_json import ScenarioStep
 from truth_monitor import TruthMonitor
 
@@ -24,13 +27,25 @@ _MODE_NAMES = {
 _SAFE_HOME = {"j3": 0.0, "j4": 0.0, "j5": 0.0}
 
 
+def _noop_publish(topic: str, value: float) -> None:
+    """No-op publish function used when no executor is injected."""
+
+
 class RunController:
     """Coordinates a full scenario replay run across both arm runtimes."""
 
-    def __init__(self, mode: int = BaselineMode.UNRESTRICTED) -> None:
+    def __init__(
+        self,
+        mode: int = BaselineMode.UNRESTRICTED,
+        executor: Optional[object] = None,
+    ) -> None:
         """
         Args:
-            mode: 0=unrestricted, 1=baseline_j5_block_skip
+            mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
+                  3=overlap_zone_wait
+            executor: Optional RunStepExecutor (or duck-typed compatible) instance.
+                      If None, a no-op executor is created (no Gazebo publishing).
+                      Inject a real RunStepExecutor for motion-backed runs.
         """
         self._mode = mode
         self._arm1 = ArmRuntime("arm1")
@@ -40,6 +55,10 @@ class RunController:
         self._baseline = BaselineMode()
         self._transport = LocalPeerTransport()
         self._last_summary: dict = {}
+        if executor is None:
+            self._executor = RunStepExecutor(publish_fn=_noop_publish)
+        else:
+            self._executor = executor
 
     # ------------------------------------------------------------------
     # Public API
@@ -164,6 +183,15 @@ class RunController:
                     and own_applied["j5"] == 0.0
                     and own_cand["j5"] > 0.0
                 )
+
+                # Call executor to perform Gazebo motion and get terminal outcome
+                outcome = self._executor.execute(
+                    arm_id=arm_id,
+                    applied_joints=own_applied,
+                    blocked=j5_blocked,
+                    skipped=own_skipped,
+                )
+
                 self._reporter.add_step(
                     StepReport(
                         step_id=step_id,
@@ -184,6 +212,9 @@ class RunController:
                         collision=col,
                         min_j4_distance=min_j4_dist,
                         skipped=own_skipped,
+                        terminal_status=outcome["terminal_status"],
+                        pick_completed=outcome["pick_completed"],
+                        executed_in_gazebo=outcome["executed_in_gazebo"],
                     )
                 )
                 # Update previous joints for this arm

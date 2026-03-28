@@ -16,6 +16,10 @@ class StepReport:
     collision: bool
     min_j4_distance: Optional[float]  # None if only one arm active in this step
     skipped: bool = False  # True when overlap_zone_wait skips the step
+    # Explicit terminal outcome fields (added by gazebo-scenario-execution change)
+    terminal_status: str = "completed"  # "completed" | "blocked" | "skipped"
+    pick_completed: bool = True
+    executed_in_gazebo: bool = False
 
 
 class JsonReporter:
@@ -32,6 +36,7 @@ class JsonReporter:
         """Build per-run JSON summary dict."""
         j5_blocked_count = sum(1 for s in self._steps if s.j5_blocked)
         skipped_count = sum(1 for s in self._steps if s.skipped)
+        completed_picks = sum(1 for s in self._steps if s.pick_completed)
         return {
             "mode": mode,
             "total_steps": total_steps,
@@ -46,6 +51,7 @@ class JsonReporter:
             "steps_with_motion_blocked": j5_blocked_count,
             "steps_with_skipped": skipped_count,
             "steps_with_blocked_or_skipped": j5_blocked_count + skipped_count,
+            "completed_picks": completed_picks,
             "step_reports": [asdict(s) for s in self._steps],
         }
 

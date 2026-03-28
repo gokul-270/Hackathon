@@ -49,6 +49,7 @@ from fk_chain import (
     J5_MAX,
 )
 from run_controller import RunController
+from run_step_executor import RunStepExecutor
 from markdown_reporter import MarkdownReporter
 
 # ---------------------------------------------------------------------------
@@ -1278,7 +1279,8 @@ async def run_start(req: RunStartRequest):
     _run_state = "running"
     run_id = str(uuid.uuid4())
 
-    controller = RunController(req.mode)
+    executor = RunStepExecutor(publish_fn=_publish_joint_gz)
+    controller = RunController(req.mode, executor=executor)
     controller.load_scenario(req.scenario)
     summary = controller.run()
     json_report_str = controller.get_json_report()
@@ -1301,6 +1303,7 @@ async def run_start(req: RunStartRequest):
         f"| Collision steps | {summary.get('steps_with_collision', 0)} |",
         f"| Blocked steps | {summary.get('steps_with_motion_blocked', 0)} |",
         f"| Skipped steps | {summary.get('steps_with_skipped', 0)} |",
+        f"| Completed picks | {summary.get('completed_picks', 0)} |",
         f"",
     ]
     md_report = "\n".join(md_lines)
