@@ -1191,6 +1191,40 @@
         });
     }
 
+    // Pre-computed camera_link -> arm_yanthra_link transform.
+    // Based on URDF: camera_joint parent=arm_yanthra_link, child=camera_link
+    // origin xyz=(0.016845, 0.100461, -0.077129) rpy=(1.5708, 0.785398, 0)
+    // We compute the INVERSE of this transform for camToJoint.
+    function initCameraToArmTransform() {
+        var tx = 0.016845, ty = 0.100461, tz = -0.077129;
+        var roll = 1.5708, pitch = 0.785398, yaw = 0.0;
+
+        var cr = Math.cos(roll), sr = Math.sin(roll);
+        var cp = Math.cos(pitch), sp = Math.sin(pitch);
+        var cy = Math.cos(yaw), sy = Math.sin(yaw);
+
+        // Forward rotation (yanthra -> camera)
+        var r00 = cy*cp, r01 = cy*sp*sr - sy*cr, r02 = cy*sp*cr + sy*sr;
+        var r10 = sy*cp, r11 = sy*sp*sr + cy*cr, r12 = sy*sp*cr - cy*sr;
+        var r20 = -sp,   r21 = cp*sr,             r22 = cp*cr;
+
+        // Inverse: R^T and -R^T * t
+        var inv_tx = -(r00*tx + r10*ty + r20*tz);
+        var inv_ty = -(r01*tx + r11*ty + r21*tz);
+        var inv_tz = -(r02*tx + r12*ty + r22*tz);
+
+        tfMatrix = {
+            apply: function(x, y, z) {
+                return {
+                    x: r00*x + r10*y + r20*z + inv_tx,
+                    y: r01*x + r11*y + r21*z + inv_ty,
+                    z: r02*x + r12*y + r22*z + inv_tz,
+                };
+            }
+        };
+        tfReady = true;
+    }
+
     function updateCamSeqTfStatus(ready) {
         var el = document.getElementById('cam-seq-tf-status');
         if (!el) return;
@@ -1607,6 +1641,10 @@
         seqAddRow();
         seqAddRow();
         seqAddRow();
+
+        // Pre-computed camera-to-arm transform (no ROS2 TF needed)
+        initCameraToArmTransform();
+        updateCamSeqTfStatus(true);
 
         // Cotton placement (ported from yanthra_move)
         setupCottonPlacement();
