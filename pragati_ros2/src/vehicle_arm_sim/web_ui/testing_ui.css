@@ -809,3 +809,134 @@ input[type="range"]::-moz-range-thumb {
 .cam-seq-remove-btn:hover {
     opacity: 0.7;
 }
+
+/* =============================================================================
+   Cotton Placement Panel (ported from yanthra_move)
+   ============================================================================= */
+
+.btn-success {
+    background: var(--success);
+    color: #000;
+    border: none;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+}
+.btn-success:hover { background: #4caf50; }
+.btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#cotton-placement-section {
+    border-left: 3px solid var(--success);
+}
+
+#cotton-placement-section .cotton-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#cotton-placement-section .cotton-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+#cotton-placement-section .cotton-inputs label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+#cotton-placement-section .cotton-inputs input[type="number"] {
+    width: 5.5rem;
+    padding: 3px 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 11px;
+    text-align: center;
+}
+
+#cotton-placement-section .cotton-inputs input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#cotton-placement-section .cotton-inputs select {
+    padding: 3px 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+#cotton-placement-section .cotton-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#cotton-placement-section .cotton-toggles {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.cotton-results {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-input);
+}
+
+.cotton-results h3 {
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+}
+
+.cotton-results .compact-table {
+    width: 100%;
+    font-size: 0.85rem;
+    border-collapse: collapse;
+}
+
+.cotton-results .compact-table td {
+    padding: 2px 6px;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+}
+
+.cotton-results .compact-table td:first-child {
+    font-weight: bold;
+    width: 30%;
+    color: var(--text-secondary);
+    font-family: -apple-system, sans-serif;
+}
+
+.pick-status {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.pick-status.picking {
+    background: rgba(255, 167, 38, 0.15);
+    color: var(--warning);
+}
+
+.pick-status.done {
+    background: rgba(102, 187, 106, 0.15);
+    color: var(--success);
+}

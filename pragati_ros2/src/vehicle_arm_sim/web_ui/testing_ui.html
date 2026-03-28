@@ -225,6 +225,57 @@
                 </div>
             </section>
 
+            <!-- ──────── COTTON PLACEMENT (ported from yanthra_move) ──────── -->
+            <section class="section" id="cotton-placement-section">
+                <h2>Cotton Placement</h2>
+
+                <div class="cotton-controls">
+                    <div class="cotton-inputs">
+                        <label>Arm:
+                            <select id="cotton-arm-select">
+                                <option value="arm1">Arm 1</option>
+                                <option value="arm2">Arm 2</option>
+                                <option value="arm3">Arm 3</option>
+                            </select>
+                        </label>
+                        <label>cam_x: <input type="number" id="cotton-cam-x" value="0.328" step="0.001"></label>
+                        <label>cam_y: <input type="number" id="cotton-cam-y" value="-0.011" step="0.001"></label>
+                        <label>cam_z: <input type="number" id="cotton-cam-z" value="-0.003" step="0.001"></label>
+                        <label>J4 pos: <input type="number" id="cotton-j4-pos" value="0.0" step="0.01"></label>
+                    </div>
+
+                    <div class="cotton-actions">
+                        <button id="cotton-spawn-btn" class="btn btn-primary">Spawn Cotton</button>
+                        <button id="cotton-remove-btn" class="btn btn-danger">Remove Cotton</button>
+                        <button id="cotton-compute-btn" class="btn btn-secondary">Compute Approach</button>
+                        <button id="cotton-pick-btn" class="btn btn-success">Pick Cotton</button>
+                    </div>
+
+                    <div class="cotton-toggles">
+                        <label><input type="checkbox" id="cotton-j4-comp" checked> J4 Compensation</label>
+                        <label><input type="checkbox" id="cotton-phi-comp"> Phi Compensation</label>
+                    </div>
+                </div>
+
+                <div id="cotton-compute-results" class="cotton-results" style="display:none;">
+                    <h3>Compute Approach Results</h3>
+                    <table class="compact-table">
+                        <tr><td>Arm Frame</td><td id="cotton-arm-xyz">--</td></tr>
+                        <tr><td>r</td><td id="cotton-r">--</td></tr>
+                        <tr><td>theta (J4)</td><td id="cotton-theta">--</td></tr>
+                        <tr><td>phi (J3)</td><td id="cotton-phi">--</td></tr>
+                        <tr><td>J3</td><td id="cotton-j3">--</td></tr>
+                        <tr><td>J4</td><td id="cotton-j4">--</td></tr>
+                        <tr><td>J5</td><td id="cotton-j5">--</td></tr>
+                        <tr><td>Reachable</td><td id="cotton-reachable">--</td></tr>
+                    </table>
+                </div>
+
+                <div id="cotton-pick-status" class="pick-status" style="display:none;">
+                    <span id="cotton-pick-status-text">Idle</span>
+                </div>
+            </section>
+
             <!-- ──────── COTTON POSITION SEQUENCE ──────── -->
             <section class="section cam-seq-section">
                 <h2>🌿 Cotton Position Sequence</h2>
