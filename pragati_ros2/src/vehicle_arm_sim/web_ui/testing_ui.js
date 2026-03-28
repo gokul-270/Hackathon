@@ -1351,8 +1351,16 @@
                 arm: params.arm, j4_pos: params.j4_pos,
             }),
         })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, status: r.status, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                var reason = resp.data.detail || 'Unknown error';
+                log('Cotton spawn failed: ' + reason, 'error');
+                return;
+            }
+            var d = resp.data;
             log('Cotton spawned at world(' + d.world_x.toFixed(3) + ', ' +
                 d.world_y.toFixed(3) + ', ' + d.world_z.toFixed(3) + ')', 'success');
         })
@@ -1436,13 +1444,21 @@
         });
     }
 
+    var _pickPollInterval = null;
+
     function pollPickStatus(pickBtn, statusDiv, statusText) {
-        var interval = setInterval(function () {
+        // Clear any existing poll to prevent stacking (D2)
+        if (_pickPollInterval) {
+            clearInterval(_pickPollInterval);
+            _pickPollInterval = null;
+        }
+        _pickPollInterval = setInterval(function () {
             fetch('/api/cotton/pick/status')
             .then(function (r) { return r.json(); })
             .then(function (d) {
                 if (!d.in_progress) {
-                    clearInterval(interval);
+                    clearInterval(_pickPollInterval);
+                    _pickPollInterval = null;
                     pickBtn.disabled = false;
                     statusDiv.className = 'pick-status done';
                     statusText.textContent = 'Done';

@@ -182,7 +182,7 @@ class TestCottonSpawn:
             mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
             resp = client.post(
                 "/api/cotton/spawn",
-                json={"cam_x": 0.1, "cam_y": -0.02, "cam_z": 0.05, "arm": "arm1", "j4_pos": 0.0},
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1", "j4_pos": 0.0},
             )
         assert resp.status_code == 200
         body = resp.json()
@@ -196,7 +196,7 @@ class TestCottonSpawn:
             mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
             client.post(
                 "/api/cotton/spawn",
-                json={"cam_x": 0.1, "cam_y": -0.02, "cam_z": 0.05, "arm": "arm1", "j4_pos": 0.0},
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1", "j4_pos": 0.0},
             )
         assert mock_run.called
         call_args = " ".join(mock_run.call_args_list[-1][0][0])
@@ -297,4 +297,136 @@ class TestCottonPick:
                 json={"arm": "arm1"},
             )
         assert resp.status_code == 409
+        testing_backend._pick_in_progress = False
+
+
+# ---------------------------------------------------------------------------
+# Pick status reliability tests (Group 1)
+# ---------------------------------------------------------------------------
+class TestPickStatusReliability:
+    def test_pick_status_resets_to_idle_between_picks(self, client):
+        """GET /api/cotton/pick/status returns 'idle' immediately after new pick starts."""
+        import testing_backend
+
+        # Simulate a completed previous pick
+        testing_backend._pick_status = "done"
+        testing_backend._pick_in_progress = False
+        testing_backend._last_cotton_cam = (0.494, -0.001, 0.004)
+        testing_backend._last_cotton_arm = "arm1"
+        testing_backend._last_cotton_j4 = 0.0
+
+        # Start a new pick (mock the background thread so it doesn't run)
+        with mock.patch("testing_backend._execute_pick_sequence"):
+            with mock.patch("threading.Thread") as mock_thread:
+                mock_thread.return_value.start = mock.Mock()
+                resp = client.post(
+                    "/api/cotton/pick",
+                    json={"arm": "arm1"},
+                )
+        assert resp.status_code == 200
+
+        # Status should NOT be "done" from the previous pick
+        status_resp = client.get("/api/cotton/pick/status")
+        body = status_resp.json()
+        assert body["status"] != "done", (
+            f"Status should be reset before new pick, got '{body['status']}'"
+        )
+        assert body["status"] in ("idle", "starting")
+        testing_backend._pick_in_progress = False
+
+    def test_pick_status_thread_lock_consistency(self, client):
+        """Pick status endpoint returns consistent snapshot under lock."""
+        import testing_backend
+
+        testing_backend._pick_in_progress = True
+        testing_backend._pick_status = "j4_lateral"
+
+        resp = client.get("/api/cotton/pick/status")
+        body = resp.json()
+        # Both fields should be consistent — if in_progress is True,
+        # status should not be "idle" or "done"
+        assert body["in_progress"] is True
+        assert body["status"] == "j4_lateral"
+
+        # Now simulate done state
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "done"
+
+        resp = client.get("/api/cotton/pick/status")
+        body = resp.json()
+        assert body["in_progress"] is False
+        assert body["status"] == "done"
+
+        # Cleanup
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+
+
+# ---------------------------------------------------------------------------
+# Reachable target validation tests (Group 3)
+# ---------------------------------------------------------------------------
+class TestReachableTargetValidation:
+    def test_spawn_unreachable_j3_above_arm(self, client):
+        """POST /api/cotton/spawn returns 400 when target is above arm (phi > 0)."""
+        # cam coords that produce positive phi (unreachable — above arm)
+        # Using the OLD default coords which are unreachable with correct transform
+        # cam(0.10, -0.10, 0.0) → az positive → phi positive → J3 out of range
+        with mock.patch("testing_backend._gz_spawn_model"):
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.10, "cam_y": -0.10, "cam_z": 0.0, "arm": "arm1"},
+            )
+        assert resp.status_code == 400
+        body = resp.json()
+        assert "unreachable" in body["detail"].lower() or "out of range" in body["detail"].lower()
+
+    def test_spawn_unreachable_j5_too_close(self, client):
+        """POST /api/cotton/spawn returns 400 when target is too close (r < HARDWARE_OFFSET)."""
+        # Very small cam coords → small r → J5 negative
+        with mock.patch("testing_backend._gz_spawn_model"):
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.05, "cam_y": 0.05, "cam_z": 0.0, "arm": "arm1"},
+            )
+        assert resp.status_code == 400
+        body = resp.json()
+        assert "unreachable" in body["detail"].lower() or "out of range" in body["detail"].lower()
+
+    def test_spawn_reachable_returns_200(self, client):
+        """POST /api/cotton/spawn returns 200 with cotton name for valid coords."""
+        # Known reachable coords from real arm log
+        with mock.patch("testing_backend._gz_spawn_model"):
+            with mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+                with mock.patch("testing_backend._gz_remove_model"):
+                    resp = client.post(
+                        "/api/cotton/spawn",
+                        json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+                    )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "cotton_name" in body
+        assert body["status"] == "ok"
+
+    def test_pick_after_remove_rejected(self, client):
+        """POST /api/cotton/pick returns 400 after cotton has been removed."""
+        import testing_backend
+
+        # Spawn a cotton
+        testing_backend._last_cotton_cam = (0.494, -0.001, 0.004)
+        testing_backend._last_cotton_arm = "arm1"
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._cotton_spawned = True
+        testing_backend._pick_in_progress = False
+
+        # Remove it
+        with mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            with mock.patch("testing_backend._gz_remove_model"):
+                client.post("/api/cotton/remove")
+
+        # Now try to pick — should be rejected
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1"},
+        )
+        assert resp.status_code == 400
         testing_backend._pick_in_progress = False

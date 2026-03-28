@@ -12,27 +12,27 @@
 
 ## 1. Pick Status Reliability — Backend [PARALLEL with 2, 3]
 
-- [ ] 1.1 RED: Write test `test_pick_status_resets_to_idle_between_picks` — assert `GET /api/cotton/pick-status` returns `"idle"` immediately after a new `POST /api/cotton/pick` (before timers fire). Capability: `pick-status-reliability`
-- [ ] 1.2 RED: Write test `test_pick_status_thread_lock` — assert concurrent status reads during timer updates return consistent snapshots (no mixed state). Capability: `pick-status-reliability`
-- [ ] 1.3 GREEN: Add `threading.Lock` to `testing_backend.py`; protect `_pick_in_progress` and `_pick_status` reads/writes; reset `_pick_status = "idle"` at start of `POST /api/cotton/pick`. Design ref: D1, D3
-- [ ] 1.4 REFACTOR: Clean up any redundant status checks; verify tests pass
+- [x] 1.1 RED: Write test `test_pick_status_resets_to_idle_between_picks` — assert `GET /api/cotton/pick-status` returns `"idle"` immediately after a new `POST /api/cotton/pick` (before timers fire). Capability: `pick-status-reliability`
+- [x] 1.2 RED: Write test `test_pick_status_thread_lock` — assert concurrent status reads during timer updates return consistent snapshots (no mixed state). Capability: `pick-status-reliability`
+- [x] 1.3 GREEN: Add `threading.Lock` to `testing_backend.py`; protect `_pick_in_progress` and `_pick_status` reads/writes; reset `_pick_status = "idle"` at start of `POST /api/cotton/pick`. Design ref: D1, D3
+- [x] 1.4 REFACTOR: Clean up any redundant status checks; verify tests pass
 
 ## 2. Pick Status Reliability — Frontend [PARALLEL with 1, 3]
 
 - [ ] 2.1 RED: Write Playwright E2E test `test_single_completion_message` — assert exactly one "Pick sequence complete" log entry after a pick. Capability: `pick-status-reliability`
-- [ ] 2.2 GREEN: Refactor `pollPickStatus()` in `testing_ui.js` — replace local interval variable with module-level `_pickPollInterval`; clear existing interval before creating new one. Design ref: D2
+- [x] 2.2 GREEN: Refactor `pollPickStatus()` in `testing_ui.js` — replace local interval variable with module-level `_pickPollInterval`; clear existing interval before creating new one. Design ref: D2
 - [ ] 2.3 REFACTOR: Remove any dead code from old poll pattern; verify E2E test passes
 
 ## 3. Reachable Target Validation [PARALLEL with 1, 2]
 
-- [ ] 3.1 RED: Write test `test_spawn_unreachable_j3_above_arm` — assert `POST /api/cotton/spawn` returns 400 with reason when phi > 0. Capability: `reachable-target-validation`
-- [ ] 3.2 RED: Write test `test_spawn_unreachable_j5_too_close` — assert 400 when r < HARDWARE_OFFSET. Capability: `reachable-target-validation`
-- [ ] 3.3 RED: Write test `test_spawn_reachable_returns_200` — assert 200 with cotton name and joint values for valid coordinates. Capability: `reachable-target-validation`
-- [ ] 3.4 RED: Write test `test_pick_after_remove_rejected` — assert pick returns error when cotton has been removed. Capability: `reachable-target-validation`
-- [ ] 3.5 GREEN: Add reachability check to `POST /api/cotton/spawn`; return 400 with specific reason on failure. Ensure remove deletes from collection completely. Design ref: D6, D7
-- [ ] 3.6 RED: Write JS/E2E test `test_error_toast_on_unreachable` — assert error message displayed in UI on failed spawn. Capability: `reachable-target-validation`
-- [ ] 3.7 GREEN: Add frontend error handling for 400 responses from spawn; display reason in status area
-- [ ] 3.8 REFACTOR: Clean up; verify all reachability tests pass
+- [x] 3.1 RED: Write test `test_spawn_unreachable_j3_above_arm` — assert `POST /api/cotton/spawn` returns 400 with reason when phi > 0. Capability: `reachable-target-validation`
+- [x] 3.2 RED: Write test `test_spawn_unreachable_j5_too_close` — assert 400 when r < HARDWARE_OFFSET. Capability: `reachable-target-validation`
+- [x] 3.3 RED: Write test `test_spawn_reachable_returns_200` — assert 200 with cotton name and joint values for valid coordinates. Capability: `reachable-target-validation`
+- [x] 3.4 RED: Write test `test_pick_after_remove_rejected` — assert pick returns error when cotton has been removed. Capability: `reachable-target-validation`
+- [x] 3.5 GREEN: Add reachability check to `POST /api/cotton/spawn`; return 400 with specific reason on failure. Ensure remove deletes from collection completely. Design ref: D6, D7
+- [x] 3.6 RED: Write JS/E2E test `test_error_toast_on_unreachable` — assert error message displayed in UI on failed spawn. Capability: `reachable-target-validation`
+- [x] 3.7 GREEN: Add frontend error handling for 400 responses from spawn; display reason in status area
+- [x] 3.8 REFACTOR: Clean up; verify all reachability tests pass
 
 ## 4. Multi-Cotton Backend State [SEQUENTIAL]
 

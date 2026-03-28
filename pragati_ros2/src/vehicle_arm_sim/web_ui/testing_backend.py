@@ -665,6 +665,7 @@ _last_cotton_arm: str | None = None
 _last_cotton_j4: float = 0.0
 _pick_in_progress: bool = False
 _pick_status: str = "idle"
+_pick_lock = threading.Lock()  # Protects _pick_in_progress and _pick_status
 
 # SDF template for cotton ball (white sphere, 0.04m radius)
 _COTTON_SDF_TEMPLATE = (
@@ -743,6 +744,35 @@ def cotton_spawn(req: CottonSpawnRequest):
     if arm_config is None:
         raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
 
+    # --- Reachability check ---
+    ax, ay, az = camera_to_arm(req.cam_x, req.cam_y, req.cam_z, j4_pos=req.j4_pos)
+    result = polar_decompose(ax, ay, az)
+    if not result["reachable"]:
+        # Build specific reason
+        reasons = []
+        j3_val = result["j3"]
+        j5_val = result["j5"]
+        j4_val = result["j4"]
+        if j3_val < J3_MIN or j3_val > J3_MAX:
+            reasons.append(
+                f"J3={j3_val:.3f} rad out of range [{J3_MIN}, {J3_MAX}]"
+            )
+        if j4_val < J4_MIN or j4_val > J4_MAX:
+            reasons.append(
+                f"J4={j4_val:.3f} m out of range [{J4_MIN}, {J4_MAX}]"
+            )
+        if j5_val < J5_MIN or j5_val > J5_MAX:
+            reasons.append(
+                f"J5={j5_val:.3f} m out of range [{J5_MIN}, {J5_MAX}]"
+            )
+        if result["r"] <= 0.1:
+            reasons.append(f"r={result['r']:.3f} m too small (min 0.1)")
+        reason_str = "; ".join(reasons) if reasons else "target unreachable"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unreachable: {reason_str}",
+        )
+
     # Convert camera coords to world frame via FK
     wx, wy, wz = camera_to_world_fk(
         req.cam_x, req.cam_y, req.cam_z,
@@ -778,11 +808,12 @@ def cotton_spawn(req: CottonSpawnRequest):
 @app.post("/api/cotton/remove")
 def cotton_remove():
     """Remove the spawned cotton ball from Gazebo."""
-    global _cotton_spawned
+    global _cotton_spawned, _last_cotton_cam
     if _cotton_spawned:
         world_name = _detect_gz_world_name()
         _gz_remove_model(_cotton_name, world_name)
     _cotton_spawned = False
+    _last_cotton_cam = None
     return {"status": "ok"}
 
 
@@ -881,27 +912,33 @@ def _execute_pick_sequence(
     j5_topic = arm_config["j5_topic"]
 
     try:
-        _pick_status = "j4_lateral"
+        with _pick_lock:
+            _pick_status = "j4_lateral"
         _publish_joint_gz(j4_topic, j4)
         time.sleep(0.8)
 
-        _pick_status = "j3_tilt"
+        with _pick_lock:
+            _pick_status = "j3_tilt"
         _publish_joint_gz(j3_topic, j3)
         time.sleep(0.8)
 
-        _pick_status = "j5_extend"
+        with _pick_lock:
+            _pick_status = "j5_extend"
         _publish_joint_gz(j5_topic, j5)
         time.sleep(1.4)
 
-        _pick_status = "j5_retract"
+        with _pick_lock:
+            _pick_status = "j5_retract"
         _publish_joint_gz(j5_topic, 0.0)
         time.sleep(0.8)
 
-        _pick_status = "j3_home"
+        with _pick_lock:
+            _pick_status = "j3_home"
         _publish_joint_gz(j3_topic, 0.0)
         time.sleep(0.8)
 
-        _pick_status = "j4_home"
+        with _pick_lock:
+            _pick_status = "j4_home"
         _publish_joint_gz(j4_topic, 0.0)
         time.sleep(0.9)
 
@@ -911,12 +948,15 @@ def _execute_pick_sequence(
             _gz_remove_model(_cotton_name, world_name)
             _cotton_spawned = False
 
-        _pick_status = "done"
+        with _pick_lock:
+            _pick_status = "done"
     except Exception as e:
         logger.error("Pick sequence error: %s", e)
-        _pick_status = f"error: {e}"
+        with _pick_lock:
+            _pick_status = f"error: {e}"
     finally:
-        _pick_in_progress = False
+        with _pick_lock:
+            _pick_in_progress = False
 
 
 @app.post("/api/cotton/pick")
@@ -927,11 +967,17 @@ def cotton_pick(req: CottonPickRequest):
     if _last_cotton_cam is None:
         raise HTTPException(status_code=400, detail="No cotton spawned yet")
 
-    if _pick_in_progress:
-        raise HTTPException(status_code=409, detail="Pick already in progress")
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(status_code=409, detail="Pick already in progress")
+        _pick_in_progress = True
+        _pick_status = "starting"
 
     arm_config = ARM_CONFIGS.get(req.arm)
     if arm_config is None:
+        with _pick_lock:
+            _pick_in_progress = False
+            _pick_status = "idle"
         raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
 
     # Compute joint values
@@ -949,9 +995,6 @@ def cotton_pick(req: CottonPickRequest):
     j3_clamped = max(J3_MIN, min(J3_MAX, j3))
     j4_clamped = max(J4_MIN, min(J4_MAX, result["j4"]))
     j5_clamped = max(J5_MIN, min(J5_MAX, j5))
-
-    _pick_in_progress = True
-    _pick_status = "starting"
 
     # Launch animation in background thread
     t = threading.Thread(
@@ -973,10 +1016,11 @@ def cotton_pick(req: CottonPickRequest):
 @app.get("/api/cotton/pick/status")
 def cotton_pick_status():
     """Get the current status of the pick animation."""
-    return {
-        "in_progress": _pick_in_progress,
-        "status": _pick_status,
-    }
+    with _pick_lock:
+        return {
+            "in_progress": _pick_in_progress,
+            "status": _pick_status,
+        }
 
 
 # ---------------------------------------------------------------------------

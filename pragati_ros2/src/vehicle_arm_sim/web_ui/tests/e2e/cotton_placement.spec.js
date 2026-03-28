@@ -42,3 +42,23 @@ test('Pick Cotton button exists and is clickable', async ({ page }) => {
   await expect(btn).toBeVisible({ timeout: 2000 });
   await expect(btn).toBeEnabled();
 });
+
+test('Spawn unreachable cotton shows error message in log', async ({ page }) => {
+  await page.goto('/');
+  // Mock spawn endpoint to return 400 (unreachable)
+  await page.route('/api/cotton/spawn', async route => {
+    await route.fulfill({
+      status: 400,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        detail: 'Unreachable: J3=-1.200 rad out of range [-0.9, 0.0]',
+      }),
+    });
+  });
+  await page.locator('#cotton-spawn-btn').click();
+  // Should show error in log area with 'error' class
+  const logArea = page.locator('#log-area');
+  const errorEntry = logArea.locator('.log-error');
+  await expect(errorEntry.first()).toBeVisible({ timeout: 3000 });
+  await expect(errorEntry.first()).toContainText('Unreachable');
+});
