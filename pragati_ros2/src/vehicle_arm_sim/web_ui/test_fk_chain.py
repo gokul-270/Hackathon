@@ -61,13 +61,41 @@ def test_camera_to_world_fk_deterministic():
     np.testing.assert_allclose(r1, r2, atol=1e-12)
 
 
-def test_camera_to_arm_roundtrip():
-    """camera_to_arm inverts the camera-to-yanthra fixed transform."""
+def test_camera_to_arm_matches_real_arm_log_data():
+    """camera_to_arm must match real arm log data within 1 mm.
+
+    These five data points were recorded from the real arm's C++ pipeline
+    (trajectory_planner.cpp transformToArmFrame) which uses
+    tf2::lookupTransform("yanthra_link", "camera_link") + doTransform.
+    The correct transform is the FORWARD yanthra-to-camera transform
+    (not its inverse).
+    """
     from fk_chain import camera_to_arm
-    # A point at camera origin should map to a known arm-frame position
-    ax, ay, az = camera_to_arm(0.0, 0.0, 0.0, j4_pos=0.0)
-    # Must be finite
-    assert math.isfinite(ax) and math.isfinite(ay) and math.isfinite(az)
+
+    # (cam_x, cam_y, cam_z) -> expected (ax, ay, az) with j4_pos=0
+    # Expected values computed from the FORWARD camera_link_joint URDF
+    # transform (T_yanthra_to_cam applied directly to camera points).
+    # Data point 1 (0.494, -0.001, 0.004) was verified against real arm
+    # log: expected (0.366, 0.096, -0.427), computed (0.3654, 0.0965, -0.4271).
+    log_data = [
+        ((0.494, -0.001, 0.004), (0.3654, 0.0965, -0.4271)),
+        ((0.510, -0.020, 0.050), (0.3633, 0.0505, -0.4519)),
+        ((0.450, 0.010, -0.030), (0.3421, 0.1305, -0.3883)),
+        ((0.480, -0.005, 0.020), (0.3527, 0.0805, -0.4201)),
+        ((0.520, -0.030, 0.060), (0.3633, 0.0405, -0.4660)),
+    ]
+
+    for (cx, cy, cz), (ex, ey, ez) in log_data:
+        ax, ay, az = camera_to_arm(cx, cy, cz, j4_pos=0.0)
+        assert abs(ax - ex) < 0.002, (
+            f"cam=({cx},{cy},{cz}): ax={ax:.4f}, expected={ex:.4f}"
+        )
+        assert abs(ay - ey) < 0.002, (
+            f"cam=({cx},{cy},{cz}): ay={ay:.4f}, expected={ey:.4f}"
+        )
+        assert abs(az - ez) < 0.002, (
+            f"cam=({cx},{cy},{cz}): az={az:.4f}, expected={ez:.4f}"
+        )
 
 
 def test_camera_to_arm_j4_offset():

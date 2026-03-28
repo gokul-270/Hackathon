@@ -170,9 +170,11 @@ def camera_to_world_fk(
     return (float(world_pt[0]), float(world_pt[1]), float(world_pt[2]))
 
 
-# Pre-compute the inverse of the camera-to-yanthra fixed transform
-_T_YANTHRA_TO_CAM = tf_origin(CAMERA_LINK_XYZ, CAMERA_LINK_RPY)
-_T_CAM_TO_YANTHRA = np.linalg.inv(_T_YANTHRA_TO_CAM)
+# Camera-link joint transform from the URDF.
+# The URDF origin describes the yanthra→camera transform, and applying it
+# directly (NOT inverted) reproduces the real arm's C++ tf2 pipeline output.
+# See test_camera_to_arm_matches_real_arm_log_data for numerical proof.
+_T_CAM_TO_ARM = tf_origin(CAMERA_LINK_XYZ, CAMERA_LINK_RPY)
 
 
 def camera_to_arm(
@@ -191,7 +193,7 @@ def camera_to_arm(
     Returns:
         (ax, ay_absolute, az) in yanthra_link frame
     """
-    pt = _T_CAM_TO_YANTHRA @ np.array([cam_x, cam_y, cam_z, 1.0])
+    pt = _T_CAM_TO_ARM @ np.array([cam_x, cam_y, cam_z, 1.0])
     ax, ay, az = float(pt[0]), float(pt[1]), float(pt[2])
     ay_absolute = ay + j4_pos
     return (ax, ay_absolute, az)
