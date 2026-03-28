@@ -16,11 +16,13 @@ Vehicle & arm CONTROL is handled externally via:
 
 import argparse
 import logging
+import math
 import os
 import re
 import subprocess
 import sys
 import threading
+import uuid
 from pathlib import Path
 
 import uvicorn
@@ -535,6 +537,117 @@ JOINT_LIMITS = {
 @app.get("/api/joint_limits")
 async def get_joint_limits():
     return {"limits": JOINT_LIMITS}
+
+
+# ---------------------------------------------------------------------------
+# Camera → World FK
+# ---------------------------------------------------------------------------
+# T_world_camera derived from vehicle_arm_merged.urdf + spawn pose (Rx 90°, z=1.0).
+# Camera joint: xyz=(1.55, -0.25, 0.9) rpy=(-1.5708, 0, -0.2618) rel. base-v1.
+# Vehicle spawn: z=1.0, orientation=(x=0.7071068, y=0, z=0, w=0.7071068) = Rx(90°).
+#
+# Row 0: [ 0.9659,  0.0,    0.2588,  1.55 ]
+# Row 1: [ 0.0,     1.0,    0.0,    -0.90 ]
+# Row 2: [-0.2588,  0.0,    0.9659,  0.75 ]
+# Row 3: [ 0.0,     0.0,    0.0,     1.0  ]
+_T_WC_R00 = 0.9659
+_T_WC_R02 = 0.2588
+_T_WC_TX  = 1.55
+_T_WC_TY  = -0.90
+_T_WC_R20 = -0.2588
+_T_WC_R22 = 0.9659
+_T_WC_TZ  = 0.75
+
+
+def cam_to_world(cam_x: float, cam_y: float, cam_z: float) -> tuple[float, float, float]:
+    """Convert camera-frame point to Gazebo world frame via pre-computed FK matrix."""
+    wx = _T_WC_R00 * cam_x + _T_WC_R02 * cam_z + _T_WC_TX
+    wy = cam_y + _T_WC_TY
+    wz = _T_WC_R20 * cam_x + _T_WC_R22 * cam_z + _T_WC_TZ
+    return wx, wy, wz
+
+
+# ---------------------------------------------------------------------------
+# Cam marker state
+# ---------------------------------------------------------------------------
+_spawned_marker_names: list[str] = []
+
+# SDF template for a 0.05 m radius sphere (visual only, no collision)
+_MARKER_SDF_TEMPLATE = (
+    "<sdf version='1.7'>"
+    "<model name='{name}'>"
+    "<static>true</static>"
+    "<link name='link'>"
+    "<visual name='visual'>"
+    "<geometry><sphere><radius>0.05</radius></sphere></geometry>"
+    "<material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>"
+    "</visual>"
+    "</link>"
+    "</model>"
+    "</sdf>"
+)
+
+
+class CamMarkerPlaceRequest(BaseModel):
+    cam_x: float
+    cam_y: float
+    cam_z: float
+
+
+@app.post("/api/cam_markers/place")
+async def cam_markers_place(req: CamMarkerPlaceRequest):
+    """Convert camera-frame coords to world frame and spawn a sphere marker in Gazebo."""
+    wx, wy, wz = cam_to_world(req.cam_x, req.cam_y, req.cam_z)
+    marker_name = f"cam_marker_{uuid.uuid4().hex[:8]}"
+
+    sdf_str = _MARKER_SDF_TEMPLATE.format(name=marker_name)
+    escaped = (
+        sdf_str.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+    )
+    world_name = _detect_gz_world_name()
+    spawn_req = (
+        f'sdf: "{escaped}" '
+        f'name: "{marker_name}" '
+        f"pose: {{ position: {{ x: {wx}, y: {wy}, z: {wz} }} }}"
+    )
+    subprocess.run(
+        [
+            "gz", "service",
+            "-s", f"/world/{world_name}/create",
+            "--reqtype", "gz.msgs.EntityFactory",
+            "--reptype", "gz.msgs.Boolean",
+            "--timeout", "5000",
+            "--req", spawn_req,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    _spawned_marker_names.append(marker_name)
+    return {"status": "ok", "marker_name": marker_name, "world_pos": {"x": wx, "y": wy, "z": wz}}
+
+
+@app.post("/api/cam_markers/clear")
+async def cam_markers_clear():
+    """Remove all previously spawned cam marker spheres from Gazebo."""
+    world_name = _detect_gz_world_name()
+    for name in list(_spawned_marker_names):
+        subprocess.run(
+            [
+                "gz", "service",
+                "-s", f"/world/{world_name}/remove",
+                "--reqtype", "gz.msgs.Entity",
+                "--reptype", "gz.msgs.Boolean",
+                "--timeout", "3000",
+                "--req", f'name: "{name}" type: MODEL',
+            ],
+            capture_output=True,
+            timeout=10,
+        )
+    _spawned_marker_names.clear()
+    return {"status": "ok", "cleared": 0}
 
 
 # ---------------------------------------------------------------------------
