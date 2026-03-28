@@ -135,7 +135,7 @@ def test_run_controller_emits_blocked_outcome_when_mode_blocks_step():
     outcomes = []
 
     class TrackingExecutor:
-        def execute(self, arm_id, applied_joints, blocked=False, skipped=False):
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
             if blocked:
                 outcomes.append("blocked")
                 return {"terminal_status": "blocked", "pick_completed": False, "executed_in_gazebo": False}

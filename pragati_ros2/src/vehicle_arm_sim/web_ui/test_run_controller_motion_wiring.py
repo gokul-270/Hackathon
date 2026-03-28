@@ -87,7 +87,7 @@ def test_run_controller_executor_receives_arm_id_and_applied_joints():
     captured_calls = []
 
     class CapturingExecutor:
-        def execute(self, arm_id, applied_joints, blocked=False, skipped=False):
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
             captured_calls.append({"arm_id": arm_id, "applied_joints": applied_joints})
             return {"terminal_status": "completed", "pick_completed": True, "executed_in_gazebo": True}
 
@@ -112,7 +112,7 @@ def test_run_controller_passes_blocked_true_when_mode_blocks_step():
     blocked_calls = []
 
     class TrackingExecutor:
-        def execute(self, arm_id, applied_joints, blocked=False, skipped=False):
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
             blocked_calls.append(blocked)
             return {
                 "terminal_status": "blocked" if blocked else "completed",
@@ -217,7 +217,7 @@ def test_run_controller_executes_both_arms_in_paired_step():
     execution_order = []
 
     class OrderTracker:
-        def execute(self, arm_id, applied_joints, blocked=False, skipped=False):
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
             execution_order.append(arm_id)
             return {"terminal_status": "completed", "pick_completed": True, "executed_in_gazebo": True}
 
@@ -267,7 +267,7 @@ def test_run_controller_executes_solo_tail_step_after_paired_step():
     executed_arms_per_step = {}
 
     class StepTracker:
-        def execute(self, arm_id, applied_joints, blocked=False, skipped=False):
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
             # We can't get step_id here; just track all calls
             executed_arms_per_step.setdefault(arm_id, 0)
             executed_arms_per_step[arm_id] += 1

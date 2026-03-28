@@ -989,6 +989,38 @@ def _publish_joint_gz(topic: str, value: float):
     )
 
 
+def _run_spawn_cotton(
+    arm_id: str,
+    cam_x: float,
+    cam_y: float,
+    cam_z: float,
+    j4_pos: float,
+) -> str:
+    """Spawn a cotton model at cam position for a replay run step.
+
+    Returns the model name so the caller can remove it later.
+    """
+    global _cotton_counter
+    world_name = _detect_gz_world_name()
+    wx, wy, wz = cam_to_world(cam_x, cam_y, cam_z)
+    name = f"run_cotton_{arm_id}_{_cotton_counter}"
+    _cotton_counter += 1
+    sdf = _COTTON_SDF_TEMPLATE.format(name=name)
+    _gz_spawn_model(name, sdf, wx, wy, wz, world_name)
+    return name
+
+
+def _run_remove_cotton(model_name: str) -> None:
+    """Remove a cotton model that was spawned during a replay run step."""
+    world_name = _detect_gz_world_name()
+    _gz_remove_model(model_name, world_name)
+
+
+def _run_sleep(seconds: float) -> None:
+    """time.sleep wrapper used during run replay animation; injectable in tests."""
+    time.sleep(seconds)
+
+
 def _execute_pick_sequence(
     j3: float, j4: float, j5: float, arm_config: dict
 ):
@@ -1279,7 +1311,12 @@ async def run_start(req: RunStartRequest):
     _run_state = "running"
     run_id = str(uuid.uuid4())
 
-    executor = RunStepExecutor(publish_fn=_publish_joint_gz)
+    executor = RunStepExecutor(
+        publish_fn=_publish_joint_gz,
+        spawn_fn=_run_spawn_cotton,
+        remove_fn=_run_remove_cotton,
+        sleep_fn=_run_sleep,
+    )
     controller = RunController(req.mode, executor=executor)
     controller.load_scenario(req.scenario)
     summary = controller.run()

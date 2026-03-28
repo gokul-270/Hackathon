@@ -56,7 +56,11 @@ class RunController:
         self._transport = LocalPeerTransport()
         self._last_summary: dict = {}
         if executor is None:
-            self._executor = RunStepExecutor(publish_fn=_noop_publish)
+            # No-op executor: no real Gazebo publishing, no real delays.
+            self._executor = RunStepExecutor(
+                publish_fn=_noop_publish,
+                sleep_fn=lambda _: None,
+            )
         else:
             self._executor = executor
 
@@ -185,11 +189,16 @@ class RunController:
                 )
 
                 # Call executor to perform Gazebo motion and get terminal outcome
+                own_step = arm_steps[arm_id]
                 outcome = self._executor.execute(
                     arm_id=arm_id,
                     applied_joints=own_applied,
                     blocked=j5_blocked,
                     skipped=own_skipped,
+                    cam_x=own_step.cam_x,
+                    cam_y=own_step.cam_y,
+                    cam_z=own_step.cam_z,
+                    j4_pos=own_applied["j4"],
                 )
 
                 self._reporter.add_step(

@@ -12,6 +12,7 @@ Tests the FastAPI backend for:
 import json
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +23,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from testing_backend import app
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _no_gz_side_effects():
+    """Suppress Gazebo side-effects (sleep, spawn, remove) so tests stay fast."""
+    with (
+        patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+        patch("testing_backend._run_remove_cotton"),
+        patch("testing_backend._publish_joint_gz"),
+    ):
+        yield
 
 # ---------------------------------------------------------------------------
 # /api/run/start

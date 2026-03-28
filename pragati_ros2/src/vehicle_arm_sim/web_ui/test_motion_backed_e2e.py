@@ -136,3 +136,70 @@ class TestMotionBackedE2E:
             assert resp.status_code == 200, f"mode={mode} failed"
             data = client.get("/api/run/report/json").json()
             assert "completed_picks" in data["summary"], f"mode={mode} missing completed_picks"
+
+
+class TestMotionBackedE2EWithSpawn:
+    """End-to-end tests verifying cotton spawn and remove are driven by /api/run/start."""
+
+    def _run_with_spawn_tracking(self, scenario, mode=0):
+        publish_calls = []
+        spawn_calls = []
+        remove_calls = []
+
+        def mock_publish(topic: str, value: float):
+            publish_calls.append((topic, value))
+
+        def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+            model_name = f"cotton_{len(spawn_calls)}"
+            spawn_calls.append((arm_id, cam_x, cam_y, cam_z, j4_pos))
+            return model_name
+
+        def mock_remove(model_name: str):
+            remove_calls.append(model_name)
+
+        tb._current_run_result = None
+        with (
+            patch("testing_backend._publish_joint_gz", side_effect=mock_publish),
+            patch("testing_backend._run_spawn_cotton", side_effect=mock_spawn),
+            patch("testing_backend._run_remove_cotton", side_effect=mock_remove),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post("/api/run/start", json={"mode": mode, "scenario": scenario})
+
+        return resp, publish_calls, spawn_calls, remove_calls, client
+
+    def test_run_start_calls_spawn_once_per_allowed_arm_step(self):
+        """For each allowed arm-step, /api/run/start must spawn one cotton model."""
+        resp, _, spawn_calls, _, _ = self._run_with_spawn_tracking(_PAIRED_SCENARIO, mode=0)
+        assert resp.status_code == 200
+        # 4 arm-steps in PAIRED_SCENARIO, all unrestricted → 4 spawns
+        assert len(spawn_calls) == 4
+
+    def test_run_start_calls_remove_once_per_spawned_cotton(self):
+        """For each spawned cotton, /api/run/start must call remove after the animation."""
+        resp, _, spawn_calls, remove_calls, _ = self._run_with_spawn_tracking(_PAIRED_SCENARIO, mode=0)
+        assert resp.status_code == 200
+        assert len(remove_calls) == len(spawn_calls)
+
+    def test_run_start_does_not_spawn_for_blocked_steps(self):
+        """Blocked arm-steps must not trigger spawn."""
+        # _BLOCKED_SCENARIO uses mode=1 (baseline_j5_block_skip) which blocks j5
+        resp, _, spawn_calls, _, client = self._run_with_spawn_tracking(_BLOCKED_SCENARIO, mode=1)
+        assert resp.status_code == 200
+        data = client.get("/api/run/report/json").json()
+        blocked_count = sum(1 for s in data["steps"] if s["terminal_status"] == "blocked")
+        # Each blocked step must not contribute a spawn
+        non_blocked_count = len(data["steps"]) - blocked_count
+        assert len(spawn_calls) == non_blocked_count
+
+    def test_run_start_unrestricted_reports_completed_picks_equal_step_count(self):
+        """In unrestricted mode, completed_picks must equal number of arm-steps."""
+        resp, _, spawn_calls, remove_calls, client = self._run_with_spawn_tracking(
+            _PAIRED_SCENARIO, mode=0
+        )
+        assert resp.status_code == 200
+        data = client.get("/api/run/report/json").json()
+        assert data["summary"]["completed_picks"] == 4  # 4 arm-steps in PAIRED_SCENARIO
+        assert len(spawn_calls) == 4
+        assert len(remove_calls) == 4
