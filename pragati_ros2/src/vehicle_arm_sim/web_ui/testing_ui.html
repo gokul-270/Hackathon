@@ -225,6 +225,134 @@
                 </div>
             </section>
 
+            <!-- ──────── COTTON PLACEMENT (ported from yanthra_move) ──────── -->
+            <section class="section" id="cotton-placement-section">
+                <h2>Cotton Placement</h2>
+
+                <div class="cotton-controls">
+                    <div class="cotton-inputs">
+                        <label>Arm:
+                            <select id="cotton-arm-select">
+                                <option value="arm1">Arm 1</option>
+                                <option value="arm2">Arm 2</option>
+                                <option value="arm3">Arm 3</option>
+                            </select>
+                        </label>
+                        <label>cam_x: <input type="number" id="cotton-cam-x" value="0.328" step="0.001"></label>
+                        <label>cam_y: <input type="number" id="cotton-cam-y" value="-0.011" step="0.001"></label>
+                        <label>cam_z: <input type="number" id="cotton-cam-z" value="-0.003" step="0.001"></label>
+                        <label>J4 pos: <input type="number" id="cotton-j4-pos" value="0.0" step="0.01"></label>
+                    </div>
+
+                    <div class="cotton-actions">
+                        <button id="cotton-spawn-btn" class="btn btn-primary">Spawn Cotton</button>
+                        <button id="cotton-remove-btn" class="btn btn-danger">Remove Cotton</button>
+                        <button id="cotton-compute-btn" class="btn btn-secondary">Compute Approach</button>
+                        <button id="cotton-pick-btn" class="btn btn-success">Pick Cotton</button>
+                    </div>
+
+                    <div class="cotton-toggles">
+                        <label><input type="checkbox" id="cotton-j4-comp" checked> J4 Compensation</label>
+                        <label><input type="checkbox" id="cotton-phi-comp"> Phi Compensation</label>
+                    </div>
+                </div>
+
+                <div id="cotton-compute-results" class="cotton-results" style="display:none;">
+                    <h3>Compute Approach Results</h3>
+                    <table class="compact-table">
+                        <tr><td>Arm Frame</td><td id="cotton-arm-xyz">--</td></tr>
+                        <tr><td>r</td><td id="cotton-r">--</td></tr>
+                        <tr><td>theta (J4)</td><td id="cotton-theta">--</td></tr>
+                        <tr><td>phi (J3)</td><td id="cotton-phi">--</td></tr>
+                        <tr><td>J3</td><td id="cotton-j3">--</td></tr>
+                        <tr><td>J4</td><td id="cotton-j4">--</td></tr>
+                        <tr><td>J5</td><td id="cotton-j5">--</td></tr>
+                        <tr><td>Reachable</td><td id="cotton-reachable">--</td></tr>
+                    </table>
+                </div>
+
+                <div id="cotton-pick-status" class="pick-status" style="display:none;">
+                    <span id="cotton-pick-status-text">Idle</span>
+                </div>
+
+                <!-- Multi-cotton table -->
+                <div id="cotton-table-container" class="cotton-table-container" style="display:none;">
+                    <h3>Spawned Cottons</h3>
+                    <table class="cotton-table compact-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Cam X</th>
+                                <th>Cam Y</th>
+                                <th>Cam Z</th>
+                                <th>J3</th>
+                                <th>J4</th>
+                                <th>J5</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cotton-table-body"></tbody>
+                    </table>
+                    <div class="cotton-table-actions">
+                        <button id="cotton-remove-all-btn" class="btn btn-danger">Remove All</button>
+                        <button id="cotton-pick-all-btn" class="btn btn-success">Pick All</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ──────── COTTON POSITION SEQUENCE ──────── -->
+            <section class="section cam-seq-section">
+                <h2>🌿 Cotton Position Sequence</h2>
+                <p class="cam-seq-desc">
+                    Enter camera-frame coordinates. Joint values are computed via polar
+                    decomposition using the TF transform
+                    <code>camera_link → arm_yanthra_link</code>.
+                    Out-of-range rows are highlighted red and block execution.
+                </p>
+                <!-- Status + Arm selector -->
+                <div class="seq-control-row">
+                    <span id="cam-seq-tf-status" class="cam-seq-tf-not-ready">TF not ready</span>
+                    <label>Arm:
+                        <select id="cam-seq-arm-select">
+                            <option value="arm1">Arm 1</option>
+                            <option value="arm2">Arm 2</option>
+                            <option value="arm3">Arm 3</option>
+                        </select>
+                    </label>
+                    <label>Dwell (s):
+                        <input type="number" id="cam-seq-dwell" value="2.0" min="0.1" step="0.1"
+                               class="seq-input" style="width:5em">
+                    </label>
+                </div>
+                <!-- Sequence table -->
+                <table class="seq-table cam-seq-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>cam_x (m)</th>
+                            <th>cam_y (m)</th>
+                            <th>cam_z (m)</th>
+                            <th>Joints (computed)</th>
+                            <th>Marker</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cam-seq-table-body"></tbody>
+                </table>
+                <!-- Table + marker buttons -->
+                <div class="seq-table-actions">
+                    <button id="cam-seq-add-btn" class="btn btn-small btn-secondary">+ Add Position</button>
+                    <button id="cam-seq-place-btn" class="btn btn-small btn-secondary">📍 Place Markers</button>
+                    <button id="cam-seq-clear-btn" class="btn btn-small btn-secondary">🗑 Clear Markers</button>
+                </div>
+                <!-- Run controls -->
+                <div class="seq-run-buttons">
+                    <button id="cam-seq-run-btn" class="btn btn-primary">▶ Run Sequence</button>
+                    <button id="cam-seq-stop-btn" class="btn btn-danger" disabled>⏹ Stop</button>
+                </div>
+            </section>
+
             <!-- ──────── ARM COSINE TEST ──────── -->
             <section class="section arm-test-section">
                 <h2>🧪 Arm Cosine Test</h2>

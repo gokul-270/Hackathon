@@ -658,11 +658,12 @@ class ArmSimBridge(Node):
         Returns:
             (ax, ay, az): point in yanthra_link frame
         """
-        # Step 1: Camera to yanthra using fixed transform (rotation only matters here)
-        T_yanthra_to_cam = self._tf_origin(
+        # Step 1: Camera to yanthra using fixed URDF joint transform.
+        # The URDF origin describes yanthra→camera; applying it directly
+        # (NOT inverted) reproduces the real arm's C++ tf2 pipeline.
+        T_cam_to_arm = self._tf_origin(
             (0.016845, 0.100461, -0.077129), (1.5708, 0.785398, 0))
-        T_cam_to_yanthra = np.linalg.inv(T_yanthra_to_cam)
-        pt = T_cam_to_yanthra @ np.array([cam_x, cam_y, cam_z, 1.0])
+        pt = T_cam_to_arm @ np.array([cam_x, cam_y, cam_z, 1.0])
         
         # Step 2: Adjust for J4 scan offset
         # When J4 is at position j4_pos, the detected Y coordinate in yanthra_link frame

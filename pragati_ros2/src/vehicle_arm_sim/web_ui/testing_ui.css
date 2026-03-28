@@ -723,3 +723,255 @@ input[type="range"]::-moz-range-thumb {
     }
     .joystick-zone { width: 200px; height: 200px; }
 }
+
+/* =============================================================================
+   Cotton Position Sequence
+   ============================================================================= */
+
+/* Section card */
+.cam-seq-section {
+    border-left: 3px solid var(--accent);
+}
+
+.cam-seq-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* TF status badge */
+.cam-seq-tf-ready {
+    font-size: 12px;
+    font-weight: 600;
+    color: #2ecc71;
+    padding: 2px 8px;
+    border: 1px solid #2ecc71;
+    border-radius: 4px;
+}
+
+.cam-seq-tf-not-ready {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--warning);
+    padding: 2px 8px;
+    border: 1px solid var(--warning);
+    border-radius: 4px;
+}
+
+/* Table */
+.cam-seq-table {
+    font-size: 12px;
+}
+
+/* Out-of-range row highlight */
+.cam-seq-row.row-error {
+    background: rgba(231, 76, 60, 0.15);
+    outline: 1px solid var(--danger);
+}
+
+.cam-seq-row.row-error td {
+    color: var(--danger);
+}
+
+/* Active row during playback */
+.cam-seq-row.cam-seq-active {
+    background: rgba(79, 195, 247, 0.15);
+    outline: 1px solid var(--accent);
+}
+
+/* Joints cell (computed preview) */
+.cam-seq-joints {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* Marker name cell */
+.cam-seq-marker-name {
+    font-size: 11px;
+    color: var(--text-secondary);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Remove button */
+.cam-seq-remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 4px;
+}
+
+.cam-seq-remove-btn:hover {
+    opacity: 0.7;
+}
+
+/* =============================================================================
+   Cotton Placement Panel (ported from yanthra_move)
+   ============================================================================= */
+
+.btn-success {
+    background: var(--success);
+    color: #000;
+    border: none;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+}
+.btn-success:hover { background: #4caf50; }
+.btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#cotton-placement-section {
+    border-left: 3px solid var(--success);
+}
+
+#cotton-placement-section .cotton-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#cotton-placement-section .cotton-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+#cotton-placement-section .cotton-inputs label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+#cotton-placement-section .cotton-inputs input[type="number"] {
+    width: 5.5rem;
+    padding: 3px 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 11px;
+    text-align: center;
+}
+
+#cotton-placement-section .cotton-inputs input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+#cotton-placement-section .cotton-inputs select {
+    padding: 3px 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+#cotton-placement-section .cotton-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#cotton-placement-section .cotton-toggles {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.cotton-results {
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-input);
+}
+
+.cotton-results h3 {
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+}
+
+.cotton-results .compact-table {
+    width: 100%;
+    font-size: 0.85rem;
+    border-collapse: collapse;
+}
+
+.cotton-results .compact-table td {
+    padding: 2px 6px;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.3);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+}
+
+.cotton-results .compact-table td:first-child {
+    font-weight: bold;
+    width: 30%;
+    color: var(--text-secondary);
+    font-family: -apple-system, sans-serif;
+}
+
+.pick-status {
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.pick-status.picking {
+    background: rgba(255, 167, 38, 0.15);
+    color: var(--warning);
+}
+
+.pick-status.done {
+    background: rgba(102, 187, 106, 0.15);
+    color: var(--success);
+}
+
+/* Multi-cotton table */
+.cotton-table-container {
+    margin-top: 12px;
+}
+.cotton-table-container h3 {
+    margin: 0 0 6px 0;
+    font-size: 0.95rem;
+}
+.cotton-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.cotton-table th,
+.cotton-table td {
+    padding: 4px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.cotton-table th {
+    font-weight: 600;
+    color: var(--text-secondary, #aaa);
+}
+.cotton-table .status-spawned {
+    color: var(--accent, #4fc3f7);
+}
+.cotton-table .status-picked {
+    color: var(--success, #66bb6a);
+}
+.cotton-table-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}

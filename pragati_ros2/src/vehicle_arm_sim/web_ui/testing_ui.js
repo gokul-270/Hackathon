@@ -42,6 +42,35 @@
     var seqRunning = false;
     var seqAborted = false;
 
+    // Cotton position sequence state
+    var camSeqRunning = false;
+    var camSeqAborted = false;
+    var tfReady       = false;
+    var tfMatrix      = null;   // 4×4 camera_link → arm_yanthra_link transform
+
+    // Cotton sequence — named constants
+    var CAM_SEQ_TF_FRAME_FIXED  = 'camera_link';
+    var CAM_SEQ_TF_FRAME_ARM    = 'arm_yanthra_link';
+    var CAM_SEQ_J5_OFFSET       = 0.320;   // m — simulation pick-path offset
+    var CAM_SEQ_J3_MIN          = -0.9;    // rad
+    var CAM_SEQ_J3_MAX          =  0.0;    // rad
+    var CAM_SEQ_J4_MIN          = -0.250;  // m
+    var CAM_SEQ_J4_MAX          =  0.350;  // m
+    var CAM_SEQ_J5_MIN          =  0.0;    // m
+    var CAM_SEQ_J5_MAX          =  0.450;  // m
+
+    // Phi compensation constants
+    var PHI_ZONE1_MAX_DEG = 50.5;
+    var PHI_ZONE2_MAX_DEG = 60.0;
+    var PHI_ZONE1_OFFSET  = 0.014;
+    var PHI_ZONE2_OFFSET  = 0.0;
+    var PHI_ZONE3_OFFSET  = -0.014;
+    var PHI_L5_SCALE      = 0.5;
+    var PHI_JOINT5_MAX    = 0.450;
+
+    // Running row counter for cam sequence rows
+    var camSeqRowCounter = 0;
+
     // =========================================================================
     // State
     // =========================================================================
@@ -199,6 +228,9 @@
         odomSub.subscribe(onOdom);
 
         log('ROS2 topics set up (' + (2 + armTopicNames.length) + ' publishers, 2 subscribers)');
+
+        // Set up TF subscriber for cotton sequence
+        setupTfSubscriber();
     }
 
     // =========================================================================
@@ -1048,6 +1080,695 @@
     }
 
     // =========================================================================
+    // Cotton Position Sequence — cam-coord → joint conversion
+    // =========================================================================
+
+    /**
+     * camToJoint(tf4x4, cam_x, cam_y, cam_z)
+     *
+     * Converts a camera-frame point to arm joint commands using polar decomposition.
+     *
+     * @param {object} tf4x4  - Object with method apply(x,y,z) → {x,y,z} in arm frame
+     * @param {number} cam_x
+     * @param {number} cam_y
+     * @param {number} cam_z
+     * @returns {{ valid: boolean, j3?: number, j4?: number, j5?: number }}
+     */
+    function camToJoint(tf4x4, cam_x, cam_y, cam_z) {
+        var arm = tf4x4.apply(cam_x, cam_y, cam_z);
+        var ax = arm.x, ay = arm.y, az = arm.z;
+
+        var r  = Math.sqrt(ax * ax + az * az);
+        var j3 = (r > 1e-9) ? Math.asin(az / r) : 0.0;
+        var j4 = ay;
+        var j5 = r - CAM_SEQ_J5_OFFSET;
+
+        if (j3 < CAM_SEQ_J3_MIN || j3 > CAM_SEQ_J3_MAX ||
+            j4 < CAM_SEQ_J4_MIN || j4 > CAM_SEQ_J4_MAX ||
+            j5 < CAM_SEQ_J5_MIN || j5 > CAM_SEQ_J5_MAX) {
+            return { valid: false };
+        }
+        return { valid: true, j3: j3, j4: j4, j5: j5 };
+    }
+
+    /**
+     * Phi-compensation: adjust j3 based on phi zone and j5 extension.
+     * Zones: phi_deg <= 50.5 → +offset, 50.5..60 → 0, > 60 → −offset.
+     */
+    function phiCompensation(j3, j5) {
+        var phiDeg = Math.abs(j3 * 180.0 / Math.PI);
+        var baseOffset;
+        if (phiDeg <= PHI_ZONE1_MAX_DEG) {
+            baseOffset = PHI_ZONE1_OFFSET;
+        } else if (phiDeg <= PHI_ZONE2_MAX_DEG) {
+            baseOffset = PHI_ZONE2_OFFSET;
+        } else {
+            baseOffset = PHI_ZONE3_OFFSET;
+        }
+        var l5Norm = Math.max(0.0, j5) / PHI_JOINT5_MAX;
+        var l5Scale = 1.0 + PHI_L5_SCALE * l5Norm;
+        var compRot = baseOffset * l5Scale;
+        var compRad = compRot * 2.0 * Math.PI;
+        return j3 + compRad;
+    }
+
+    /**
+     * Build a 4×4 apply() adapter from a ROSLIB transform message.
+     * The transform carries translation + quaternion rotation.
+     * We only need R·v (the rotation part) for the arm-frame decomposition.
+     */
+    function makeTfAdapter(tMsg) {
+        // tMsg.transform: { translation: {x,y,z}, rotation: {x,y,z,w} }
+        var t = tMsg.transform.translation;
+        var q = tMsg.transform.rotation;
+        // Quaternion → rotation matrix
+        var qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+        // Row 0
+        var r00 = 1 - 2*(qy*qy + qz*qz);
+        var r01 = 2*(qx*qy - qw*qz);
+        var r02 = 2*(qx*qz + qw*qy);
+        // Row 1
+        var r10 = 2*(qx*qy + qw*qz);
+        var r11 = 1 - 2*(qx*qx + qz*qz);
+        var r12 = 2*(qy*qz - qw*qx);
+        // Row 2
+        var r20 = 2*(qx*qz - qw*qy);
+        var r21 = 2*(qy*qz + qw*qx);
+        var r22 = 1 - 2*(qx*qx + qy*qy);
+        return {
+            apply: function (x, y, z) {
+                return {
+                    x: r00*x + r01*y + r02*z + t.x,
+                    y: r10*x + r11*y + r12*z + t.y,
+                    z: r20*x + r21*y + r22*z + t.z,
+                };
+            }
+        };
+    }
+
+    function setupTfSubscriber() {
+        if (!ros) return;
+        var tfStaticSub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/tf_static',
+            messageType: 'tf2_msgs/msg/TFMessage',
+        });
+        tfStaticSub.subscribe(function (msg) {
+            if (!msg.transforms) return;
+            for (var i = 0; i < msg.transforms.length; i++) {
+                var t = msg.transforms[i];
+                if (t.child_frame_id === CAM_SEQ_TF_FRAME_ARM &&
+                    t.header.frame_id === CAM_SEQ_TF_FRAME_FIXED) {
+                    tfMatrix = makeTfAdapter(t);
+                    if (!tfReady) {
+                        tfReady = true;
+                        log('TF ready: ' + CAM_SEQ_TF_FRAME_FIXED + ' → ' + CAM_SEQ_TF_FRAME_ARM, 'success');
+                        updateCamSeqTfStatus(true);
+                    }
+                    break;
+                }
+            }
+        });
+    }
+
+    // Pre-computed camera_link -> arm_yanthra_link transform.
+    // Based on URDF: camera_joint parent=arm_yanthra_link, child=camera_link
+    // origin xyz=(0.016845, 0.100461, -0.077129) rpy=(1.5708, 0.785398, 0)
+    // We compute the INVERSE of this transform for camToJoint.
+    function initCameraToArmTransform() {
+        var tx = 0.016845, ty = 0.100461, tz = -0.077129;
+        var roll = 1.5708, pitch = 0.785398, yaw = 0.0;
+
+        var cr = Math.cos(roll), sr = Math.sin(roll);
+        var cp = Math.cos(pitch), sp = Math.sin(pitch);
+        var cy = Math.cos(yaw), sy = Math.sin(yaw);
+
+        // Forward rotation (yanthra -> camera)
+        var r00 = cy*cp, r01 = cy*sp*sr - sy*cr, r02 = cy*sp*cr + sy*sr;
+        var r10 = sy*cp, r11 = sy*sp*sr + cy*cr, r12 = sy*sp*cr - cy*sr;
+        var r20 = -sp,   r21 = cp*sr,             r22 = cp*cr;
+
+        // Inverse: R^T and -R^T * t
+        var inv_tx = -(r00*tx + r10*ty + r20*tz);
+        var inv_ty = -(r01*tx + r11*ty + r21*tz);
+        var inv_tz = -(r02*tx + r12*ty + r22*tz);
+
+        tfMatrix = {
+            apply: function(x, y, z) {
+                return {
+                    x: r00*x + r10*y + r20*z + inv_tx,
+                    y: r01*x + r11*y + r21*z + inv_ty,
+                    z: r02*x + r12*y + r22*z + inv_tz,
+                };
+            }
+        };
+        tfReady = true;
+    }
+
+    function updateCamSeqTfStatus(ready) {
+        var el = document.getElementById('cam-seq-tf-status');
+        if (!el) return;
+        el.textContent = ready ? 'TF ready' : 'TF not ready';
+        el.className   = ready ? 'cam-seq-tf-ready' : 'cam-seq-tf-not-ready';
+    }
+
+    // =========================================================================
+    // Cotton Position Sequence — UI handlers
+    // =========================================================================
+
+    function camSeqAddRow(cam_x, cam_y, cam_z) {
+        cam_x = (cam_x !== undefined) ? cam_x : 0;
+        cam_y = (cam_y !== undefined) ? cam_y : 0;
+        cam_z = (cam_z !== undefined) ? cam_z : 0;
+
+        var tbody   = document.getElementById('cam-seq-table-body');
+        var rowIdx  = ++camSeqRowCounter;
+        var tr      = document.createElement('tr');
+        tr.id       = 'cam-seq-row-' + rowIdx;
+        tr.className = 'cam-seq-row';
+
+        tr.innerHTML =
+            '<td class="cam-seq-row-num">' + (tbody.children.length + 1) + '</td>' +
+            '<td><input type="number" class="cam-seq-input" data-col="cam_x"' +
+                ' value="' + cam_x.toFixed(3) + '" step="0.01"></td>' +
+            '<td><input type="number" class="cam-seq-input" data-col="cam_y"' +
+                ' value="' + cam_y.toFixed(3) + '" step="0.01"></td>' +
+            '<td><input type="number" class="cam-seq-input" data-col="cam_z"' +
+                ' value="' + cam_z.toFixed(3) + '" step="0.01"></td>' +
+            '<td class="cam-seq-joints" id="cam-seq-joints-' + rowIdx + '">—</td>' +
+            '<td class="cam-seq-marker-name" id="cam-seq-marker-' + rowIdx + '">—</td>' +
+            '<td id="cam-seq-status-' + rowIdx + '">—</td>' +
+            '<td><button class="cam-seq-remove-btn" title="Remove row">✕</button></td>';
+
+        tr.querySelector('.cam-seq-remove-btn').addEventListener('click', function () {
+            tr.parentNode.removeChild(tr);
+            camSeqRenumber();
+        });
+
+        tr.querySelectorAll('.cam-seq-input').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+                camSeqValidateRow(tr);
+            });
+        });
+
+        tbody.appendChild(tr);
+        camSeqValidateRow(tr);
+    }
+
+    function camSeqRenumber() {
+        document.querySelectorAll('#cam-seq-table-body tr').forEach(function (tr, i) {
+            var numCell = tr.querySelector('.cam-seq-row-num');
+            if (numCell) numCell.textContent = i + 1;
+        });
+    }
+
+    function camSeqValidateRow(tr) {
+        var cam_x = parseFloat(tr.querySelector('[data-col="cam_x"]').value) || 0;
+        var cam_y = parseFloat(tr.querySelector('[data-col="cam_y"]').value) || 0;
+        var cam_z = parseFloat(tr.querySelector('[data-col="cam_z"]').value) || 0;
+
+        var rowIdx = tr.id.replace('cam-seq-row-', '');
+        var jointsCell = document.getElementById('cam-seq-joints-' + rowIdx);
+
+        if (!tfReady || !tfMatrix) {
+            tr.classList.remove('row-error');
+            if (jointsCell) jointsCell.textContent = '—';
+            return null;
+        }
+
+        var result = camToJoint(tfMatrix, cam_x, cam_y, cam_z);
+        if (!result.valid) {
+            tr.classList.add('row-error');
+            if (jointsCell) jointsCell.textContent = 'OUT OF RANGE';
+        } else {
+            tr.classList.remove('row-error');
+            if (jointsCell) {
+                jointsCell.textContent =
+                    'J3=' + result.j3.toFixed(3) +
+                    ' J4=' + result.j4.toFixed(3) +
+                    ' J5=' + result.j5.toFixed(3);
+            }
+        }
+        return result;
+    }
+
+    // =========================================================================
+    // Cotton Placement (ported from yanthra_move)
+    // =========================================================================
+
+    function setupCottonPlacement() {
+        var spawnBtn     = document.getElementById('cotton-spawn-btn');
+        var removeBtn    = document.getElementById('cotton-remove-btn');
+        var computeBtn   = document.getElementById('cotton-compute-btn');
+        var pickBtn      = document.getElementById('cotton-pick-btn');
+        var removeAllBtn = document.getElementById('cotton-remove-all-btn');
+        var pickAllBtn   = document.getElementById('cotton-pick-all-btn');
+
+        if (spawnBtn)     spawnBtn.addEventListener('click', cottonSpawn);
+        if (removeBtn)    removeBtn.addEventListener('click', cottonRemove);
+        if (computeBtn)   computeBtn.addEventListener('click', cottonCompute);
+        if (pickBtn)      pickBtn.addEventListener('click', cottonPick);
+        if (removeAllBtn) removeAllBtn.addEventListener('click', cottonRemoveAll);
+        if (pickAllBtn)   pickAllBtn.addEventListener('click', cottonPickAll);
+    }
+
+    function getCottonParams() {
+        return {
+            cam_x: parseFloat(document.getElementById('cotton-cam-x').value) || 0,
+            cam_y: parseFloat(document.getElementById('cotton-cam-y').value) || 0,
+            cam_z: parseFloat(document.getElementById('cotton-cam-z').value) || 0,
+            arm:   document.getElementById('cotton-arm-select').value || 'arm1',
+            j4_pos: parseFloat(document.getElementById('cotton-j4-pos').value) || 0,
+            enable_j4_compensation: document.getElementById('cotton-j4-comp').checked,
+            enable_phi_compensation: document.getElementById('cotton-phi-comp').checked,
+        };
+    }
+
+    function cottonSpawn() {
+        var params = getCottonParams();
+        log('Spawning cotton at cam(' + params.cam_x + ', ' + params.cam_y + ', ' + params.cam_z + ')...');
+        fetch('/api/cotton/spawn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cam_x: params.cam_x, cam_y: params.cam_y, cam_z: params.cam_z,
+                arm: params.arm, j4_pos: params.j4_pos,
+            }),
+        })
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, status: r.status, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                var reason = resp.data.detail || 'Unknown error';
+                log('Cotton spawn failed: ' + reason, 'error');
+                return;
+            }
+            var d = resp.data;
+            log('Cotton spawned at world(' + d.world_x.toFixed(3) + ', ' +
+                d.world_y.toFixed(3) + ', ' + d.world_z.toFixed(3) + ')', 'success');
+            refreshCottonTable();
+        })
+        .catch(function (e) { log('Cotton spawn error: ' + e, 'error'); });
+    }
+
+    function cottonRemove() {
+        fetch('/api/cotton/remove', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function () {
+            log('Cotton removed', 'success');
+            refreshCottonTable();
+        })
+        .catch(function (e) { log('Cotton remove error: ' + e, 'error'); });
+    }
+
+    function refreshCottonTable() {
+        fetch('/api/cotton/list')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            var container = document.getElementById('cotton-table-container');
+            var tbody = document.getElementById('cotton-table-body');
+            if (!container || !tbody) return;
+
+            tbody.innerHTML = '';
+            var cottons = d.cottons || [];
+
+            if (cottons.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            cottons.forEach(function (c) {
+                var jv = c.joint_values || {};
+                var j3 = jv.j3 != null ? jv.j3.toFixed(3) : '—';
+                var j4 = jv.j4 != null ? jv.j4.toFixed(3) : '—';
+                var j5 = jv.j5 != null ? jv.j5.toFixed(3) : '—';
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + c.name + '</td>' +
+                    '<td>' + c.cam_x.toFixed(3) + '</td>' +
+                    '<td>' + c.cam_y.toFixed(3) + '</td>' +
+                    '<td>' + c.cam_z.toFixed(3) + '</td>' +
+                    '<td>' + j3 + '</td>' +
+                    '<td>' + j4 + '</td>' +
+                    '<td>' + j5 + '</td>' +
+                    '<td class="status-' + c.status + '">' + c.status + '</td>';
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(function () { /* ignore refresh errors */ });
+    }
+
+    function cottonRemoveAll() {
+        fetch('/api/cotton/remove-all', { method: 'POST' })
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                log('Remove all failed: ' + resp.data.detail, 'error');
+                return;
+            }
+            log('Removed ' + resp.data.removed + ' cotton(s)', 'success');
+            refreshCottonTable();
+        })
+        .catch(function (e) { log('Remove all error: ' + e, 'error'); });
+    }
+
+    function cottonPickAll() {
+        var params = getCottonParams();
+        var pickAllBtn = document.getElementById('cotton-pick-all-btn');
+        var removeAllBtn = document.getElementById('cotton-remove-all-btn');
+        var statusDiv = document.getElementById('cotton-pick-status');
+        var statusText = document.getElementById('cotton-pick-status-text');
+
+        if (pickAllBtn) pickAllBtn.disabled = true;
+        if (removeAllBtn) removeAllBtn.disabled = true;
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'pick-status picking';
+        statusText.textContent = 'Picking all...';
+
+        log('Starting pick-all sequence on ' + params.arm + '...');
+        fetch('/api/cotton/pick-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                arm: params.arm,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                log('Pick-all error: ' + resp.data.detail, 'error');
+                if (pickAllBtn) pickAllBtn.disabled = false;
+                if (removeAllBtn) removeAllBtn.disabled = false;
+                statusDiv.className = 'pick-status';
+                statusText.textContent = 'Error';
+                return;
+            }
+            if (resp.data.status === 'nothing_to_pick') {
+                log('No cottons to pick', 'warn');
+                if (pickAllBtn) pickAllBtn.disabled = false;
+                if (removeAllBtn) removeAllBtn.disabled = false;
+                statusDiv.style.display = 'none';
+                return;
+            }
+            log('Pick-all started: ' + resp.data.total + ' cotton(s)', 'success');
+            pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText);
+        })
+        .catch(function (e) {
+            log('Pick-all error: ' + e, 'error');
+            if (pickAllBtn) pickAllBtn.disabled = false;
+            if (removeAllBtn) removeAllBtn.disabled = false;
+            statusDiv.className = 'pick-status';
+            statusText.textContent = 'Error';
+        });
+    }
+
+    var _pickAllPollInterval = null;
+
+    function pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText) {
+        if (_pickAllPollInterval) {
+            clearInterval(_pickAllPollInterval);
+            _pickAllPollInterval = null;
+        }
+        _pickAllPollInterval = setInterval(function () {
+            fetch('/api/cotton/pick/status')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.progress) {
+                    statusText.textContent = 'Picking ' + d.progress.current +
+                        '/' + d.progress.total + ' (' + (d.current || '') + ')';
+                }
+                if (!d.in_progress) {
+                    clearInterval(_pickAllPollInterval);
+                    _pickAllPollInterval = null;
+                    if (pickAllBtn) pickAllBtn.disabled = false;
+                    if (removeAllBtn) removeAllBtn.disabled = false;
+                    statusDiv.className = 'pick-status done';
+                    statusText.textContent = 'Done';
+                    log('Pick-all sequence complete', 'success');
+                    refreshCottonTable();
+                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+                }
+            })
+            .catch(function () { /* ignore poll errors */ });
+        }, 500);
+    }
+
+    function cottonCompute() {
+        var params = getCottonParams();
+        fetch('/api/cotton/compute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cam_x: params.cam_x, cam_y: params.cam_y, cam_z: params.cam_z,
+                arm: params.arm, j4_pos: params.j4_pos,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            var panel = document.getElementById('cotton-compute-results');
+            panel.style.display = 'block';
+            document.getElementById('cotton-arm-xyz').textContent =
+                '(' + d.arm_x.toFixed(4) + ', ' + d.arm_y.toFixed(4) + ', ' + d.arm_z.toFixed(4) + ')';
+            document.getElementById('cotton-r').textContent = d.r.toFixed(4) + ' m';
+            document.getElementById('cotton-theta').textContent = d.theta.toFixed(4) + ' m';
+            document.getElementById('cotton-phi').textContent =
+                d.phi.toFixed(4) + ' rad (' + (d.phi * 180 / Math.PI).toFixed(1) + ' deg)';
+            document.getElementById('cotton-j3').textContent = d.j3.toFixed(4) + ' rad';
+            document.getElementById('cotton-j4').textContent = d.j4.toFixed(4) + ' m';
+            document.getElementById('cotton-j5').textContent = d.j5.toFixed(4) + ' m';
+            document.getElementById('cotton-reachable').textContent = d.reachable ? 'YES' : 'NO';
+            document.getElementById('cotton-reachable').style.color = d.reachable ? '#5cb85c' : '#d9534f';
+            log('Compute approach: r=' + d.r.toFixed(3) + ' reachable=' + d.reachable,
+                d.reachable ? 'success' : 'warn');
+        })
+        .catch(function (e) { log('Compute error: ' + e, 'error'); });
+    }
+
+    function cottonPick() {
+        var params = getCottonParams();
+        var pickBtn = document.getElementById('cotton-pick-btn');
+        var statusDiv = document.getElementById('cotton-pick-status');
+        var statusText = document.getElementById('cotton-pick-status-text');
+
+        pickBtn.disabled = true;
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'pick-status picking';
+        statusText.textContent = 'Picking...';
+
+        log('Starting pick sequence on ' + params.arm + '...');
+        fetch('/api/cotton/pick', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                arm: params.arm,
+                enable_j4_compensation: params.enable_j4_compensation,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) {
+            if (!r.ok) { throw new Error('HTTP ' + r.status); }
+            return r.json();
+        })
+        .then(function (d) {
+            log('Pick started: J3=' + d.j3.toFixed(3) + ' J4=' + d.j4.toFixed(3) +
+                ' J5=' + d.j5.toFixed(3), 'success');
+            pollPickStatus(pickBtn, statusDiv, statusText);
+        })
+        .catch(function (e) {
+            log('Pick error: ' + e, 'error');
+            pickBtn.disabled = false;
+            statusDiv.className = 'pick-status';
+            statusText.textContent = 'Error';
+        });
+    }
+
+    var _pickPollInterval = null;
+
+    function pollPickStatus(pickBtn, statusDiv, statusText) {
+        // Clear any existing poll to prevent stacking (D2)
+        if (_pickPollInterval) {
+            clearInterval(_pickPollInterval);
+            _pickPollInterval = null;
+        }
+        _pickPollInterval = setInterval(function () {
+            fetch('/api/cotton/pick/status')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (!d.in_progress) {
+                    clearInterval(_pickPollInterval);
+                    _pickPollInterval = null;
+                    pickBtn.disabled = false;
+                    statusDiv.className = 'pick-status done';
+                    statusText.textContent = 'Done';
+                    log('Pick sequence complete', 'success');
+                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+                }
+            })
+            .catch(function () { /* ignore poll errors */ });
+        }, 500);
+    }
+
+    // =========================================================================
+    // Cotton Position Sequence
+    // =========================================================================
+
+    function setupCottonSequence() {
+        document.getElementById('cam-seq-add-btn').addEventListener('click', function () {
+            camSeqAddRow();
+        });
+
+        document.getElementById('cam-seq-run-btn').addEventListener('click', runCottonSequence);
+
+        document.getElementById('cam-seq-stop-btn').addEventListener('click', function () {
+            camSeqAborted = true;
+            log('Cotton sequence ABORTED by user', 'warn');
+        });
+
+        document.getElementById('cam-seq-place-btn').addEventListener('click', placeAllCamMarkers);
+        document.getElementById('cam-seq-clear-btn').addEventListener('click', clearCamMarkers);
+
+        // Live re-validation on input change
+        document.getElementById('cam-seq-table-body').addEventListener('input', function (e) {
+            var inp = e.target;
+            if (!inp.classList.contains('cam-seq-input')) return;
+            var tr = inp.closest('tr');
+            if (tr) camSeqValidateRow(tr);
+        });
+
+        updateCamSeqTfStatus(false);
+    }
+
+    function placeAllCamMarkers() {
+        var rows = document.querySelectorAll('#cam-seq-table-body tr.cam-seq-row');
+        if (rows.length === 0) {
+            log('No positions to place markers for', 'warn');
+            return;
+        }
+        rows.forEach(function (tr) {
+            var cam_x = parseFloat(tr.querySelector('[data-col="cam_x"]').value) || 0;
+            var cam_y = parseFloat(tr.querySelector('[data-col="cam_y"]').value) || 0;
+            var cam_z = parseFloat(tr.querySelector('[data-col="cam_z"]').value) || 0;
+            var rowIdx = tr.id.replace('cam-seq-row-', '');
+            var markerCell = document.getElementById('cam-seq-marker-' + rowIdx);
+
+            fetch('/api/cam_markers/place', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cam_x: cam_x, cam_y: cam_y, cam_z: cam_z }),
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.marker_name && markerCell) {
+                    markerCell.textContent = d.marker_name;
+                }
+                log('Marker placed: ' + d.marker_name, 'success');
+            })
+            .catch(function (e) {
+                log('Marker place error: ' + e, 'error');
+            });
+        });
+    }
+
+    function clearCamMarkers() {
+        fetch('/api/cam_markers/clear', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function () {
+            document.querySelectorAll('[id^="cam-seq-marker-"]').forEach(function (el) {
+                el.textContent = '—';
+            });
+            log('Cam markers cleared', 'success');
+        })
+        .catch(function (e) {
+            log('Marker clear error: ' + e, 'error');
+        });
+    }
+
+    async function runCottonSequence() {
+        if (camSeqRunning) return;
+
+        var rows = document.querySelectorAll('#cam-seq-table-body tr.cam-seq-row');
+        if (rows.length === 0) {
+            log('No positions in sequence', 'warn');
+            return;
+        }
+        if (!tfReady || !tfMatrix) {
+            log('TF not ready — cannot run Cotton sequence', 'error');
+            return;
+        }
+
+        // Validate all rows — bail if any are invalid
+        var valid = true;
+        rows.forEach(function (tr) {
+            var result = camSeqValidateRow(tr);
+            if (!result || !result.valid) { valid = false; }
+        });
+        if (!valid) {
+            log('Cotton sequence: one or more rows are out of range (highlighted in red)', 'error');
+            return;
+        }
+
+        var armKey = document.getElementById('cam-seq-arm-select')
+            ? document.getElementById('cam-seq-arm-select').value
+            : 'arm1';
+        var cfg = ARM_CONFIGS[armKey];
+        var dwellMs = parseFloat(document.getElementById('cam-seq-dwell')
+            ? document.getElementById('cam-seq-dwell').value
+            : 2) * 1000 || 2000;
+
+        camSeqRunning = true;
+        camSeqAborted = false;
+        document.getElementById('cam-seq-run-btn').disabled  = true;
+        document.getElementById('cam-seq-stop-btn').disabled = false;
+
+        log('=== Cotton Sequence START === (arm=' + armKey + ', rows=' + rows.length + ')');
+
+        for (var i = 0; i < rows.length; i++) {
+            if (camSeqAborted || estopActive) {
+                log('Cotton sequence halted');
+                break;
+            }
+            var tr     = rows[i];
+            var rowIdx = tr.id.replace('cam-seq-row-', '');
+            var cam_x  = parseFloat(tr.querySelector('[data-col="cam_x"]').value) || 0;
+            var cam_y  = parseFloat(tr.querySelector('[data-col="cam_y"]').value) || 0;
+            var cam_z  = parseFloat(tr.querySelector('[data-col="cam_z"]').value) || 0;
+            var result = camToJoint(tfMatrix, cam_x, cam_y, cam_z);
+
+            tr.classList.add('cam-seq-active');
+            var statusEl = document.getElementById('cam-seq-status-' + rowIdx);
+            if (statusEl) statusEl.textContent = '▶';
+
+            log('Cotton step ' + (i + 1) + ': J3=' + result.j3.toFixed(3) +
+                ' J4=' + result.j4.toFixed(3) + ' J5=' + result.j5.toFixed(3));
+
+            publishArmJoint(cfg.j3, result.j3);
+            publishArmJoint(cfg.j4, result.j4);
+            publishArmJoint(cfg.j5, result.j5);
+            updateSliderUI(armKey, result.j3, result.j4, result.j5);
+
+            await sleep(dwellMs);
+
+            tr.classList.remove('cam-seq-active');
+            if (statusEl) statusEl.textContent = camSeqAborted ? '🛑' : '✅';
+
+            if (camSeqAborted || estopActive) break;
+        }
+
+        camSeqRunning = false;
+        document.getElementById('cam-seq-run-btn').disabled  = false;
+        document.getElementById('cam-seq-stop-btn').disabled = true;
+        log('=== Cotton Sequence ' + (camSeqAborted ? 'ABORTED' : 'COMPLETE') + ' ===');
+    }
+
+    // =========================================================================
     // Initialisation
     // =========================================================================
     function init() {
@@ -1082,6 +1803,16 @@
         seqAddRow();
         seqAddRow();
         seqAddRow();
+
+        // Pre-computed camera-to-arm transform (no ROS2 TF needed)
+        initCameraToArmTransform();
+        updateCamSeqTfStatus(true);
+
+        // Cotton placement (ported from yanthra_move)
+        setupCottonPlacement();
+
+        // Cotton position sequence
+        setupCottonSequence();
 
         // Load data
         loadUrdfList();

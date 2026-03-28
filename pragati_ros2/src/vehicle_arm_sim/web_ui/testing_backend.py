@@ -16,12 +16,17 @@ Vehicle & arm CONTROL is handled externally via:
 
 import argparse
 import logging
+import math
 import os
 import re
 import subprocess
 import sys
 import threading
+import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
+
+import time
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -29,6 +34,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from starlette.responses import Response
 from pydantic import BaseModel
+
+from fk_chain import (
+    camera_to_world_fk,
+    camera_to_arm,
+    polar_decompose,
+    phi_compensation,
+    ARM_CONFIGS,
+    J3_MIN,
+    J3_MAX,
+    J4_MIN,
+    J4_MAX,
+    J5_MIN,
+    J5_MAX,
+)
 
 # ---------------------------------------------------------------------------
 # ROS2 import (optional — degrades gracefully)
@@ -535,6 +554,685 @@ JOINT_LIMITS = {
 @app.get("/api/joint_limits")
 async def get_joint_limits():
     return {"limits": JOINT_LIMITS}
+
+
+# ---------------------------------------------------------------------------
+# Camera → World FK
+# ---------------------------------------------------------------------------
+
+
+def cam_to_world(cam_x: float, cam_y: float, cam_z: float) -> tuple[float, float, float]:
+    """Convert camera-frame point to Gazebo world frame via FK.
+
+    Uses Arm 1 with J3=0, J4=0 as default (camera is on Arm 1).
+    """
+    return camera_to_world_fk(
+        cam_x, cam_y, cam_z,
+        j3=0.0, j4=0.0,
+        arm_config=ARM_CONFIGS['arm1'],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Cam marker state
+# ---------------------------------------------------------------------------
+_spawned_marker_names: list[str] = []
+
+# SDF template for a 0.05 m radius sphere (visual only, no collision)
+_MARKER_SDF_TEMPLATE = (
+    "<sdf version='1.7'>"
+    "<model name='{name}'>"
+    "<static>true</static>"
+    "<link name='link'>"
+    "<visual name='visual'>"
+    "<geometry><sphere><radius>0.05</radius></sphere></geometry>"
+    "<material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>"
+    "</visual>"
+    "</link>"
+    "</model>"
+    "</sdf>"
+)
+
+
+class CamMarkerPlaceRequest(BaseModel):
+    cam_x: float
+    cam_y: float
+    cam_z: float
+
+
+@app.post("/api/cam_markers/place")
+async def cam_markers_place(req: CamMarkerPlaceRequest):
+    """Convert camera-frame coords to world frame and spawn a sphere marker in Gazebo."""
+    wx, wy, wz = cam_to_world(req.cam_x, req.cam_y, req.cam_z)
+    marker_name = f"cam_marker_{uuid.uuid4().hex[:8]}"
+
+    sdf_str = _MARKER_SDF_TEMPLATE.format(name=marker_name)
+    escaped = (
+        sdf_str.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+    )
+    world_name = _detect_gz_world_name()
+    spawn_req = (
+        f'sdf: "{escaped}" '
+        f'name: "{marker_name}" '
+        f"pose: {{ position: {{ x: {wx}, y: {wy}, z: {wz} }} }}"
+    )
+    subprocess.run(
+        [
+            "gz", "service",
+            "-s", f"/world/{world_name}/create",
+            "--reqtype", "gz.msgs.EntityFactory",
+            "--reptype", "gz.msgs.Boolean",
+            "--timeout", "5000",
+            "--req", spawn_req,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    _spawned_marker_names.append(marker_name)
+    return {"status": "ok", "marker_name": marker_name, "world_pos": {"x": wx, "y": wy, "z": wz}}
+
+
+@app.post("/api/cam_markers/clear")
+async def cam_markers_clear():
+    """Remove all previously spawned cam marker spheres from Gazebo."""
+    world_name = _detect_gz_world_name()
+    for name in list(_spawned_marker_names):
+        subprocess.run(
+            [
+                "gz", "service",
+                "-s", f"/world/{world_name}/remove",
+                "--reqtype", "gz.msgs.Entity",
+                "--reptype", "gz.msgs.Boolean",
+                "--timeout", "3000",
+                "--req", f'name: "{name}" type: MODEL',
+            ],
+            capture_output=True,
+            timeout=10,
+        )
+    _spawned_marker_names.clear()
+    return {"status": "ok", "cleared": 0}
+
+
+# ---------------------------------------------------------------------------
+# Cotton picking state
+# ---------------------------------------------------------------------------
+@dataclass
+class CottonState:
+    """State for a single cotton ball in the collection."""
+    name: str
+    cam_x: float
+    cam_y: float
+    cam_z: float
+    arm: str
+    j4_pos: float = 0.0
+    arm_coords: tuple | None = None  # (ax, ay, az) from camera_to_arm
+    joint_values: dict | None = None  # {"j3": ..., "j4": ..., "j5": ...}
+    status: str = "spawned"  # spawned | picked
+
+
+_cottons: dict[str, CottonState] = {}  # name → CottonState
+_cotton_counter: int = 0
+_cotton_spawned: bool = False
+_cotton_name: str = ""
+_last_cotton_cam: tuple | None = None
+_last_cotton_arm: str | None = None
+_last_cotton_j4: float = 0.0
+_pick_in_progress: bool = False
+_pick_status: str = "idle"
+_pick_current: str | None = None  # Name of cotton currently being picked
+_pick_progress: dict | None = None  # {"current": N, "total": M} during pick-all
+_pick_lock = threading.Lock()  # Protects _pick_in_progress and _pick_status
+
+# SDF template for cotton ball (white sphere, 0.04m radius)
+_COTTON_SDF_TEMPLATE = (
+    "<sdf version='1.7'>"
+    "<model name='{name}'>"
+    "<static>true</static>"
+    "<link name='link'>"
+    "<visual name='visual'>"
+    "<geometry><sphere><radius>0.04</radius></sphere></geometry>"
+    "<material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>"
+    "</visual>"
+    "</link>"
+    "</model>"
+    "</sdf>"
+)
+
+
+def _gz_spawn_model(name: str, sdf: str, x: float, y: float, z: float, world: str):
+    """Spawn an SDF model in Gazebo via gz service create."""
+    escaped = (
+        sdf.replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\n", "\\n")
+    )
+    spawn_req = (
+        f'sdf: "{escaped}" '
+        f'name: "{name}" '
+        f"pose: {{ position: {{ x: {x}, y: {y}, z: {z} }} }}"
+    )
+    subprocess.run(
+        [
+            "gz", "service",
+            "-s", f"/world/{world}/create",
+            "--reqtype", "gz.msgs.EntityFactory",
+            "--reptype", "gz.msgs.Boolean",
+            "--timeout", "5000",
+            "--req", spawn_req,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+
+
+def _gz_remove_model(name: str, world: str):
+    """Remove a model from Gazebo via gz service remove."""
+    subprocess.run(
+        [
+            "gz", "service",
+            "-s", f"/world/{world}/remove",
+            "--reqtype", "gz.msgs.Entity",
+            "--reptype", "gz.msgs.Boolean",
+            "--timeout", "3000",
+            "--req", f'name: "{name}" type: MODEL',
+        ],
+        capture_output=True,
+        timeout=10,
+    )
+
+
+class CottonSpawnRequest(BaseModel):
+    cam_x: float
+    cam_y: float
+    cam_z: float
+    arm: str = "arm1"
+    j4_pos: float = 0.0
+
+
+@app.post("/api/cotton/spawn")
+def cotton_spawn(req: CottonSpawnRequest):
+    """Spawn a cotton ball in Gazebo at the camera-frame position."""
+    global _cotton_spawned, _cotton_name, _last_cotton_cam
+    global _last_cotton_arm, _last_cotton_j4, _cotton_counter
+
+    arm_config = ARM_CONFIGS.get(req.arm)
+    if arm_config is None:
+        raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
+
+    # --- Reachability check ---
+    ax, ay, az = camera_to_arm(req.cam_x, req.cam_y, req.cam_z, j4_pos=req.j4_pos)
+    result = polar_decompose(ax, ay, az)
+    if not result["reachable"]:
+        # Build specific reason
+        reasons = []
+        j3_val = result["j3"]
+        j5_val = result["j5"]
+        j4_val = result["j4"]
+        if j3_val < J3_MIN or j3_val > J3_MAX:
+            reasons.append(
+                f"J3={j3_val:.3f} rad out of range [{J3_MIN}, {J3_MAX}]"
+            )
+        if j4_val < J4_MIN or j4_val > J4_MAX:
+            reasons.append(
+                f"J4={j4_val:.3f} m out of range [{J4_MIN}, {J4_MAX}]"
+            )
+        if j5_val < J5_MIN or j5_val > J5_MAX:
+            reasons.append(
+                f"J5={j5_val:.3f} m out of range [{J5_MIN}, {J5_MAX}]"
+            )
+        if result["r"] <= 0.1:
+            reasons.append(f"r={result['r']:.3f} m too small (min 0.1)")
+        reason_str = "; ".join(reasons) if reasons else "target unreachable"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unreachable: {reason_str}",
+        )
+
+    # Convert camera coords to world frame via FK
+    wx, wy, wz = camera_to_world_fk(
+        req.cam_x, req.cam_y, req.cam_z,
+        j3=0.0, j4=req.j4_pos,
+        arm_config=arm_config,
+    )
+
+    # Spawn new cotton with sequential name
+    _cotton_name = f"cotton_{_cotton_counter}"
+    _cotton_counter += 1
+    sdf = _COTTON_SDF_TEMPLATE.format(name=_cotton_name)
+    world_name = _detect_gz_world_name()
+    _gz_spawn_model(_cotton_name, sdf, wx, wy, wz, world_name)
+
+    # Add to collection
+    _cottons[_cotton_name] = CottonState(
+        name=_cotton_name,
+        cam_x=req.cam_x,
+        cam_y=req.cam_y,
+        cam_z=req.cam_z,
+        arm=req.arm,
+        j4_pos=req.j4_pos,
+        arm_coords=(ax, ay, az),
+        joint_values={
+            "j3": result["j3"],
+            "j4": result["j4"],
+            "j5": result["j5"],
+        },
+    )
+
+    _cotton_spawned = True
+    _last_cotton_cam = (req.cam_x, req.cam_y, req.cam_z)
+    _last_cotton_arm = req.arm
+    _last_cotton_j4 = req.j4_pos
+
+    return {
+        "status": "ok",
+        "cotton_name": _cotton_name,
+        "world_x": wx,
+        "world_y": wy,
+        "world_z": wz,
+    }
+
+
+@app.post("/api/cotton/remove")
+def cotton_remove():
+    """Remove the last spawned cotton ball from Gazebo."""
+    global _cotton_spawned, _last_cotton_cam
+    if _cotton_spawned:
+        world_name = _detect_gz_world_name()
+        _gz_remove_model(_cotton_name, world_name)
+        # Remove from collection
+        _cottons.pop(_cotton_name, None)
+    _cotton_spawned = False
+    _last_cotton_cam = None
+    return {"status": "ok"}
+
+
+@app.get("/api/cotton/list")
+def cotton_list():
+    """Return all cottons in the collection with coords and status."""
+    return {
+        "cottons": [
+            {
+                "name": c.name,
+                "cam_x": c.cam_x,
+                "cam_y": c.cam_y,
+                "cam_z": c.cam_z,
+                "arm": c.arm,
+                "j4_pos": c.j4_pos,
+                "arm_coords": list(c.arm_coords) if c.arm_coords else None,
+                "joint_values": c.joint_values,
+                "status": c.status,
+            }
+            for c in _cottons.values()
+        ]
+    }
+
+
+@app.post("/api/cotton/remove-all")
+def cotton_remove_all():
+    """Remove all cottons from Gazebo and clear the collection."""
+    global _cotton_spawned, _last_cotton_cam
+
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot remove cottons during pick sequence",
+            )
+
+    count = len(_cottons)
+    if count > 0:
+        world_name = _detect_gz_world_name()
+        for name in list(_cottons.keys()):
+            _gz_remove_model(name, world_name)
+        _cottons.clear()
+
+    _cotton_spawned = False
+    _last_cotton_cam = None
+    return {"status": "ok", "removed": count}
+
+
+class CottonComputeRequest(BaseModel):
+    cam_x: float = 0.328
+    cam_y: float = -0.011
+    cam_z: float = -0.003
+    arm: str = "arm1"
+    j4_pos: float = 0.0
+    enable_phi_compensation: bool = False
+
+
+@app.post("/api/cotton/compute")
+def cotton_compute(req: CottonComputeRequest):
+    """Compute polar decomposition and joint commands for cotton pick."""
+    arm_config = ARM_CONFIGS.get(req.arm)
+    if arm_config is None:
+        raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
+
+    ax, ay, az = camera_to_arm(req.cam_x, req.cam_y, req.cam_z, j4_pos=req.j4_pos)
+    result = polar_decompose(ax, ay, az)
+
+    j3 = result["j3"]
+    j5 = result["j5"]
+
+    if req.enable_phi_compensation:
+        j3 = phi_compensation(j3, j5)
+        result["reachable"] = (
+            J3_MIN <= j3 <= J3_MAX
+            and J4_MIN <= result["j4"] <= J4_MAX
+            and J5_MIN <= j5 <= J5_MAX
+            and result["r"] > 0.1
+        )
+
+    j3_clamped = max(J3_MIN, min(J3_MAX, j3))
+    j4_clamped = max(J4_MIN, min(J4_MAX, result["j4"]))
+    j5_clamped = max(J5_MIN, min(J5_MAX, j5))
+
+    return {
+        "arm_x": ax,
+        "arm_y": ay,
+        "arm_z": az,
+        "r": result["r"],
+        "theta": result["theta"],
+        "phi": result["phi"],
+        "j3": j3_clamped,
+        "j4": j4_clamped,
+        "j5": j5_clamped,
+        "j3_raw": j3,
+        "j4_raw": result["j4"],
+        "j5_raw": j5,
+        "reachable": result["reachable"],
+        "phi_compensated": req.enable_phi_compensation,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Cotton pick endpoint + animation
+# ---------------------------------------------------------------------------
+class CottonPickRequest(BaseModel):
+    arm: str = "arm1"
+    enable_phi_compensation: bool = False
+
+
+def _publish_joint_gz(topic: str, value: float):
+    """Publish a joint command via gz topic (non-blocking)."""
+    subprocess.Popen(
+        [
+            "gz", "topic",
+            "-t", topic,
+            "-m", "gz.msgs.Double",
+            "-p", f"data: {value}",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _execute_pick_sequence(
+    j3: float, j4: float, j5: float, arm_config: dict
+):
+    """Run the pick animation in a background thread.
+
+    Steps (times relative to start):
+      0.0s  J4 lateral move
+      0.8s  J3 tilt
+      1.6s  J5 extend
+      3.0s  J5 retract
+      3.8s  J3 home
+      4.6s  J4 home
+      5.5s  done
+    """
+    global _pick_in_progress, _pick_status, _cotton_spawned
+    j3_topic = arm_config["j3_topic"]
+    j4_topic = arm_config["j4_topic"]
+    j5_topic = arm_config["j5_topic"]
+
+    try:
+        with _pick_lock:
+            _pick_status = "j4_lateral"
+        _publish_joint_gz(j4_topic, j4)
+        time.sleep(0.8)
+
+        with _pick_lock:
+            _pick_status = "j3_tilt"
+        _publish_joint_gz(j3_topic, j3)
+        time.sleep(0.8)
+
+        with _pick_lock:
+            _pick_status = "j5_extend"
+        _publish_joint_gz(j5_topic, j5)
+        time.sleep(1.4)
+
+        with _pick_lock:
+            _pick_status = "j5_retract"
+        _publish_joint_gz(j5_topic, 0.0)
+        time.sleep(0.8)
+
+        with _pick_lock:
+            _pick_status = "j3_home"
+        _publish_joint_gz(j3_topic, 0.0)
+        time.sleep(0.8)
+
+        with _pick_lock:
+            _pick_status = "j4_home"
+        _publish_joint_gz(j4_topic, 0.0)
+        time.sleep(0.9)
+
+        # Remove cotton from Gazebo
+        if _cotton_spawned:
+            world_name = _detect_gz_world_name()
+            _gz_remove_model(_cotton_name, world_name)
+            _cotton_spawned = False
+
+        with _pick_lock:
+            _pick_status = "done"
+    except Exception as e:
+        logger.error("Pick sequence error: %s", e)
+        with _pick_lock:
+            _pick_status = f"error: {e}"
+    finally:
+        with _pick_lock:
+            _pick_in_progress = False
+
+
+@app.post("/api/cotton/pick")
+def cotton_pick(req: CottonPickRequest):
+    """Start the pick animation sequence for the last spawned cotton."""
+    global _pick_in_progress, _pick_status
+
+    if _last_cotton_cam is None:
+        raise HTTPException(status_code=400, detail="No cotton spawned yet")
+
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(status_code=409, detail="Pick already in progress")
+        _pick_in_progress = True
+        _pick_status = "starting"
+
+    arm_config = ARM_CONFIGS.get(req.arm)
+    if arm_config is None:
+        with _pick_lock:
+            _pick_in_progress = False
+            _pick_status = "idle"
+        raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
+
+    # Compute joint values
+    cam_x, cam_y, cam_z = _last_cotton_cam
+    j4_pos = _last_cotton_j4
+    ax, ay, az = camera_to_arm(cam_x, cam_y, cam_z, j4_pos=j4_pos)
+    result = polar_decompose(ax, ay, az)
+
+    j3 = result["j3"]
+    j5 = result["j5"]
+
+    if req.enable_phi_compensation:
+        j3 = phi_compensation(j3, j5)
+
+    j3_clamped = max(J3_MIN, min(J3_MAX, j3))
+    j4_clamped = max(J4_MIN, min(J4_MAX, result["j4"]))
+    j5_clamped = max(J5_MIN, min(J5_MAX, j5))
+
+    # Launch animation in background thread
+    t = threading.Thread(
+        target=_execute_pick_sequence,
+        args=(j3_clamped, j4_clamped, j5_clamped, arm_config),
+        daemon=True,
+    )
+    t.start()
+
+    return {
+        "status": "picking",
+        "j3": j3_clamped,
+        "j4": j4_clamped,
+        "j5": j5_clamped,
+        "reachable": result["reachable"],
+    }
+
+
+@app.get("/api/cotton/pick/status")
+def cotton_pick_status():
+    """Get the current status of the pick animation."""
+    with _pick_lock:
+        resp = {
+            "in_progress": _pick_in_progress,
+            "status": _pick_status,
+        }
+        if _pick_current is not None:
+            resp["current"] = _pick_current
+        if _pick_progress is not None:
+            resp["progress"] = _pick_progress
+        return resp
+
+
+# ---------------------------------------------------------------------------
+# Cotton pick-all endpoint + sequential animation
+# ---------------------------------------------------------------------------
+class CottonPickAllRequest(BaseModel):
+    arm: str = "arm1"
+    enable_phi_compensation: bool = False
+
+
+def _execute_pick_all_sequence(
+    to_pick: list[CottonState], arm_config: dict, enable_phi_comp: bool
+):
+    """Run pick animation for multiple cottons sequentially in a background thread."""
+    global _pick_in_progress, _pick_status, _pick_current, _pick_progress
+    global _cotton_spawned
+
+    total = len(to_pick)
+    try:
+        for idx, cotton in enumerate(to_pick):
+            with _pick_lock:
+                _pick_current = cotton.name
+                _pick_progress = {"current": idx + 1, "total": total}
+
+            # Compute joint values for this cotton
+            ax, ay, az = camera_to_arm(
+                cotton.cam_x, cotton.cam_y, cotton.cam_z, j4_pos=cotton.j4_pos
+            )
+            result = polar_decompose(ax, ay, az)
+            j3 = result["j3"]
+            j5 = result["j5"]
+
+            if enable_phi_comp:
+                j3 = phi_compensation(j3, j5)
+
+            j3_c = max(J3_MIN, min(J3_MAX, j3))
+            j4_c = max(J4_MIN, min(J4_MAX, result["j4"]))
+            j5_c = max(J5_MIN, min(J5_MAX, j5))
+
+            j3_topic = arm_config["j3_topic"]
+            j4_topic = arm_config["j4_topic"]
+            j5_topic = arm_config["j5_topic"]
+
+            # Pick animation for this cotton
+            with _pick_lock:
+                _pick_status = "j4_lateral"
+            _publish_joint_gz(j4_topic, j4_c)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j3_tilt"
+            _publish_joint_gz(j3_topic, j3_c)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j5_extend"
+            _publish_joint_gz(j5_topic, j5_c)
+            time.sleep(1.4)
+
+            with _pick_lock:
+                _pick_status = "j5_retract"
+            _publish_joint_gz(j5_topic, 0.0)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j3_home"
+            _publish_joint_gz(j3_topic, 0.0)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j4_home"
+            _publish_joint_gz(j4_topic, 0.0)
+            time.sleep(0.9)
+
+            # Remove this cotton from Gazebo and mark as picked
+            try:
+                world_name = _detect_gz_world_name()
+                _gz_remove_model(cotton.name, world_name)
+            except Exception:
+                pass
+            cotton.status = "picked"
+
+        with _pick_lock:
+            _pick_status = "done"
+    except Exception as e:
+        logger.error("Pick-all sequence error: %s", e)
+        with _pick_lock:
+            _pick_status = f"error: {e}"
+    finally:
+        with _pick_lock:
+            _pick_in_progress = False
+            _pick_current = None
+            _pick_progress = None
+
+
+@app.post("/api/cotton/pick-all")
+def cotton_pick_all(req: CottonPickAllRequest):
+    """Pick all spawned (unpicked) cottons sequentially."""
+    global _pick_in_progress, _pick_status, _pick_current, _pick_progress
+
+    arm_config = ARM_CONFIGS.get(req.arm)
+    if arm_config is None:
+        raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
+
+    # Filter to unpicked cottons in spawn order
+    to_pick = [c for c in _cottons.values() if c.status == "spawned"]
+
+    if not to_pick:
+        return {"status": "nothing_to_pick", "total": 0}
+
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(status_code=409, detail="Pick already in progress")
+        _pick_in_progress = True
+        _pick_status = "starting"
+        _pick_current = to_pick[0].name
+        _pick_progress = {"current": 1, "total": len(to_pick)}
+
+    t = threading.Thread(
+        target=_execute_pick_all_sequence,
+        args=(to_pick, arm_config, req.enable_phi_compensation),
+        daemon=True,
+    )
+    t.start()
+
+    return {
+        "status": "picking",
+        "total": len(to_pick),
+    }
 
 
 # ---------------------------------------------------------------------------
