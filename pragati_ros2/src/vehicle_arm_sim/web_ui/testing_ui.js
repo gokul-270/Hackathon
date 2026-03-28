@@ -1278,6 +1278,152 @@
         return result;
     }
 
+    // =========================================================================
+    // Cotton Placement (ported from yanthra_move)
+    // =========================================================================
+
+    function setupCottonPlacement() {
+        var spawnBtn   = document.getElementById('cotton-spawn-btn');
+        var removeBtn  = document.getElementById('cotton-remove-btn');
+        var computeBtn = document.getElementById('cotton-compute-btn');
+        var pickBtn    = document.getElementById('cotton-pick-btn');
+
+        if (spawnBtn)   spawnBtn.addEventListener('click', cottonSpawn);
+        if (removeBtn)  removeBtn.addEventListener('click', cottonRemove);
+        if (computeBtn) computeBtn.addEventListener('click', cottonCompute);
+        if (pickBtn)    pickBtn.addEventListener('click', cottonPick);
+    }
+
+    function getCottonParams() {
+        return {
+            cam_x: parseFloat(document.getElementById('cotton-cam-x').value) || 0,
+            cam_y: parseFloat(document.getElementById('cotton-cam-y').value) || 0,
+            cam_z: parseFloat(document.getElementById('cotton-cam-z').value) || 0,
+            arm:   document.getElementById('cotton-arm-select').value || 'arm1',
+            j4_pos: parseFloat(document.getElementById('cotton-j4-pos').value) || 0,
+            enable_j4_compensation: document.getElementById('cotton-j4-comp').checked,
+            enable_phi_compensation: document.getElementById('cotton-phi-comp').checked,
+        };
+    }
+
+    function cottonSpawn() {
+        var params = getCottonParams();
+        log('Spawning cotton at cam(' + params.cam_x + ', ' + params.cam_y + ', ' + params.cam_z + ')...');
+        fetch('/api/cotton/spawn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cam_x: params.cam_x, cam_y: params.cam_y, cam_z: params.cam_z,
+                arm: params.arm, j4_pos: params.j4_pos,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            log('Cotton spawned at world(' + d.world_x.toFixed(3) + ', ' +
+                d.world_y.toFixed(3) + ', ' + d.world_z.toFixed(3) + ')', 'success');
+        })
+        .catch(function (e) { log('Cotton spawn error: ' + e, 'error'); });
+    }
+
+    function cottonRemove() {
+        fetch('/api/cotton/remove', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function () { log('Cotton removed', 'success'); })
+        .catch(function (e) { log('Cotton remove error: ' + e, 'error'); });
+    }
+
+    function cottonCompute() {
+        var params = getCottonParams();
+        fetch('/api/cotton/compute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cam_x: params.cam_x, cam_y: params.cam_y, cam_z: params.cam_z,
+                arm: params.arm, j4_pos: params.j4_pos,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            var panel = document.getElementById('cotton-compute-results');
+            panel.style.display = 'block';
+            document.getElementById('cotton-arm-xyz').textContent =
+                '(' + d.arm_x.toFixed(4) + ', ' + d.arm_y.toFixed(4) + ', ' + d.arm_z.toFixed(4) + ')';
+            document.getElementById('cotton-r').textContent = d.r.toFixed(4) + ' m';
+            document.getElementById('cotton-theta').textContent = d.theta.toFixed(4) + ' m';
+            document.getElementById('cotton-phi').textContent =
+                d.phi.toFixed(4) + ' rad (' + (d.phi * 180 / Math.PI).toFixed(1) + ' deg)';
+            document.getElementById('cotton-j3').textContent = d.j3.toFixed(4) + ' rad';
+            document.getElementById('cotton-j4').textContent = d.j4.toFixed(4) + ' m';
+            document.getElementById('cotton-j5').textContent = d.j5.toFixed(4) + ' m';
+            document.getElementById('cotton-reachable').textContent = d.reachable ? 'YES' : 'NO';
+            document.getElementById('cotton-reachable').style.color = d.reachable ? '#5cb85c' : '#d9534f';
+            log('Compute approach: r=' + d.r.toFixed(3) + ' reachable=' + d.reachable,
+                d.reachable ? 'success' : 'warn');
+        })
+        .catch(function (e) { log('Compute error: ' + e, 'error'); });
+    }
+
+    function cottonPick() {
+        var params = getCottonParams();
+        var pickBtn = document.getElementById('cotton-pick-btn');
+        var statusDiv = document.getElementById('cotton-pick-status');
+        var statusText = document.getElementById('cotton-pick-status-text');
+
+        pickBtn.disabled = true;
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'pick-status picking';
+        statusText.textContent = 'Picking...';
+
+        log('Starting pick sequence on ' + params.arm + '...');
+        fetch('/api/cotton/pick', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                arm: params.arm,
+                enable_j4_compensation: params.enable_j4_compensation,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) {
+            if (!r.ok) { throw new Error('HTTP ' + r.status); }
+            return r.json();
+        })
+        .then(function (d) {
+            log('Pick started: J3=' + d.j3.toFixed(3) + ' J4=' + d.j4.toFixed(3) +
+                ' J5=' + d.j5.toFixed(3), 'success');
+            pollPickStatus(pickBtn, statusDiv, statusText);
+        })
+        .catch(function (e) {
+            log('Pick error: ' + e, 'error');
+            pickBtn.disabled = false;
+            statusDiv.className = 'pick-status';
+            statusText.textContent = 'Error';
+        });
+    }
+
+    function pollPickStatus(pickBtn, statusDiv, statusText) {
+        var interval = setInterval(function () {
+            fetch('/api/cotton/pick/status')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (!d.in_progress) {
+                    clearInterval(interval);
+                    pickBtn.disabled = false;
+                    statusDiv.className = 'pick-status done';
+                    statusText.textContent = 'Done';
+                    log('Pick sequence complete', 'success');
+                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+                }
+            })
+            .catch(function () { /* ignore poll errors */ });
+        }, 500);
+    }
+
+    // =========================================================================
+    // Cotton Position Sequence
+    // =========================================================================
+
     function setupCottonSequence() {
         document.getElementById('cam-seq-add-btn').addEventListener('click', function () {
             camSeqAddRow();
@@ -1461,6 +1607,9 @@
         seqAddRow();
         seqAddRow();
         seqAddRow();
+
+        // Cotton placement (ported from yanthra_move)
+        setupCottonPlacement();
 
         // Cotton position sequence
         setupCottonSequence();
