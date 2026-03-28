@@ -23,15 +23,13 @@ import subprocess
 import sys
 import threading
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-
-import time
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from starlette.responses import Response
 from pydantic import BaseModel
 
@@ -672,17 +670,6 @@ class CottonState:
     joint_values: dict | None = None  # {"j3": ..., "j4": ..., "j5": ...}
     status: str = "spawned"  # spawned | picked
 
-
-@dataclass
-class ArmPickState:
-    """Per-arm pick state so multiple arms can pick simultaneously."""
-    lock: threading.Lock = field(default_factory=threading.Lock)
-    in_progress: bool = False
-    status: str = "idle"
-    current: str | None = None
-    progress: tuple[int, int] = (0, 0)
-
-
 _cottons: dict[str, CottonState] = {}  # name → CottonState
 _cotton_counter: int = 0
 _cotton_spawned: bool = False
@@ -690,14 +677,6 @@ _cotton_name: str = ""
 _last_cotton_cam: tuple | None = None
 _last_cotton_arm: str | None = None
 _last_cotton_j4: float = 0.0
-_pick_in_progress: bool = False
-_pick_status: str = "idle"
-_pick_current: str | None = None  # Name of cotton currently being picked
-_pick_progress: dict | None = None  # {"current": N, "total": M} during pick-all
-_pick_lock = threading.Lock()  # Protects _pick_in_progress and _pick_status
-_arm_pick_state: dict[str, ArmPickState] = {
-    name: ArmPickState() for name in ARM_CONFIGS
-}
 
 # SDF template for cotton ball (white sphere, 0.04m radius)
 _COTTON_SDF_TEMPLATE = (
@@ -889,15 +868,6 @@ def cotton_remove_all():
     """Remove all cottons from Gazebo and clear the collection."""
     global _cotton_spawned, _last_cotton_cam
 
-    with _pick_lock:
-        if any(
-            s.in_progress for s in _arm_pick_state.values()
-        ):
-            raise HTTPException(
-                status_code=400,
-                detail="Cannot remove cottons during pick sequence",
-            )
-
     count = len(_cottons)
     if count > 0:
         world_name = _detect_gz_world_name()
@@ -964,181 +934,25 @@ def cotton_compute(req: CottonComputeRequest):
 
 
 # ---------------------------------------------------------------------------
-# Cotton pick endpoint + animation
+# Cotton pick endpoints (compute-only — frontend drives animation)
 # ---------------------------------------------------------------------------
 class CottonPickRequest(BaseModel):
     arm: str = "arm1"
     enable_phi_compensation: bool = False
 
 
-# Retry constants for _publish_joint_gz
-PUBLISH_MAX_RETRIES = 3
-PUBLISH_RETRY_DELAY = 0.2   # seconds between retries
-PUBLISH_TIMEOUT = 2          # seconds to wait for gz topic process
-
-# Per-arm locks to serialise concurrent gz topic commands on the same arm
-_arm_joint_locks: dict[str, threading.Lock] = {
-    arm: threading.Lock() for arm in ARM_CONFIGS
-}
-
-
-def _publish_joint_gz(
-    topic: str, value: float, arm_name: str = "arm1"
-) -> bool:
-    """Publish a joint command via gz topic CLI with retry.
-
-    Retries up to PUBLISH_MAX_RETRIES times. Each attempt uses
-    ``Popen.wait(timeout=PUBLISH_TIMEOUT)`` and checks the return code.
-    A per-arm lock prevents concurrent gz commands on the same arm while
-    allowing different arms to publish simultaneously.
-
-    Returns True on first success, False after all retries exhausted.
-    """
-    lock = _arm_joint_locks.get(arm_name)
-    if lock is None:
-        logger.error(
-            f"Unknown arm '{arm_name}' — no lock available, skipping publish"
-        )
-        return False
-
-    with lock:
-        for attempt in range(1, PUBLISH_MAX_RETRIES + 1):
-            try:
-                proc = subprocess.Popen(
-                    [
-                        "gz", "topic",
-                        "-t", topic,
-                        "-m", "gz.msgs.Double",
-                        "-p", f"data: {value}",
-                    ],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                proc.wait(timeout=PUBLISH_TIMEOUT)
-                if proc.returncode == 0:
-                    logger.debug(
-                        f"gz topic published {topic}={value} (attempt {attempt})"
-                    )
-                    return True
-                # Non-zero return code — log warning and retry
-                logger.warning(
-                    f"gz topic failed {topic}={value} attempt {attempt}/{PUBLISH_MAX_RETRIES} "
-                    f"(rc={proc.returncode})"
-                )
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                logger.warning(
-                    f"gz topic timeout {topic}={value} attempt {attempt}/{PUBLISH_MAX_RETRIES}"
-                )
-
-            if attempt < PUBLISH_MAX_RETRIES:
-                time.sleep(PUBLISH_RETRY_DELAY)
-
-        logger.error(
-            f"gz topic FAILED after {PUBLISH_MAX_RETRIES} attempts: {topic}={value}"
-        )
-        return False
-
-
-def _execute_pick_sequence(
-    j3: float, j4: float, j5: float, arm_config: dict,
-    arm_name: str = "arm1", cotton_name: str | None = None,
-):
-    """Run the pick animation in a background thread.
-
-    Steps (times relative to start):
-      0.0s  J4 lateral move
-      0.8s  J3 tilt
-      1.6s  J5 extend
-      3.0s  J5 retract
-      3.8s  J3 home
-      4.6s  J4 home
-      5.5s  done
-    """
-    arm_state = _arm_pick_state[arm_name]
-    j3_topic = arm_config["j3_topic"]
-    j4_topic = arm_config["j4_topic"]
-    j5_topic = arm_config["j5_topic"]
-
-    try:
-        with arm_state.lock:
-            arm_state.status = "j4_lateral"
-        _publish_joint_gz(j4_topic, j4, arm_name=arm_name)
-        time.sleep(0.8)
-
-        with arm_state.lock:
-            arm_state.status = "j3_tilt"
-        _publish_joint_gz(j3_topic, j3, arm_name=arm_name)
-        time.sleep(0.8)
-
-        with arm_state.lock:
-            arm_state.status = "j5_extend"
-        _publish_joint_gz(j5_topic, j5, arm_name=arm_name)
-        time.sleep(1.4)
-
-        with arm_state.lock:
-            arm_state.status = "j5_retract"
-        _publish_joint_gz(j5_topic, 0.0, arm_name=arm_name)
-        time.sleep(0.8)
-
-        with arm_state.lock:
-            arm_state.status = "j3_home"
-        _publish_joint_gz(j3_topic, 0.0, arm_name=arm_name)
-        time.sleep(0.8)
-
-        with arm_state.lock:
-            arm_state.status = "j4_home"
-        _publish_joint_gz(j4_topic, 0.0, arm_name=arm_name)
-        time.sleep(0.9)
-
-        # Mark cotton as picked (model persists in Gazebo)
-        pick_name = cotton_name or _cotton_name
-        if pick_name in _cottons:
-            _cottons[pick_name].status = "picked"
-
-        with arm_state.lock:
-            arm_state.status = "done"
-    except Exception as e:
-        logger.error("Pick sequence error: %s", e)
-        with arm_state.lock:
-            arm_state.status = f"error: {e}"
-    finally:
-        with arm_state.lock:
-            arm_state.in_progress = False
-
-
 @app.post("/api/cotton/pick")
 def cotton_pick(req: CottonPickRequest):
-    """Start the pick animation sequence for the last spawned cotton."""
+    """Compute joint values for picking the last spawned cotton. No animation."""
 
     if _last_cotton_cam is None:
         raise HTTPException(status_code=400, detail="No cotton spawned yet")
 
-    # Determine arm from the cotton being picked (use last spawned cotton's arm)
     arm_name = _last_cotton_arm or req.arm
-    arm_state = _arm_pick_state.get(arm_name)
-    if arm_state is None:
-        raise HTTPException(status_code=400, detail=f"Unknown arm: {arm_name}")
-
-    with arm_state.lock:
-        if arm_state.in_progress:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Pick already in progress on {arm_name}",
-            )
-        arm_state.in_progress = True
-        arm_state.status = "starting"
-        arm_state.current = _cotton_name
-
     arm_config = ARM_CONFIGS.get(arm_name)
     if arm_config is None:
-        with arm_state.lock:
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
         raise HTTPException(status_code=400, detail=f"Unknown arm: {arm_name}")
 
-    # Compute joint values
     cam_x, cam_y, cam_z = _last_cotton_cam
     j4_pos = _last_cotton_j4
     ax, ay, az = camera_to_arm(cam_x, cam_y, cam_z, j4_pos=j4_pos)
@@ -1150,182 +964,95 @@ def cotton_pick(req: CottonPickRequest):
     if req.enable_phi_compensation:
         j3 = phi_compensation(j3, j5)
 
-    j3_clamped = max(J3_MIN, min(J3_MAX, j3))
-    j4_clamped = max(J4_MIN, min(J4_MAX, result["j4"]))
-    j5_clamped = max(J5_MIN, min(J5_MAX, j5))
+    j3_val = max(J3_MIN, min(J3_MAX, j3))
+    j4_val = max(J4_MIN, min(J4_MAX, result["j4"]))
+    j5_val = max(J5_MIN, min(J5_MAX, j5))
 
-    # Launch animation in background thread
-    t = threading.Thread(
-        target=_execute_pick_sequence,
-        args=(j3_clamped, j4_clamped, j5_clamped, arm_config),
-        kwargs={"arm_name": arm_name, "cotton_name": _cotton_name},
-        daemon=True,
-    )
-    t.start()
-
-    return {
-        "status": "picking",
-        "j3": j3_clamped,
-        "j4": j4_clamped,
-        "j5": j5_clamped,
-        "reachable": result["reachable"],
+    reachable = result["reachable"]
+    response = {
+        "status": "ready",
+        "j3": j3_val,
+        "j4": j4_val,
+        "j5": j5_val,
+        "arm": arm_name,
+        "cotton_name": _cotton_name,
+        "reachable": reachable,
     }
+    if not reachable:
+        response["reason"] = result.get("reason", "Target outside joint limits")
+    return response
 
 
-@app.get("/api/cotton/pick/status")
-def cotton_pick_status():
-    """Get the current status of the pick animation (per-arm)."""
-    arms = {}
-    for arm_name, arm_state in _arm_pick_state.items():
-        with arm_state.lock:
-            arms[arm_name] = {
-                "in_progress": arm_state.in_progress,
-                "status": arm_state.status,
-                "current": arm_state.current,
-                "progress": list(arm_state.progress),
-            }
-    return {"arms": arms}
-
-
-# ---------------------------------------------------------------------------
-# Cotton pick-all endpoint + sequential animation
-# ---------------------------------------------------------------------------
 class CottonPickAllRequest(BaseModel):
     arm: str = "arm1"
     enable_phi_compensation: bool = False
 
 
-def _execute_pick_all_sequence(
-    to_pick: list[CottonState], arm_config: dict, enable_phi_comp: bool,
-    arm_name: str = "arm1",
-):
-    """Run pick animation for multiple cottons sequentially in a background thread."""
-    global _cotton_spawned
-
-    arm_state = _arm_pick_state[arm_name]
-    total = len(to_pick)
-    try:
-        for idx, cotton in enumerate(to_pick):
-            with arm_state.lock:
-                arm_state.current = cotton.name
-                arm_state.progress = (idx + 1, total)
-
-            # Compute joint values for this cotton
-            ax, ay, az = camera_to_arm(
-                cotton.cam_x, cotton.cam_y, cotton.cam_z, j4_pos=cotton.j4_pos
-            )
-            result = polar_decompose(ax, ay, az)
-            j3 = result["j3"]
-            j5 = result["j5"]
-
-            if enable_phi_comp:
-                j3 = phi_compensation(j3, j5)
-
-            j3_c = max(J3_MIN, min(J3_MAX, j3))
-            j4_c = max(J4_MIN, min(J4_MAX, result["j4"]))
-            j5_c = max(J5_MIN, min(J5_MAX, j5))
-
-            j3_topic = arm_config["j3_topic"]
-            j4_topic = arm_config["j4_topic"]
-            j5_topic = arm_config["j5_topic"]
-
-            # Pick animation for this cotton
-            with arm_state.lock:
-                arm_state.status = "j4_lateral"
-            _publish_joint_gz(j4_topic, j4_c, arm_name=arm_name)
-            time.sleep(0.8)
-
-            with arm_state.lock:
-                arm_state.status = "j3_tilt"
-            _publish_joint_gz(j3_topic, j3_c, arm_name=arm_name)
-            time.sleep(0.8)
-
-            with arm_state.lock:
-                arm_state.status = "j5_extend"
-            _publish_joint_gz(j5_topic, j5_c, arm_name=arm_name)
-            time.sleep(1.4)
-
-            with arm_state.lock:
-                arm_state.status = "j5_retract"
-            _publish_joint_gz(j5_topic, 0.0, arm_name=arm_name)
-            time.sleep(0.8)
-
-            with arm_state.lock:
-                arm_state.status = "j3_home"
-            _publish_joint_gz(j3_topic, 0.0, arm_name=arm_name)
-            time.sleep(0.8)
-
-            with arm_state.lock:
-                arm_state.status = "j4_home"
-            _publish_joint_gz(j4_topic, 0.0, arm_name=arm_name)
-            time.sleep(0.9)
-
-            # Mark cotton as picked (model persists in Gazebo)
-            cotton.status = "picked"
-
-        with arm_state.lock:
-            arm_state.status = "done"
-    except Exception as e:
-        logger.error("Pick-all sequence error: %s", e)
-        with arm_state.lock:
-            arm_state.status = f"error: {e}"
-    finally:
-        with arm_state.lock:
-            arm_state.in_progress = False
-            arm_state.current = None
-            arm_state.progress = (0, 0)
-
-
 @app.post("/api/cotton/pick-all")
 def cotton_pick_all(req: CottonPickAllRequest):
-    """Pick all spawned (unpicked) cottons, grouped by arm with parallel threads."""
+    """Compute joint values for all spawned cottons, grouped by arm. No animation."""
 
-    # Filter to unpicked cottons in spawn order
     to_pick = [c for c in _cottons.values() if c.status == "spawned"]
 
     if not to_pick:
         return {"status": "nothing_to_pick", "total": 0}
 
-    # Group cottons by arm
-    arm_groups: dict[str, list[CottonState]] = {}
-    for cotton in to_pick:
-        arm_groups.setdefault(cotton.arm, []).append(cotton)
+    arms: dict[str, list] = {}
+    warnings: list[str] = []
 
-    # Set per-arm state and spawn one thread per arm group
-    started_arms = []
-    skipped_arms = []
-    for arm_name, arm_cottons in arm_groups.items():
+    for cotton in to_pick:
+        arm_name = cotton.arm
         arm_config = ARM_CONFIGS.get(arm_name)
         if arm_config is None:
+            warnings.append(f"{cotton.name}: unknown arm '{arm_name}'")
             continue
 
-        arm_state = _arm_pick_state[arm_name]
-        with arm_state.lock:
-            if arm_state.in_progress:
-                skipped_arms.append(arm_name)
-                continue
-            arm_state.in_progress = True
-            arm_state.status = "starting"
-            arm_state.current = arm_cottons[0].name
-            arm_state.progress = (1, len(arm_cottons))
+        ax, ay, az = camera_to_arm(cotton.cam_x, cotton.cam_y, cotton.cam_z,
+                                   j4_pos=cotton.j4_pos)
+        result = polar_decompose(ax, ay, az)
 
-        t = threading.Thread(
-            target=_execute_pick_all_sequence,
-            args=(arm_cottons, arm_config, req.enable_phi_compensation),
-            kwargs={"arm_name": arm_name},
-            daemon=True,
-        )
-        t.start()
-        started_arms.append(arm_name)
+        j3 = result["j3"]
+        j5 = result["j5"]
+        if req.enable_phi_compensation:
+            j3 = phi_compensation(j3, j5)
 
-    total_started = sum(len(arm_groups[a]) for a in started_arms)
+        j3_val = max(J3_MIN, min(J3_MAX, j3))
+        j4_val = max(J4_MIN, min(J4_MAX, result["j4"]))
+        j5_val = max(J5_MIN, min(J5_MAX, j5))
 
-    return {
-        "status": "picking" if started_arms else "nothing_to_pick",
-        "total": total_started,
-        "started_arms": started_arms,
-        "skipped_arms": skipped_arms,
-    }
+        if not result["reachable"]:
+            reason = result.get("reason", "outside joint limits")
+            warnings.append(f"{cotton.name}: unreachable ({reason})")
+            continue
+
+        arms.setdefault(arm_name, []).append({
+            "name": cotton.name,
+            "j3": j3_val,
+            "j4": j4_val,
+            "j5": j5_val,
+        })
+
+    if not arms:
+        response = {"status": "nothing_to_pick", "total": 0}
+    else:
+        response = {"status": "ready", "arms": arms}
+
+    if warnings:
+        response["warnings"] = warnings
+
+    return response
+
+
+@app.post("/api/cotton/{name}/mark-picked")
+def cotton_mark_picked(name: str):
+    """Mark a cotton as picked. Called by frontend after J5-extend animation step."""
+    if name not in _cottons:
+        return JSONResponse(status_code=404, content={"error": f"Cotton '{name}' not found"})
+    cotton = _cottons[name]
+    if cotton.status == "picked":
+        return JSONResponse(status_code=409, content={"error": f"Cotton '{name}' already picked"})
+    cotton.status = "picked"
+    return {"status": "ok"}
 
 
 # ---------------------------------------------------------------------------

@@ -32,7 +32,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 # Import the symbols under test — will ImportError until implementation exists
-from testing_backend import app, cam_to_world, _spawned_marker_names, _publish_joint_gz  # noqa: E402
+from testing_backend import app, cam_to_world, _spawned_marker_names  # noqa: E402
 
 
 @pytest.fixture()
@@ -255,133 +255,32 @@ class TestCottonCompute:
 # Cotton pick endpoint tests
 # ---------------------------------------------------------------------------
 class TestCottonPick:
-    def test_pick_returns_200_with_sequence_info(self, client):
-        """POST /api/cotton/pick returns 200 with computed joint values and status."""
+    def test_pick_returns_200_with_compute_only_response(self, client):
+        """POST /api/cotton/pick returns 200 with computed joint values and 'ready' status."""
         import testing_backend
         testing_backend._last_cotton_cam = (0.328, -0.011, -0.003)
         testing_backend._last_cotton_arm = "arm1"
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            resp = client.post(
-                "/api/cotton/pick",
-                json={"arm": "arm1", "enable_phi_compensation": False},
-            )
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1", "enable_phi_compensation": False},
+        )
         assert resp.status_code == 200
         body = resp.json()
         assert "j3" in body
         assert "j4" in body
         assert "j5" in body
-        assert body["status"] == "picking"
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
+        assert body["status"] == "ready"
 
     def test_pick_rejects_when_no_cotton_spawned(self, client):
         """POST /api/cotton/pick returns 400 when no cotton has been spawned."""
         import testing_backend
         testing_backend._last_cotton_cam = None
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
         resp = client.post(
             "/api/cotton/pick",
             json={"arm": "arm1"},
         )
         assert resp.status_code == 400
-
-    def test_pick_rejects_concurrent_pick(self, client):
-        """POST /api/cotton/pick returns 409 when pick is already in progress."""
-        import testing_backend
-        testing_backend._last_cotton_cam = (0.1, 0.0, 0.0)
-        testing_backend._last_cotton_arm = "arm1"
-        testing_backend._pick_in_progress = True
-        testing_backend._arm_pick_state["arm1"].in_progress = True
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            resp = client.post(
-                "/api/cotton/pick",
-                json={"arm": "arm1"},
-            )
-        assert resp.status_code == 409
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
-
-
-# ---------------------------------------------------------------------------
-# Pick status reliability tests (Group 1)
-# ---------------------------------------------------------------------------
-class TestPickStatusReliability:
-    def test_pick_status_resets_to_idle_between_picks(self, client):
-        """GET /api/cotton/pick/status returns 'idle' immediately after new pick starts."""
-        import testing_backend
-
-        # Simulate a completed previous pick
-        testing_backend._pick_status = "done"
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "done"
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._last_cotton_cam = (0.494, -0.001, 0.004)
-        testing_backend._last_cotton_arm = "arm1"
-        testing_backend._last_cotton_j4 = 0.0
-
-        # Start a new pick (mock the background thread so it doesn't run)
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm1"},
-                )
-        assert resp.status_code == 200
-
-        # Status should NOT be "done" from the previous pick
-        status_resp = client.get("/api/cotton/pick/status")
-        body = status_resp.json()
-        arm1_status = body["arms"]["arm1"]["status"]
-        assert arm1_status != "done", (
-            f"Status should be reset before new pick, got '{arm1_status}'"
-        )
-        assert arm1_status in ("idle", "starting")
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
-
-    def test_pick_status_thread_lock_consistency(self, client):
-        """Pick status endpoint returns consistent snapshot under lock."""
-        import testing_backend
-
-        testing_backend._pick_in_progress = True
-        testing_backend._pick_status = "j4_lateral"
-        testing_backend._arm_pick_state["arm1"].in_progress = True
-        testing_backend._arm_pick_state["arm1"].status = "j4_lateral"
-
-        resp = client.get("/api/cotton/pick/status")
-        body = resp.json()
-        arm1 = body["arms"]["arm1"]
-        # Both fields should be consistent — if in_progress is True,
-        # status should not be "idle" or "done"
-        assert arm1["in_progress"] is True
-        assert arm1["status"] == "j4_lateral"
-
-        # Now simulate done state
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "done"
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "done"
-
-        resp = client.get("/api/cotton/pick/status")
-        body = resp.json()
-        arm1 = body["arms"]["arm1"]
-        assert arm1["in_progress"] is False
-        assert arm1["status"] == "done"
-
-        # Cleanup
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
 
 
 # ---------------------------------------------------------------------------
@@ -438,9 +337,6 @@ class TestReachableTargetValidation:
         testing_backend._last_cotton_arm = "arm1"
         testing_backend._last_cotton_j4 = 0.0
         testing_backend._cotton_spawned = True
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
 
         # Remove it
         with mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
@@ -453,8 +349,6 @@ class TestReachableTargetValidation:
             json={"arm": "arm1"},
         )
         assert resp.status_code == 400
-        testing_backend._pick_in_progress = False
-        testing_backend._arm_pick_state["arm1"].in_progress = False
 
 
 # ---------------------------------------------------------------------------
@@ -471,14 +365,6 @@ class TestMultiCottonState:
         testing_backend._last_cotton_cam = None
         testing_backend._last_cotton_arm = None
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        # Reset per-arm pick state
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
         # Reset multi-cotton collection if it exists
         if hasattr(testing_backend, "_cottons"):
             testing_backend._cottons.clear()
@@ -581,26 +467,12 @@ class TestMultiCottonState:
         assert len(resp.json()["cottons"]) == 0
         self._reset_cotton_state()
 
-    def test_remove_all_blocked_during_pick(self, client):
-        """POST /api/cotton/remove-all returns 400 during active pick."""
-        import testing_backend
-        self._reset_cotton_state()
-        testing_backend._pick_in_progress = True
-        testing_backend._arm_pick_state["arm1"].in_progress = True
-
-        resp = client.post("/api/cotton/remove-all")
-        assert resp.status_code == 400
-        assert "pick" in resp.json()["detail"].lower()
-
-        testing_backend._pick_in_progress = False
-        self._reset_cotton_state()
-
 
 # ---------------------------------------------------------------------------
 # Sequential pick-all tests (Group 6)
 # ---------------------------------------------------------------------------
 class TestPickAll:
-    """Tests for POST /api/cotton/pick-all sequential picking."""
+    """Tests for POST /api/cotton/pick-all compute-only picking."""
 
     def _reset_cotton_state(self):
         """Reset all cotton globals to clean state."""
@@ -610,14 +482,6 @@ class TestPickAll:
         testing_backend._last_cotton_cam = None
         testing_backend._last_cotton_arm = None
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        # Reset per-arm pick state
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
         testing_backend._cottons.clear()
         testing_backend._cotton_counter = 0
 
@@ -638,23 +502,18 @@ class TestPickAll:
                     json={"cam_x": cx, "cam_y": cy, "cam_z": cz, "arm": "arm1"},
                 )
 
-    def test_pick_all_sequential_order(self, client):
-        """POST /api/cotton/pick-all picks cottons in spawn order."""
+    def test_pick_all_returns_ready_with_arm_groupings(self, client):
+        """POST /api/cotton/pick-all returns ready status with arm groupings."""
         self._reset_cotton_state()
         self._spawn_cottons(client, 2)
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model"), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post(
-                "/api/cotton/pick-all",
-                json={"arm": "arm1"},
-            )
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"arm": "arm1"},
+        )
         assert resp.status_code == 200
         body = resp.json()
-        assert body["status"] == "picking"
-        assert body["total"] == 2
+        assert body["status"] == "ready"
         self._reset_cotton_state()
 
     def test_pick_all_skips_picked_cottons(self, client):
@@ -666,18 +525,11 @@ class TestPickAll:
         # Manually mark first cotton as picked
         testing_backend._cottons["cotton_0"].status = "picked"
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model"), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post(
-                "/api/cotton/pick-all",
-                json={"arm": "arm1"},
-            )
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"arm": "arm1"},
+        )
         assert resp.status_code == 200
-        body = resp.json()
-        # Only 1 cotton should be picked (cotton_1), cotton_0 is skipped
-        assert body["total"] == 1
         self._reset_cotton_state()
 
     def test_pick_all_nothing_to_pick(self, client):
@@ -691,80 +543,6 @@ class TestPickAll:
         assert resp.status_code == 200
         assert resp.json()["status"] == "nothing_to_pick"
         self._reset_cotton_state()
-
-    def test_pick_status_progress_during_multi(self, client):
-        """GET /api/cotton/pick/status returns current and progress during pick-all."""
-        import testing_backend
-        self._reset_cotton_state()
-
-        # Simulate in-progress multi-pick state (per-arm)
-        testing_backend._pick_in_progress = True
-        testing_backend._pick_status = "j4_lateral"
-        testing_backend._pick_current = "cotton_1"
-        testing_backend._pick_progress = {"current": 2, "total": 3}
-        testing_backend._arm_pick_state["arm1"].in_progress = True
-        testing_backend._arm_pick_state["arm1"].status = "j4_lateral"
-        testing_backend._arm_pick_state["arm1"].current = "cotton_1"
-        testing_backend._arm_pick_state["arm1"].progress = (2, 3)
-
-        resp = client.get("/api/cotton/pick/status")
-        assert resp.status_code == 200
-        body = resp.json()
-        arm1 = body["arms"]["arm1"]
-        assert arm1["in_progress"] is True
-        assert arm1["current"] == "cotton_1"
-        assert arm1["progress"][0] == 2
-        assert arm1["progress"][1] == 3
-
-        # Cleanup
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        testing_backend._pick_current = None
-        testing_backend._pick_progress = None
-        self._reset_cotton_state()
-
-
-# ---------------------------------------------------------------------------
-# Verification fix: pick status idle reset
-# ---------------------------------------------------------------------------
-class TestPickStatusIdleReset:
-    """Pick status must reset between picks — no stale 'done' visible."""
-
-    def test_pick_status_not_stale_done_after_new_pick(self, client):
-        """POST /api/cotton/pick clears stale 'done' — poll returns 'starting' not 'done'."""
-        import testing_backend
-
-        # Simulate stale "done" from a previous pick
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "done"
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "done"
-        testing_backend._last_cotton_cam = (0.494, -0.001, 0.004)
-        testing_backend._last_cotton_arm = "arm1"
-        testing_backend._last_cotton_j4 = 0.0
-
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm1"},
-                )
-        assert resp.status_code == 200
-
-        # Poll status — must NOT see stale "done"
-        status_resp = client.get("/api/cotton/pick/status")
-        body = status_resp.json()
-        arm1_status = body["arms"]["arm1"]["status"]
-        assert arm1_status != "done", (
-            f"Stale 'done' visible after new pick — should be 'starting'"
-        )
-        assert arm1_status == "starting"
-        # Cleanup
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        testing_backend._arm_pick_state["arm1"].in_progress = False
-        testing_backend._arm_pick_state["arm1"].status = "idle"
 
 
 # ---------------------------------------------------------------------------
@@ -780,14 +558,6 @@ class TestCottonStateFields:
         testing_backend._last_cotton_cam = None
         testing_backend._last_cotton_arm = None
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        # Reset per-arm pick state
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
         testing_backend._cottons.clear()
         testing_backend._cotton_counter = 0
 
@@ -866,197 +636,6 @@ class TestCottonStateFields:
 
 
 # ---------------------------------------------------------------------------
-# Reliable joint publishing tests (Group 2)
-# ---------------------------------------------------------------------------
-class TestPublishJointGzRetry:
-    """Tests for retry-based _publish_joint_gz."""
-
-    def test_publish_returns_true_on_first_success(self):
-        """_publish_joint_gz returns True when subprocess succeeds on first try."""
-        mock_proc = mock.MagicMock()
-        mock_proc.wait.return_value = None
-        mock_proc.returncode = 0
-
-        with mock.patch("testing_backend.subprocess.Popen", return_value=mock_proc):
-            result = _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        assert result is True
-
-    def test_publish_retries_on_first_failure_returns_true(self):
-        """_publish_joint_gz retries after first failure, returns True on second success."""
-        fail_proc = mock.MagicMock()
-        fail_proc.wait.return_value = None
-        fail_proc.returncode = 1
-
-        ok_proc = mock.MagicMock()
-        ok_proc.wait.return_value = None
-        ok_proc.returncode = 0
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", side_effect=[fail_proc, ok_proc]
-        ), mock.patch("testing_backend.time.sleep"):
-            result = _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        assert result is True
-
-    def test_publish_returns_false_after_three_failures(self):
-        """_publish_joint_gz returns False after 3 consecutive failures."""
-        fail_proc = mock.MagicMock()
-        fail_proc.wait.return_value = None
-        fail_proc.returncode = 1
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", return_value=fail_proc
-        ), mock.patch("testing_backend.time.sleep"):
-            result = _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        assert result is False
-
-    def test_publish_handles_timeout_kills_and_retries(self):
-        """_publish_joint_gz kills process on timeout, retries, succeeds on next."""
-        import subprocess as sp
-
-        timeout_proc = mock.MagicMock()
-        timeout_proc.wait.side_effect = sp.TimeoutExpired(cmd="gz", timeout=2)
-
-        ok_proc = mock.MagicMock()
-        ok_proc.wait.return_value = None
-        ok_proc.returncode = 0
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", side_effect=[timeout_proc, ok_proc]
-        ), mock.patch("testing_backend.time.sleep"):
-            result = _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        timeout_proc.kill.assert_called_once()
-        assert result is True
-
-    def test_publish_logs_warning_on_failed_attempt(self):
-        """_publish_joint_gz logs WARNING with topic, value, attempt on failure."""
-        fail_proc = mock.MagicMock()
-        fail_proc.wait.return_value = None
-        fail_proc.returncode = 1
-
-        ok_proc = mock.MagicMock()
-        ok_proc.wait.return_value = None
-        ok_proc.returncode = 0
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", side_effect=[fail_proc, ok_proc]
-        ), mock.patch("testing_backend.time.sleep"), \
-                mock.patch("testing_backend.logger") as mock_logger:
-            _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        mock_logger.warning.assert_called_once()
-        warn_msg = mock_logger.warning.call_args[0][0]
-        # Message should contain topic, value, and attempt number
-        assert "/joint3_cmd" in warn_msg
-        assert "0.5" in warn_msg
-        assert "1" in warn_msg  # attempt 1 (of 3)
-
-    def test_publish_logs_error_when_all_attempts_fail(self):
-        """_publish_joint_gz logs ERROR when all 3 attempts fail."""
-        fail_proc = mock.MagicMock()
-        fail_proc.wait.return_value = None
-        fail_proc.returncode = 1
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", return_value=fail_proc
-        ), mock.patch("testing_backend.time.sleep"), \
-                mock.patch("testing_backend.logger") as mock_logger:
-            _publish_joint_gz("/joint3_cmd", 0.5, arm_name="arm1")
-
-        mock_logger.error.assert_called_once()
-        err_msg = mock_logger.error.call_args[0][0]
-        assert "/joint3_cmd" in err_msg
-
-    def test_publish_same_arm_serialized(self):
-        """Concurrent publishes on same arm are serialized by lock."""
-        import threading
-        import time as real_time
-
-        call_order = []
-
-        def slow_popen(*args, **kwargs):
-            proc = mock.MagicMock()
-            proc.returncode = 0
-            proc.wait.return_value = None
-            call_order.append(threading.current_thread().name)
-            # Small sleep to ensure overlap would occur without lock
-            real_time.sleep(0.05)
-            return proc
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", side_effect=slow_popen
-        ), mock.patch("testing_backend.time.sleep"):
-            t1 = threading.Thread(
-                target=_publish_joint_gz,
-                args=("/joint3_cmd", 0.1),
-                kwargs={"arm_name": "arm1"},
-                name="t1",
-            )
-            t2 = threading.Thread(
-                target=_publish_joint_gz,
-                args=("/joint3_cmd", 0.2),
-                kwargs={"arm_name": "arm1"},
-                name="t2",
-            )
-            t1.start()
-            t2.start()
-            t1.join(timeout=5)
-            t2.join(timeout=5)
-
-        # Both threads completed
-        assert len(call_order) == 2
-
-    def test_publish_different_arms_concurrent(self):
-        """Publishes on different arms are NOT blocked by each other."""
-        import threading
-        import time as real_time
-
-        entry_times = {}
-        lock = threading.Lock()
-
-        def recording_popen(*args, **kwargs):
-            proc = mock.MagicMock()
-            proc.returncode = 0
-            proc.wait.return_value = None
-            name = threading.current_thread().name
-            with lock:
-                entry_times[name] = real_time.monotonic()
-            real_time.sleep(0.1)  # hold for 100ms
-            return proc
-
-        with mock.patch(
-            "testing_backend.subprocess.Popen", side_effect=recording_popen
-        ), mock.patch("testing_backend.time.sleep"):
-            t1 = threading.Thread(
-                target=_publish_joint_gz,
-                args=("/joint3_cmd", 0.1),
-                kwargs={"arm_name": "arm1"},
-                name="arm1_thread",
-            )
-            t2 = threading.Thread(
-                target=_publish_joint_gz,
-                args=("/joint3_copy_cmd", 0.2),
-                kwargs={"arm_name": "arm2"},
-                name="arm2_thread",
-            )
-            t1.start()
-            t2.start()
-            t1.join(timeout=5)
-            t2.join(timeout=5)
-
-        # Both threads ran — entry times should be close (within 80ms)
-        assert "arm1_thread" in entry_times
-        assert "arm2_thread" in entry_times
-        delta = abs(entry_times["arm1_thread"] - entry_times["arm2_thread"])
-        assert delta < 0.08, (
-            f"Different arms should run concurrently, but delta was {delta:.3f}s"
-        )
-
-
-# ---------------------------------------------------------------------------
 # Group 3: Cotton persists after pick (no auto-deletion)
 # ---------------------------------------------------------------------------
 class TestCottonPersistAfterPick:
@@ -1070,16 +649,6 @@ class TestCottonPersistAfterPick:
         testing_backend._last_cotton_cam = None
         testing_backend._last_cotton_arm = None
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        testing_backend._pick_current = None
-        testing_backend._pick_progress = None
-        # Reset per-arm pick state
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
         testing_backend._cottons.clear()
         testing_backend._cotton_counter = 0
 
@@ -1095,21 +664,21 @@ class TestCottonPersistAfterPick:
         return resp.json()["cotton_name"]
 
     # -- Task 3.1 --
-    def test_single_pick_sets_cotton_status_to_picked(self, client):
-        """_execute_pick_sequence sets cotton.status='picked' after animation."""
+    def test_mark_picked_sets_cotton_status_to_picked(self, client):
+        """POST /api/cotton/{name}/mark-picked sets cotton.status='picked'."""
         import testing_backend
         self._reset_cotton_state()
         name = self._spawn_one_cotton(client)
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model"), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post("/api/cotton/pick", json={"arm": "arm1"})
-            assert resp.status_code == 200
-            # Wait for background thread to finish
-            import time
-            time.sleep(0.1)
+        # Compute-only pick (synchronous)
+        resp = client.post("/api/cotton/pick", json={"arm": "arm1"})
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ready"
+
+        # Mark as picked via new endpoint
+        resp = client.post(f"/api/cotton/{name}/mark-picked")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
 
         cotton = testing_backend._cottons[name]
         assert cotton.status == "picked", (
@@ -1118,28 +687,21 @@ class TestCottonPersistAfterPick:
         self._reset_cotton_state()
 
     # -- Task 3.2 --
-    def test_single_pick_does_not_call_gz_remove_model(self, client):
-        """_execute_pick_sequence must NOT call _gz_remove_model (cotton persists)."""
-        import testing_backend
+    def test_compute_pick_does_not_call_gz_remove_model(self, client):
+        """POST /api/cotton/pick (compute-only) must NOT call _gz_remove_model."""
         self._reset_cotton_state()
         self._spawn_one_cotton(client)
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model") as mock_remove, \
-             mock.patch("testing_backend.time.sleep"):
+        with mock.patch("testing_backend._gz_remove_model") as mock_remove:
             resp = client.post("/api/cotton/pick", json={"arm": "arm1"})
             assert resp.status_code == 200
-            import time
-            time.sleep(0.1)
 
         mock_remove.assert_not_called()
         self._reset_cotton_state()
 
     # -- Task 3.4 --
-    def test_pick_all_does_not_call_gz_remove_model(self, client):
-        """_execute_pick_all_sequence must NOT call _gz_remove_model."""
-        import testing_backend
+    def test_pick_all_compute_does_not_call_gz_remove_model(self, client):
+        """POST /api/cotton/pick-all (compute-only) must NOT call _gz_remove_model."""
         self._reset_cotton_state()
 
         # Spawn two cottons
@@ -1151,35 +713,25 @@ class TestCottonPersistAfterPick:
                     json={"cam_x": cx, "cam_y": cy, "cam_z": cz, "arm": "arm1"},
                 )
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model") as mock_remove, \
-             mock.patch("testing_backend.time.sleep"):
+        with mock.patch("testing_backend._gz_remove_model") as mock_remove:
             resp = client.post("/api/cotton/pick-all", json={"arm": "arm1"})
             assert resp.status_code == 200
-            import time
-            time.sleep(0.1)
 
         mock_remove.assert_not_called()
-        # Both cottons should still be status "picked"
-        for name in ["cotton_0", "cotton_1"]:
-            assert testing_backend._cottons[name].status == "picked"
         self._reset_cotton_state()
 
     # -- Task 3.6 --
-    def test_cotton_list_shows_picked_after_single_pick(self, client):
-        """GET /api/cotton/list shows cotton with status 'picked' after single pick."""
-        import testing_backend
+    def test_cotton_list_shows_picked_after_mark_picked(self, client):
+        """GET /api/cotton/list shows cotton with status 'picked' after mark-picked."""
         self._reset_cotton_state()
         name = self._spawn_one_cotton(client)
 
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
-             mock.patch("testing_backend._gz_remove_model"), \
-             mock.patch("testing_backend.time.sleep"):
-            client.post("/api/cotton/pick", json={"arm": "arm1"})
-            import time
-            time.sleep(0.1)
+        # Compute-only pick
+        client.post("/api/cotton/pick", json={"arm": "arm1"})
+
+        # Mark as picked
+        resp = client.post(f"/api/cotton/{name}/mark-picked")
+        assert resp.status_code == 200
 
         resp = client.get("/api/cotton/list")
         assert resp.status_code == 200
@@ -1249,551 +801,358 @@ class TestCottonPersistAfterPick:
 
 
 # ---------------------------------------------------------------------------
-# Group 4: Per-arm pick state (ArmPickState)
+# Frontend-driven pick animation: backend removal assertions (Group 1)
 # ---------------------------------------------------------------------------
-class TestPerArmPickState:
-    """Tests for per-arm ArmPickState replacing global pick state."""
+class TestBackendAnimationCodeRemoved:
+    """Assert that all backend animation code has been removed."""
 
-    def _reset_pick_state(self):
-        """Reset per-arm pick state to defaults."""
+    def test_no_publish_joint_gz_function(self):
+        """_publish_joint_gz function must not exist in the backend module."""
         import testing_backend
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
-        testing_backend._cotton_spawned = False
-        testing_backend._cotton_name = ""
-        testing_backend._last_cotton_cam = None
-        testing_backend._last_cotton_arm = None
-        testing_backend._last_cotton_j4 = 0.0
-        testing_backend._cottons.clear()
-        testing_backend._cotton_counter = 0
-
-    # -- Task 4.1: ArmPickState dataclass defaults --
-    def test_arm_pick_state_dataclass_defaults(self):
-        """ArmPickState has correct default field values."""
-        import threading
-        from testing_backend import ArmPickState
-
-        state = ArmPickState()
-        assert isinstance(state.lock, type(threading.Lock()))
-        assert state.in_progress is False
-        assert state.status == "idle"
-        assert state.current is None
-        assert state.progress == (0, 0)
-
-    # -- Task 4.3: _arm_pick_state dict has all arms --
-    def test_arm_pick_state_dict_has_all_arms(self):
-        """_arm_pick_state dict has keys arm1, arm2, arm3 with ArmPickState values."""
-        from testing_backend import _arm_pick_state, ArmPickState
-
-        assert "arm1" in _arm_pick_state
-        assert "arm2" in _arm_pick_state
-        assert "arm3" in _arm_pick_state
-        for arm_name, state in _arm_pick_state.items():
-            assert isinstance(state, ArmPickState), (
-                f"Expected ArmPickState for {arm_name}, got {type(state)}"
-            )
-
-    # -- Task 4.5: pick sets per-arm state --
-    def test_pick_sets_per_arm_state(self, client):
-        """POST /api/cotton/pick sets _arm_pick_state[arm].in_progress and status."""
-        import testing_backend
-        self._reset_pick_state()
-
-        # Spawn a cotton on arm1
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            resp = client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
-            )
-        assert resp.status_code == 200
-
-        # Pick — mock the background thread so state stays at "starting"
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm1"},
-                )
-        assert resp.status_code == 200
-
-        arm_state = testing_backend._arm_pick_state["arm1"]
-        assert arm_state.in_progress is True
-        assert arm_state.status != "idle"
-        self._reset_pick_state()
-
-    # -- Task 4.7: same arm 409, different arm OK --
-    def test_pick_rejects_same_arm_allows_different(self, client):
-        """Pick on busy arm returns 409; pick on idle arm succeeds."""
-        import testing_backend
-        self._reset_pick_state()
-
-        # Spawn cotton_0 on arm1
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
-            )
-
-        # Start picking on arm1 (mock thread so it stays in_progress)
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm1"},
-                )
-        assert resp.status_code == 200
-
-        # Spawn cotton_1 on arm2
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm2"},
-            )
-
-        # Pick on arm2 should succeed (different arm)
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp2 = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm2"},
-                )
-        assert resp2.status_code == 200, (
-            f"Different arm should be allowed, got {resp2.status_code}"
+        assert not hasattr(testing_backend, "_publish_joint_gz"), (
+            "_publish_joint_gz still exists — must be removed"
         )
 
-        # Pick again on arm1 should 409 (same arm busy)
-        # Need to spawn another cotton on arm1 to set _last_cotton_arm
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
-            )
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            resp3 = client.post(
-                "/api/cotton/pick",
-                json={"arm": "arm1"},
-            )
-        assert resp3.status_code == 409, (
-            f"Same arm should be rejected, got {resp3.status_code}"
+    def test_no_execute_pick_sequence_function(self):
+        """_execute_pick_sequence function must not exist."""
+        import testing_backend
+        assert not hasattr(testing_backend, "_execute_pick_sequence"), (
+            "_execute_pick_sequence still exists — must be removed"
         )
-        self._reset_pick_state()
 
-    # -- Task 4.9: pick sequence updates per-arm status through stages --
-    def test_pick_sequence_updates_per_arm_status(self, client):
-        """_execute_pick_sequence updates arm_state.status through expected stages."""
+    def test_no_execute_pick_all_sequence_function(self):
+        """_execute_pick_all_sequence function must not exist."""
         import testing_backend
-        self._reset_pick_state()
-
-        # Spawn a cotton on arm1
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            resp = client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
-            )
-        assert resp.status_code == 200
-        cotton_name = resp.json()["cotton_name"]
-
-        # Capture status transitions
-        statuses = []
-
-        def capturing_sleep(secs):
-            arm_state = testing_backend._arm_pick_state["arm1"]
-            statuses.append(arm_state.status)
-
-        arm_state = testing_backend._arm_pick_state["arm1"]
-        arm_state.in_progress = True
-        arm_state.status = "starting"
-        arm_state.current = cotton_name
-
-        arm_config = testing_backend.ARM_CONFIGS["arm1"]
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend.time.sleep", side_effect=capturing_sleep):
-            testing_backend._execute_pick_sequence(
-                j3=-0.3, j4=0.1, j5=0.2,
-                arm_config=arm_config,
-                arm_name="arm1",
-                cotton_name=cotton_name,
-            )
-
-        # Should have gone through: j4_lateral, j3_tilt, j5_extend,
-        # j5_retract, j3_home, j4_home (captured at each sleep)
-        expected_stages = [
-            "j4_lateral", "j3_tilt", "j5_extend",
-            "j5_retract", "j3_home", "j4_home",
-        ]
-        assert statuses == expected_stages, (
-            f"Expected stages {expected_stages}, got {statuses}"
+        assert not hasattr(testing_backend, "_execute_pick_all_sequence"), (
+            "_execute_pick_all_sequence still exists — must be removed"
         )
-        # After completion: status=done, in_progress=False
-        assert arm_state.status == "done"
-        assert arm_state.in_progress is False
-        self._reset_pick_state()
 
-    # -- Task 4.11: status endpoint returns per-arm shape --
-    def test_status_endpoint_returns_per_arm_shape(self, client):
-        """GET /api/cotton/pick/status returns {arms: {arm1: {...}, ...}}."""
-        self._reset_pick_state()
-
-        resp = client.get("/api/cotton/pick/status")
-        assert resp.status_code == 200
-        body = resp.json()
-        assert "arms" in body, f"Expected 'arms' key, got {body.keys()}"
-        assert "arm1" in body["arms"]
-        assert "arm2" in body["arms"]
-        assert "arm3" in body["arms"]
-
-        # Each arm entry should have the expected fields
-        for arm_name in ["arm1", "arm2", "arm3"]:
-            arm_data = body["arms"][arm_name]
-            assert "in_progress" in arm_data
-            assert "status" in arm_data
-            assert "current" in arm_data
-            assert "progress" in arm_data
-        self._reset_pick_state()
-
-    # -- Task 4.13: concurrent status access --
-    def test_status_endpoint_concurrent_access(self, client):
-        """Status reads from multiple threads return consistent snapshots."""
+    def test_no_arm_pick_state_class(self):
+        """ArmPickState class must not exist."""
         import testing_backend
-        import concurrent.futures
-        self._reset_pick_state()
+        assert not hasattr(testing_backend, "ArmPickState"), (
+            "ArmPickState class still exists — must be removed"
+        )
 
-        # Set arm1 to picking
-        arm_state = testing_backend._arm_pick_state["arm1"]
-        arm_state.in_progress = True
-        arm_state.status = "j3_tilt"
-        arm_state.current = "cotton_0"
-
-        results = []
-
-        def read_status():
-            resp = client.get("/api/cotton/pick/status")
-            return resp.json()
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-            futures = [pool.submit(read_status) for _ in range(8)]
-            for f in concurrent.futures.as_completed(futures):
-                results.append(f.result())
-
-        # All reads should show arm1 in_progress with j3_tilt
-        for r in results:
-            arm1 = r["arms"]["arm1"]
-            assert arm1["in_progress"] is True
-            assert arm1["status"] == "j3_tilt"
-        self._reset_pick_state()
-
-    # -- Task 4.14: per-arm status resets to idle --
-    def test_per_arm_status_resets_to_idle(self, client):
-        """After pick completes, arm status returns to idle before new pick."""
+    def test_no_arm_pick_state_dict(self):
+        """_arm_pick_state dictionary must not exist."""
         import testing_backend
-        self._reset_pick_state()
+        assert not hasattr(testing_backend, "_arm_pick_state"), (
+            "_arm_pick_state dict still exists — must be removed"
+        )
 
-        # Spawn cotton on arm1
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            resp = client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
-            )
-        assert resp.status_code == 200
-        cotton_name = resp.json()["cotton_name"]
+    def test_no_arm_joint_locks_dict(self):
+        """_arm_joint_locks dictionary must not exist."""
+        import testing_backend
+        assert not hasattr(testing_backend, "_arm_joint_locks"), (
+            "_arm_joint_locks dict still exists — must be removed"
+        )
 
-        # Run full pick sequence (mocked, fast)
-        arm_state = testing_backend._arm_pick_state["arm1"]
-        arm_state.in_progress = True
-        arm_state.status = "starting"
-        arm_state.current = cotton_name
-
-        arm_config = testing_backend.ARM_CONFIGS["arm1"]
-        with mock.patch("testing_backend._publish_joint_gz"), \
-             mock.patch("testing_backend.time.sleep"):
-            testing_backend._execute_pick_sequence(
-                j3=-0.3, j4=0.1, j5=0.2,
-                arm_config=arm_config,
-                arm_name="arm1",
-                cotton_name=cotton_name,
-            )
-
-        # After done, status should be "done" and in_progress=False
-        assert arm_state.status == "done"
-        assert arm_state.in_progress is False
-
-        # Spawn another cotton and start new pick
-        with mock.patch("testing_backend._gz_spawn_model"), \
-             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
-            client.post(
-                "/api/cotton/spawn",
-                json={"cam_x": 0.525, "cam_y": 0.020, "cam_z": 0.008, "arm": "arm1"},
-            )
-
-        with mock.patch("testing_backend._execute_pick_sequence"):
-            with mock.patch("threading.Thread") as mock_thread:
-                mock_thread.return_value.start = mock.Mock()
-                resp = client.post(
-                    "/api/cotton/pick",
-                    json={"arm": "arm1"},
-                )
-        assert resp.status_code == 200
-        # Status should now be "starting", not stale "done"
-        assert arm_state.status == "starting"
-        assert arm_state.in_progress is True
-        self._reset_pick_state()
+    def test_no_gz_topic_subprocess_in_pick_animation(self):
+        """No _publish_joint_gz or subprocess 'gz topic' for pick animation."""
+        import testing_backend
+        # The E-STOP fallback legitimately uses 'gz topic' — we only check
+        # that the pick-animation subprocess pathway is gone.
+        assert not hasattr(testing_backend, "_publish_joint_gz"), (
+            "_publish_joint_gz function still exists — pick animation "
+            "subprocess pathway must be removed"
+        )
 
 
 # ---------------------------------------------------------------------------
-# Group 5: Multi-arm pick-all
+# Frontend-driven pick animation: compute-only pick endpoint (Group 2)
 # ---------------------------------------------------------------------------
-class TestMultiArmPickAll:
-    """Tests for pick-all grouping cottons by arm and parallel dispatch."""
+class TestComputeOnlyPick:
+    """POST /api/cotton/pick returns compute-only response, no threads."""
 
     def _reset_state(self):
-        """Reset all cotton and pick state."""
         import testing_backend
         testing_backend._cotton_spawned = False
         testing_backend._cotton_name = ""
         testing_backend._last_cotton_cam = None
         testing_backend._last_cotton_arm = None
         testing_backend._last_cotton_j4 = 0.0
-        testing_backend._pick_in_progress = False
-        testing_backend._pick_status = "idle"
-        for arm_state in testing_backend._arm_pick_state.values():
-            arm_state.in_progress = False
-            arm_state.status = "idle"
-            arm_state.current = None
-            arm_state.progress = (0, 0)
         testing_backend._cottons.clear()
         testing_backend._cotton_counter = 0
 
-    def _spawn_cotton(self, client, arm="arm1"):
-        """Spawn a single cotton on the given arm. Returns cotton_name."""
+    def _spawn_one(self, client, cam=(0.494, -0.001, 0.004), arm="arm1"):
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": cam[0], "cam_y": cam[1], "cam_z": cam[2], "arm": arm},
+            )
+        return resp
+
+    def test_pick_returns_ready_with_joint_values(self, client):
+        """POST /api/cotton/pick returns status 'ready' with j3, j4, j5, arm, cotton_name."""
+        self._reset_state()
+        self._spawn_one(client)
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1", "enable_phi_compensation": False},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "ready"
+        assert "j3" in body
+        assert "j4" in body
+        assert "j5" in body
+        assert "arm" in body
+        assert "cotton_name" in body
+        assert body["reachable"] is True
+        self._reset_state()
+
+    def test_pick_unreachable_returns_reachable_false(self, client):
+        """POST /api/cotton/pick with out-of-range target returns reachable: false."""
+        self._reset_state()
+        # Bypass spawn endpoint (which validates reachability) and inject an
+        # unreachable cotton directly into backend state.
+        import testing_backend
+        testing_backend._cotton_spawned = True
+        testing_backend._cotton_name = "cotton_0"
+        testing_backend._last_cotton_cam = (0.0, 0.0, 0.5)
+        testing_backend._last_cotton_arm = "arm1"
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._cottons["cotton_0"] = testing_backend.CottonState(
+            name="cotton_0", cam_x=0.0, cam_y=0.0, cam_z=0.5,
+            arm="arm1", j4_pos=0.0,
+        )
+        testing_backend._cotton_counter = 1
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1", "enable_phi_compensation": False},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["reachable"] is False
+        assert "reason" in body
+        self._reset_state()
+
+    def test_pick_no_spawned_cotton_returns_error(self, client):
+        """POST /api/cotton/pick with no cotton returns error."""
+        self._reset_state()
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1"},
+        )
+        assert resp.status_code == 400
+
+    def test_pick_does_not_spawn_thread(self, client):
+        """POST /api/cotton/pick must NOT create a background thread."""
+        self._reset_state()
+        self._spawn_one(client)
+        with mock.patch("threading.Thread") as mock_thread:
+            resp = client.post(
+                "/api/cotton/pick",
+                json={"arm": "arm1", "enable_phi_compensation": False},
+            )
+        mock_thread.assert_not_called()
+        assert resp.status_code == 200
+        self._reset_state()
+
+    def test_pick_does_not_change_cotton_status(self, client):
+        """POST /api/cotton/pick must NOT change cotton status from 'spawned'."""
+        import testing_backend
+        self._reset_state()
+        self._spawn_one(client)
+        client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1", "enable_phi_compensation": False},
+        )
+        # Cotton should still be "spawned"
+        for cotton in testing_backend._cottons.values():
+            assert cotton.status == "spawned", (
+                f"Cotton status changed to '{cotton.status}' — should remain 'spawned'"
+            )
+        self._reset_state()
+
+
+# ---------------------------------------------------------------------------
+# Frontend-driven pick animation: compute-only pick-all endpoint (Group 2)
+# ---------------------------------------------------------------------------
+class TestComputeOnlyPickAll:
+    """POST /api/cotton/pick-all returns grouped compute-only response."""
+
+    def _reset_state(self):
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._cottons.clear()
+        testing_backend._cotton_counter = 0
+
+    def _spawn_cottons(self, client, specs):
+        """Spawn cottons. specs = [(cam_tuple, arm_str), ...]"""
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            for cam, arm in specs:
+                client.post(
+                    "/api/cotton/spawn",
+                    json={"cam_x": cam[0], "cam_y": cam[1], "cam_z": cam[2], "arm": arm},
+                )
+
+    def test_pick_all_returns_ready_with_grouped_arms(self, client):
+        """POST /api/cotton/pick-all returns {status: 'ready', arms: {...}}."""
+        self._reset_state()
+        self._spawn_cottons(client, [
+            ((0.494, -0.001, 0.004), "arm1"),
+            ((0.525, 0.020, 0.008), "arm1"),
+        ])
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"enable_phi_compensation": False},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "ready"
+        assert "arms" in body
+        assert "arm1" in body["arms"]
+        arm1_cottons = body["arms"]["arm1"]
+        assert len(arm1_cottons) == 2
+        for item in arm1_cottons:
+            assert "name" in item
+            assert "j3" in item
+            assert "j4" in item
+            assert "j5" in item
+        self._reset_state()
+
+    def test_pick_all_nothing_to_pick(self, client):
+        """POST /api/cotton/pick-all with no spawned cottons returns nothing_to_pick."""
+        self._reset_state()
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"enable_phi_compensation": False},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "nothing_to_pick"
+
+    def test_pick_all_excludes_unreachable_with_warnings(self, client):
+        """POST /api/cotton/pick-all excludes unreachable cottons and includes warnings."""
+        self._reset_state()
+        # Spawn one reachable cotton via the API
+        self._spawn_cottons(client, [
+            ((0.494, -0.001, 0.004), "arm1"),  # reachable
+        ])
+        # Inject an unreachable cotton directly (bypassing spawn validation)
+        import testing_backend
+        testing_backend._cottons["cotton_bad"] = testing_backend.CottonState(
+            name="cotton_bad", cam_x=0.0, cam_y=0.0, cam_z=0.5,
+            arm="arm1", j4_pos=0.0,
+        )
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"enable_phi_compensation": False},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        # Should have at most 1 cotton in arm1 (the reachable one)
+        assert body["status"] == "ready"
+        total_cottons = sum(len(v) for v in body["arms"].values())
+        assert total_cottons == 1
+        assert "warnings" in body
+        assert any("cotton_bad" in w for w in body["warnings"])
+        self._reset_state()
+
+    def test_pick_all_does_not_spawn_threads(self, client):
+        """POST /api/cotton/pick-all must NOT create background threads."""
+        self._reset_state()
+        self._spawn_cottons(client, [
+            ((0.494, -0.001, 0.004), "arm1"),
+        ])
+        with mock.patch("testing_backend.threading.Thread") as mock_thread:
+            resp = client.post(
+                "/api/cotton/pick-all",
+                json={"enable_phi_compensation": False},
+            )
+        mock_thread.assert_not_called()
+        assert resp.status_code == 200
+        self._reset_state()
+
+    def test_pick_all_does_not_change_cotton_status(self, client):
+        """POST /api/cotton/pick-all must NOT change cotton status."""
+        import testing_backend
+        self._reset_state()
+        self._spawn_cottons(client, [
+            ((0.494, -0.001, 0.004), "arm1"),
+        ])
+        client.post(
+            "/api/cotton/pick-all",
+            json={"enable_phi_compensation": False},
+        )
+        for cotton in testing_backend._cottons.values():
+            assert cotton.status == "spawned"
+        self._reset_state()
+
+
+# ---------------------------------------------------------------------------
+# Frontend-driven pick animation: mark-picked endpoint (Group 3)
+# ---------------------------------------------------------------------------
+class TestMarkPicked:
+    """POST /api/cotton/{name}/mark-picked endpoint tests."""
+
+    def _reset_state(self):
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._cottons.clear()
+        testing_backend._cotton_counter = 0
+
+    def _spawn_one(self, client, arm="arm1"):
         with mock.patch("testing_backend._gz_spawn_model"), \
              mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
             resp = client.post(
                 "/api/cotton/spawn",
                 json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": arm},
             )
-        assert resp.status_code == 200
-        return resp.json()["cotton_name"]
+        return resp
 
-    # -- Task 5.1: pick-all groups cottons by cotton.arm field --
-    def test_pick_all_groups_by_arm(self, client):
-        """pick-all dispatches _execute_pick_all_sequence once per arm group."""
+    def test_mark_picked_sets_status(self, client):
+        """POST /api/cotton/{name}/mark-picked returns ok and sets status to picked."""
+        self._reset_state()
+        self._spawn_one(client)
+        resp = client.post("/api/cotton/cotton_0/mark-picked")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"
+
+        # Verify cotton status changed
+        list_resp = client.get("/api/cotton/list")
+        cottons = list_resp.json()["cottons"]
+        assert len(cottons) == 1
+        assert cottons[0]["status"] == "picked"
+        self._reset_state()
+
+    def test_mark_picked_not_found(self, client):
+        """POST /api/cotton/{name}/mark-picked returns 404 for nonexistent cotton."""
+        self._reset_state()
+        resp = client.post("/api/cotton/nonexistent/mark-picked")
+        assert resp.status_code == 404
+        assert "not found" in resp.json()["error"].lower()
+
+    def test_mark_picked_already_picked(self, client):
+        """POST /api/cotton/{name}/mark-picked returns 409 for already-picked cotton."""
         import testing_backend
         self._reset_state()
-
-        # Spawn 2 cottons on arm1, 1 on arm2
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm2")
-
-        threads_started = []
-
-        def capture_thread(*args, **kwargs):
-            t = mock.MagicMock()
-            threads_started.append(kwargs)
-            return t
-
-        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-        # Should have started 2 threads — one per arm group
-        assert len(threads_started) == 2, (
-            f"Expected 2 threads (one per arm), got {len(threads_started)}: {threads_started}"
-        )
-        # Each thread should target the right arm
-        arm_names = sorted(t.get("kwargs", {}).get("arm_name") for t in threads_started)
-        assert arm_names == ["arm1", "arm2"], (
-            f"Expected threads for arm1 and arm2, got {arm_names}"
-        )
+        self._spawn_one(client)
+        testing_backend._cottons["cotton_0"].status = "picked"
+        resp = client.post("/api/cotton/cotton_0/mark-picked")
+        assert resp.status_code == 409
+        assert "already picked" in resp.json()["error"].lower()
         self._reset_state()
 
-    # -- Task 5.2: pick-all threads run in parallel --
-    def test_pick_all_spawns_parallel_threads(self, client):
-        """pick-all spawns threads that call .start() for each arm group."""
-        import testing_backend
-        self._reset_state()
 
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm2")
+# ---------------------------------------------------------------------------
+# Frontend-driven pick animation: pick/status endpoint removed (Group 4)
+# ---------------------------------------------------------------------------
+class TestPickStatusEndpointRemoved:
+    """GET /api/cotton/pick/status must return 404 (removed)."""
 
-        started_threads = []
-
-        def capture_thread(*args, **kwargs):
-            t = mock.MagicMock()
-            started_threads.append(t)
-            return t
-
-        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-        assert len(started_threads) == 2
-        # Both threads should have .start() called
-        for t in started_threads:
-            t.start.assert_called_once()
-        self._reset_state()
-
-    # -- Task 5.4: 4 cottons on 2 arms complete in ~2x not 4x --
-    def test_pick_all_parallel_timing(self, client):
-        """pick-all with cottons on 2 arms runs in parallel (not serial)."""
-        import testing_backend
-        import time as real_time
-        self._reset_state()
-
-        # Spawn 2 cottons on arm1, 2 on arm2
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm2")
-        self._spawn_cotton(client, "arm2")
-
-        # Use real threads but mock the slow parts
-        sleep_calls = {"arm1": 0, "arm2": 0}
-
-        real_execute = testing_backend._execute_pick_all_sequence
-
-        def fast_execute(to_pick, arm_config, enable_phi_comp, arm_name="arm1"):
-            """Count the cottons processed per arm to verify grouping."""
-            arm_state = testing_backend._arm_pick_state[arm_name]
-            for idx, cotton in enumerate(to_pick):
-                with arm_state.lock:
-                    arm_state.current = cotton.name
-                    arm_state.progress = (idx + 1, len(to_pick))
-                    arm_state.status = "picking"
-                sleep_calls[arm_name] += 1
-                cotton.status = "picked"
-            with arm_state.lock:
-                arm_state.status = "done"
-                arm_state.in_progress = False
-                arm_state.current = None
-                arm_state.progress = (0, 0)
-
-        with mock.patch(
-            "testing_backend._execute_pick_all_sequence", side_effect=fast_execute
-        ):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-        # Wait briefly for threads
-        real_time.sleep(0.2)
-        # Each arm should have processed 2 cottons
-        assert sleep_calls["arm1"] == 2, f"arm1 processed {sleep_calls['arm1']}"
-        assert sleep_calls["arm2"] == 2, f"arm2 processed {sleep_calls['arm2']}"
-        self._reset_state()
-
-    # -- Task 5.5: all cottons on same arm runs sequentially --
-    def test_pick_all_single_arm_sequential(self, client):
-        """pick-all with all cottons on one arm spawns exactly one thread."""
-        import testing_backend
-        self._reset_state()
-
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm1")
-
-        threads_started = []
-
-        def capture_thread(*args, **kwargs):
-            t = mock.MagicMock()
-            threads_started.append(kwargs)
-            return t
-
-        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
-             mock.patch("testing_backend.time.sleep"):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-        assert len(threads_started) == 1, (
-            f"Expected 1 thread for single arm, got {len(threads_started)}"
-        )
-        # The thread should receive all 3 cottons
-        to_pick_arg = threads_started[0]["args"][0]
-        assert len(to_pick_arg) == 3
-        self._reset_state()
-
-    # -- Task 5.8: per-arm progress during pick-all --
-    def test_pick_all_per_arm_progress(self, client):
-        """pick-all sets per-arm progress [current_index, arm_total] per arm group."""
-        import testing_backend
-        self._reset_state()
-
-        # Spawn 2 on arm1, 1 on arm2
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm2")
-
-        # Check that initial state sets correct arm progress
-        # Mock thread to capture initial state set by handler
-        thread_kwargs = []
-
-        def capture_thread(*args, **kwargs):
-            t = mock.MagicMock()
-            thread_kwargs.append(kwargs)
-            return t
-
-        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-
-        # After handler, per-arm state should reflect initial progress
-        arm1_state = testing_backend._arm_pick_state["arm1"]
-        arm2_state = testing_backend._arm_pick_state["arm2"]
-
-        assert arm1_state.in_progress is True
-        assert arm1_state.progress == (1, 2), (
-            f"Expected arm1 progress (1, 2), got {arm1_state.progress}"
-        )
-        assert arm2_state.in_progress is True
-        assert arm2_state.progress == (1, 1), (
-            f"Expected arm2 progress (1, 1), got {arm2_state.progress}"
-        )
-        self._reset_state()
-
-    # -- Task 5.10: pick-all 409 only for arms already picking --
-    def test_pick_all_409_for_busy_arm_starts_others(self, client):
-        """pick-all skips arms that are already picking, starts others."""
-        import testing_backend
-        self._reset_state()
-
-        # Spawn 1 cotton on arm1, 1 on arm2
-        self._spawn_cotton(client, "arm1")
-        self._spawn_cotton(client, "arm2")
-
-        # Simulate arm1 already picking
-        testing_backend._arm_pick_state["arm1"].in_progress = True
-        testing_backend._arm_pick_state["arm1"].status = "j3_tilt"
-
-        threads_started = []
-
-        def capture_thread(*args, **kwargs):
-            t = mock.MagicMock()
-            threads_started.append(kwargs)
-            return t
-
-        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread):
-            resp = client.post("/api/cotton/pick-all", json={})
-
-        assert resp.status_code == 200
-        body = resp.json()
-        # Should have started only arm2 (arm1 is busy)
-        assert len(threads_started) == 1, (
-            f"Expected 1 thread (arm2 only), got {len(threads_started)}"
-        )
-        assert threads_started[0]["kwargs"]["arm_name"] == "arm2"
-        # Response should indicate arm1 was skipped
-        assert "skipped_arms" in body or body.get("total", 0) == 1
-        self._reset_state()
+    def test_pick_status_returns_404(self, client):
+        """GET /api/cotton/pick/status endpoint must not exist."""
+        resp = client.get("/api/cotton/pick/status")
+        assert resp.status_code == 404
