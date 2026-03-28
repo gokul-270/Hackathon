@@ -68,3 +68,32 @@ test('camToJoint returns {valid: false} when J3 is outside limits', () => {
   const result = camToJoint(invalidTf, 0, 0, 0);
   assert.strictEqual(result.valid, false, 'result.valid must be false when J3 is out of range');
 });
+
+// ─── Phi Compensation Tests ─────────────────────────────────────────────────
+
+const { phiCompensation } = require('./cam_to_joint_shim.js');
+
+// ─── Test 7.1 ────────────────────────────────────────────────────────────────
+// phiCompensation zone1 applies positive offset for phi_deg <= 50.5
+test('phiCompensation zone1 applies positive offset for phi_deg <= 50.5', () => {
+  assert.equal(typeof phiCompensation, 'function', 'phiCompensation must be exported');
+  // j3 = -0.5 rad => phi_deg = 28.6 => Zone1
+  var result = phiCompensation(-0.5, 0.1);
+  var expected = -0.5 + 0.014 * (1.0 + 0.5 * (0.1 / 0.450)) * 2 * Math.PI;
+  assert.ok(Math.abs(result - expected) < 1e-9, `result ${result} should be near ${expected}`);
+});
+
+// ─── Test 7.2 ────────────────────────────────────────────────────────────────
+// phiCompensation zone2 applies zero offset for 50.5 < phi_deg <= 60
+test('phiCompensation zone2 applies zero offset for 50.5 < phi_deg <= 60', () => {
+  var result = phiCompensation(-0.93, 0.2);
+  assert.ok(Math.abs(result - (-0.93)) < 1e-9, `result ${result} should be -0.93`);
+});
+
+// ─── Test 7.3 ────────────────────────────────────────────────────────────────
+// phiCompensation zone3 applies negative offset for phi_deg > 60
+test('phiCompensation zone3 applies negative offset for phi_deg > 60', () => {
+  var result = phiCompensation(-1.06, 0.3);
+  var expected = -1.06 + (-0.014) * (1.0 + 0.5 * (0.3 / 0.450)) * 2 * Math.PI;
+  assert.ok(Math.abs(result - expected) < 1e-9, `result ${result} should be near ${expected}`);
+});

@@ -59,6 +59,15 @@
     var CAM_SEQ_J5_MIN          =  0.0;    // m
     var CAM_SEQ_J5_MAX          =  0.450;  // m
 
+    // Phi compensation constants
+    var PHI_ZONE1_MAX_DEG = 50.5;
+    var PHI_ZONE2_MAX_DEG = 60.0;
+    var PHI_ZONE1_OFFSET  = 0.014;
+    var PHI_ZONE2_OFFSET  = 0.0;
+    var PHI_ZONE3_OFFSET  = -0.014;
+    var PHI_L5_SCALE      = 0.5;
+    var PHI_JOINT5_MAX    = 0.450;
+
     // Running row counter for cam sequence rows
     var camSeqRowCounter = 0;
 
@@ -1100,6 +1109,27 @@
             return { valid: false };
         }
         return { valid: true, j3: j3, j4: j4, j5: j5 };
+    }
+
+    /**
+     * Phi-compensation: adjust j3 based on phi zone and j5 extension.
+     * Zones: phi_deg <= 50.5 → +offset, 50.5..60 → 0, > 60 → −offset.
+     */
+    function phiCompensation(j3, j5) {
+        var phiDeg = Math.abs(j3 * 180.0 / Math.PI);
+        var baseOffset;
+        if (phiDeg <= PHI_ZONE1_MAX_DEG) {
+            baseOffset = PHI_ZONE1_OFFSET;
+        } else if (phiDeg <= PHI_ZONE2_MAX_DEG) {
+            baseOffset = PHI_ZONE2_OFFSET;
+        } else {
+            baseOffset = PHI_ZONE3_OFFSET;
+        }
+        var l5Norm = Math.max(0.0, j5) / PHI_JOINT5_MAX;
+        var l5Scale = 1.0 + PHI_L5_SCALE * l5Norm;
+        var compRot = baseOffset * l5Scale;
+        var compRad = compRot * 2.0 * Math.PI;
+        return j3 + compRad;
     }
 
     /**
