@@ -62,11 +62,17 @@ def _make_solo_tail_scenario():
 
 
 def _make_close_j4_paired_scenario():
-    """Both arms at step 0 with cam_y values that produce j4 within 0.05m of each other."""
+    """Both arms at step 0 with cam_z values that produce j4 within 0.05m of each other.
+
+    FK note: j4 = ay_absolute = camera_to_arm(cam_z) + j4_pos.  cam_z drives j4 because
+    the yanthra_link rotation maps camera-Z directly onto arm-Y.  cam_y maps to arm-Z (j3
+    geometry) and does NOT affect j4.  cam_z=0.25 and cam_z=0.27 produce j4 separation
+    of ~0.02 m, well within the 0.05 m blocking threshold.
+    """
     return {
         "steps": [
-            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.01, "cam_z": 0.0},
-            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": -0.02, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.27},
         ]
     }
 
@@ -229,16 +235,22 @@ def test_reset_clears_state_so_subsequent_run_produces_fresh_summary():
 
 
 def test_e2e_unrestricted_mode_paired_scenario_has_no_j5_blocked():
-    """E2E: 2-arm paired scenario in unrestricted mode produces zero j5_blocked reports."""
+    """E2E: 2-arm paired scenario in unrestricted mode produces zero j5_blocked reports.
+
+    FK note: j4 is driven by cam_z (camera-Z maps to arm-Y via the yanthra_link rotation).
+    arm1 cam_z=0.25 → j4≈-0.150 m, arm2 cam_z=0.35 → j4≈-0.250 m.
+    Lateral separation ≈ 0.10 m > 0.05 m threshold, so even in blocking mode j5 would not
+    be suppressed.  In unrestricted mode it is definitely never suppressed.
+    """
     from run_controller import RunController
     from baseline_mode import BaselineMode
 
     scenario = {
         "steps": [
-            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.01, "cam_z": 0.0},
-            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": -0.02, "cam_z": 0.0},
-            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.4, "cam_y": -0.05, "cam_z": 0.0},
-            {"step_id": 1, "arm_id": "arm2", "cam_x": 0.4, "cam_y": -0.06, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.35},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 1, "arm_id": "arm2", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.35},
         ]
     }
     rc = RunController(mode=BaselineMode.UNRESTRICTED)
@@ -249,15 +261,21 @@ def test_e2e_unrestricted_mode_paired_scenario_has_no_j5_blocked():
 
 
 def test_e2e_baseline_j5_block_skip_mode_blocks_j5_when_arms_laterally_close():
-    """E2E: baseline_j5_block_skip blocks j5 when arms have cam_y within 0.05m of each other."""
+    """E2E: baseline_j5_block_skip blocks j5 when arms have j4 within 0.05m of each other.
+
+    FK note: j4 is driven by cam_z (camera-Z maps to arm-Y via the yanthra_link rotation).
+    cam_z=0.25 → j4≈-0.150 m, cam_z=0.27 → j4≈-0.170 m.  Lateral separation ≈ 0.02 m,
+    which is less than the 0.05 m blocking threshold, so j5 must be zeroed.
+    Both steps are reachable (j5≈0.128 m > 0) so the block condition can fire.
+    """
     from run_controller import RunController
     from baseline_mode import BaselineMode
 
-    # cam_y=-0.01 and -0.02 → j4 difference ≈ 0.01m (well within 0.05m threshold)
+    # cam_z=0.25 → j4≈-0.150 m, cam_z=0.27 → j4≈-0.170 m (separation ~0.02 m < 0.05 m)
     scenario = {
         "steps": [
-            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.01, "cam_z": 0.0},
-            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": -0.02, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.27},
         ]
     }
     rc = RunController(mode=BaselineMode.BASELINE_J5_BLOCK_SKIP)
