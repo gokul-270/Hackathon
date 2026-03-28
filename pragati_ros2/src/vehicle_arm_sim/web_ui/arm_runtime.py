@@ -59,6 +59,44 @@ class ArmRuntime:
         ax, ay, az = camera_to_arm(step.cam_x, step.cam_y, step.cam_z, j4_pos=j4_current)
         return polar_decompose(ax, ay, az)
 
+    def run_step(
+        self,
+        step_id: int,
+        peer_state: Optional["PeerStatePacket"],
+        mode: int,
+        baseline_mode_obj: object,
+        current_joints: dict,
+    ) -> tuple[dict, bool, dict]:
+        """Execute one scenario step and return the result as a self-contained unit.
+
+        Looks up the step by step_id from the loaded steps, computes candidate joints
+        via FK, applies mode logic via baseline_mode_obj, and returns the outcome.
+
+        Args:
+            step_id: The step to execute (must have been loaded via load_scenario).
+            peer_state: PeerStatePacket from the peer arm, or None if peer is inactive.
+            mode: One of BaselineMode constants (UNRESTRICTED=0, BASELINE_J5_BLOCK_SKIP=1, …).
+            baseline_mode_obj: A BaselineMode instance used to apply mode logic.
+            current_joints: The arm's current joint positions {"j3", "j4", "j5"}.
+
+        Returns:
+            (applied_joints, skipped, candidate_joints) where:
+              - applied_joints: joints after mode logic has been applied.
+              - skipped: True only when overlap_zone_wait times out and skips the pick.
+              - candidate_joints: raw FK result before mode logic.
+        """
+        step = next((s for s in self._steps if s.step_id == step_id), None)
+        if step is None:
+            raise ValueError(f"Step {step_id} not found for arm {self._arm_id}")
+
+        j4_current = current_joints.get("j4", 0.0)
+        candidate_joints = self.compute_candidate_joints(step, j4_current=j4_current)
+
+        applied_joints, skipped = baseline_mode_obj.apply_with_skip(
+            mode, candidate_joints, peer_state, step_id=step_id, arm_id=self._arm_id
+        )
+        return applied_joints, skipped, candidate_joints
+
     def build_peer_state(
         self,
         step_id: int,

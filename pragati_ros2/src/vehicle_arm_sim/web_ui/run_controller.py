@@ -10,6 +10,7 @@ from __future__ import annotations
 from arm_runtime import ArmRuntime
 from baseline_mode import BaselineMode
 from json_reporter import JsonReporter, StepReport
+from peer_transport import LocalPeerTransport
 from scenario_json import ScenarioStep
 from truth_monitor import TruthMonitor
 
@@ -37,6 +38,7 @@ class RunController:
         self._truth_monitor = TruthMonitor()
         self._reporter = JsonReporter()
         self._baseline = BaselineMode()
+        self._transport = LocalPeerTransport()
         self._last_summary: dict = {}
 
     # ------------------------------------------------------------------
@@ -110,18 +112,24 @@ class RunController:
             # Apply mode logic and build peer state packets
             applied: dict[str, dict] = {}
             skipped_flags: dict[str, bool] = {}
+            # Publish every active arm's state to the transport (solo or paired).
+            # Solo arms publish so their state is available if queried; the peer's
+            # receive() will return None at solo steps — correct "peer not active" result.
+            for arm_id in arm_steps:
+                rt = self._arm1 if arm_id == "arm1" else self._arm2
+                packet = rt.build_peer_state(
+                    step_id=step_id,
+                    status="ready",
+                    current_joints=prev_joints[arm_id],
+                    candidate_joints=candidates[arm_id],
+                )
+                self._transport.publish(packet)
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
                 peer_id = "arm2" if arm_id == "arm1" else "arm1"
                 peer_state = None
                 if both_active:
-                    peer_rt = self._arm1 if peer_id == "arm1" else self._arm2
-                    peer_state = peer_rt.build_peer_state(
-                        step_id=step_id,
-                        status="ready",
-                        current_joints=prev_joints[peer_id],
-                        candidate_joints=candidates[peer_id],
-                    )
+                    peer_state = self._transport.receive(peer_id)
                 result_joints, skipped = self._baseline.apply_with_skip(
                     self._mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id
                 )
@@ -200,4 +208,5 @@ class RunController:
         self._arm2 = ArmRuntime("arm2")
         self._truth_monitor.reset()
         self._reporter.reset()
+        self._transport.reset()
         self._last_summary = {}
