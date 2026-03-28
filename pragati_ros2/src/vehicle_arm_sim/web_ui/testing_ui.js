@@ -70,7 +70,7 @@
     var PHI_ZONE2_OFFSET  = 0.0;
     var PHI_ZONE3_OFFSET  = -0.014;
     var PHI_L5_SCALE      = 0.5;
-    var PHI_JOINT5_MAX    = 0.450;
+    var PHI_JOINT5_MAX    = 0.6;
 
     // Running row counter for cam sequence rows
     var camSeqRowCounter = 0;

@@ -243,7 +243,7 @@ PHI_ZONE1_OFFSET = 0.014    # rotations (+5 deg)
 PHI_ZONE2_OFFSET = 0.0      # rotations (no change)
 PHI_ZONE3_OFFSET = -0.014   # rotations (-5 deg)
 PHI_L5_SCALE = 0.5
-JOINT5_MAX = 0.450           # m, for L5 normalization
+JOINT5_MAX = 0.6             # m, for L5 normalization (matches yanthra_move reference)
 
 
 def phi_compensation(j3: float, j5: float) -> float:

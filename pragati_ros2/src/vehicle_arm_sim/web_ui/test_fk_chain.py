@@ -139,12 +139,12 @@ def test_phi_compensation_zone1():
     # phi = -0.5 rad => phi_deg = abs(degrees(-0.5)) = 28.6 => Zone1
     j3_compensated = phi_compensation(j3=-0.5, j5=0.1)
     # Zone1 base = +0.014 rot
-    # l5_norm = max(0, 0.1) / 0.450 = 0.222
-    # l5_scale = 1.0 + 0.5 * 0.222 = 1.111
-    # comp_rot = 0.014 * 1.111 = 0.01556
-    # comp_rad = 0.01556 * 2 * pi = 0.09774
-    # result = -0.5 + 0.09774 = -0.40226
-    expected = -0.5 + 0.014 * (1.0 + 0.5 * (0.1 / 0.450)) * 2 * math.pi
+    # l5_norm = max(0, 0.1) / 0.6 = 0.167
+    # l5_scale = 1.0 + 0.5 * 0.167 = 1.083
+    # comp_rot = 0.014 * 1.083 = 0.01517
+    # comp_rad = 0.01517 * 2 * pi = 0.09529
+    # result = -0.5 + 0.09529 = -0.40471
+    expected = -0.5 + 0.014 * (1.0 + 0.5 * (0.1 / 0.6)) * 2 * math.pi
     assert abs(j3_compensated - expected) < 1e-9
 
 
@@ -163,11 +163,11 @@ def test_phi_compensation_zone3():
     # phi = -1.06 rad => phi_deg = 60.7 => Zone3
     j3_compensated = phi_compensation(j3=-1.06, j5=0.3)
     # Zone3 base = -0.014 rot
-    # l5_norm = 0.3 / 0.450 = 0.667
-    # l5_scale = 1.0 + 0.5 * 0.667 = 1.333
-    # comp_rot = -0.014 * 1.333 = -0.01867
-    # comp_rad = -0.01867 * 2 * pi = -0.11731
-    expected = -1.06 + (-0.014) * (1.0 + 0.5 * (0.3 / 0.450)) * 2 * math.pi
+    # l5_norm = 0.3 / 0.6 = 0.5
+    # l5_scale = 1.0 + 0.5 * 0.5 = 1.25
+    # comp_rot = -0.014 * 1.25 = -0.0175
+    # comp_rad = -0.0175 * 2 * pi = -0.10996
+    expected = -1.06 + (-0.014) * (1.0 + 0.5 * (0.3 / 0.6)) * 2 * math.pi
     assert abs(j3_compensated - expected) < 1e-9
 
 

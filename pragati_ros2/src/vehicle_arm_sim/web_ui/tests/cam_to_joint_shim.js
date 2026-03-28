@@ -25,7 +25,7 @@ var CAM_JOINT_CONFIG = {
     PHI_ZONE2_OFFSET:  0.0,
     PHI_ZONE3_OFFSET: -0.014,
     PHI_L5_SCALE:      0.5,
-    PHI_JOINT5_MAX:    0.450,
+    PHI_JOINT5_MAX:    0.6,
 
     // URDF camera_link transform
     CAMERA_LINK_XYZ: [0.016845, 0.100461, -0.077129],
