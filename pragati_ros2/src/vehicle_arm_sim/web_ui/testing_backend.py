@@ -48,6 +48,8 @@ from fk_chain import (
     J5_MIN,
     J5_MAX,
 )
+from run_controller import RunController
+from markdown_reporter import MarkdownReporter
 
 # ---------------------------------------------------------------------------
 # ROS2 import (optional — degrades gracefully)
@@ -80,6 +82,12 @@ _WORKSPACE_ROOT = _PKG_DIR.parent.parent
 _URDF_SAVED_DIR = _PKG_DIR / "urdf" / "saved"
 _MESHES_DIR = _PKG_DIR / "meshes"
 _TMP_URDF_PATH = Path("/tmp/vehicle_arm_testing.urdf")
+
+# ---------------------------------------------------------------------------
+# UI Run Flow — module-level state
+# ---------------------------------------------------------------------------
+_current_run_result: dict | None = None
+_run_state: str = "idle"  # "idle" | "running" | "complete"
 
 
 # ---------------------------------------------------------------------------
@@ -1233,6 +1241,95 @@ def cotton_pick_all(req: CottonPickAllRequest):
         "status": "picking",
         "total": len(to_pick),
     }
+
+
+# ---------------------------------------------------------------------------
+# UI Run Flow — request models
+# ---------------------------------------------------------------------------
+class RunStartRequest(BaseModel):
+    mode: int
+    scenario: dict
+
+
+# ---------------------------------------------------------------------------
+# UI Run Flow — endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/api/run/start")
+async def run_start(req: RunStartRequest):
+    """Start a replay run with the given mode and scenario data."""
+    global _current_run_result, _run_state
+
+    valid_modes = {0, 1, 2, 3}
+    if req.mode not in valid_modes:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=f"Invalid mode {req.mode}; must be 0-3")
+
+    _run_state = "running"
+    run_id = str(uuid.uuid4())
+
+    controller = RunController(req.mode)
+    controller.load_scenario(req.scenario)
+    summary = controller.run()
+    json_report_str = controller.get_json_report()
+
+    import json as _json
+    report_data = _json.loads(json_report_str)
+
+    # Rename step_reports -> steps for UI consistency
+    steps = report_data.pop("step_reports", [])
+
+    md_lines = [
+        f"## Run Report",
+        f"",
+        f"**Mode:** {summary.get('mode', 'unknown')}",
+        f"",
+        f"| Metric | Value |",
+        f"| --- | --- |",
+        f"| Total steps | {summary.get('total_steps', 0)} |",
+        f"| Near-collision steps | {summary.get('steps_with_near_collision', 0)} |",
+        f"| Collision steps | {summary.get('steps_with_collision', 0)} |",
+        f"| Blocked steps | {summary.get('steps_with_motion_blocked', 0)} |",
+        f"| Skipped steps | {summary.get('steps_with_skipped', 0)} |",
+        f"",
+    ]
+    md_report = "\n".join(md_lines)
+
+    _current_run_result = {
+        "run_id": run_id,
+        "summary": summary,
+        "steps": steps,
+        "md_report": md_report,
+    }
+    _run_state = "complete"
+
+    return {"run_id": run_id, "status": "complete"}
+
+
+@app.get("/api/run/status")
+async def run_status():
+    """Return the current run state."""
+    return {"state": _run_state}
+
+
+@app.get("/api/run/report/json")
+async def run_report_json():
+    """Return the JSON run report for the last completed run."""
+    if _current_run_result is None:
+        raise HTTPException(status_code=404, detail="No run result available")
+    return {
+        "summary": _current_run_result["summary"],
+        "steps": _current_run_result["steps"],
+    }
+
+
+@app.get("/api/run/report/markdown")
+async def run_report_markdown():
+    """Return the Markdown run report for the last completed run."""
+    if _current_run_result is None:
+        raise HTTPException(status_code=404, detail="No run result available")
+    from starlette.responses import Response as _Response
+    return _Response(content=_current_run_result["md_report"], media_type="text/plain")
 
 
 # ---------------------------------------------------------------------------
