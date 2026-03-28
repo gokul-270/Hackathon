@@ -169,3 +169,67 @@ def test_run_summary_completed_picks_separate_from_blocked_or_skipped():
     assert summary["completed_picks"] + summary["steps_with_blocked_or_skipped"] == len(
         summary["step_reports"]
     )
+
+
+# ---------------------------------------------------------------------------
+# W1 fix: Markdown per-run report must show blocked+skipped as ONE combined row
+# ---------------------------------------------------------------------------
+
+
+def test_run_report_markdown_does_not_have_separate_blocked_and_skipped_rows():
+    """Per-run Markdown report must NOT have separate 'Blocked steps' and 'Skipped steps' rows.
+
+    The collision-comparison-reporting spec requires blocked and skipped to appear
+    as ONE combined summary count in the high-level report output.
+    """
+    from fastapi.testclient import TestClient
+    import testing_backend as tb
+
+    tb._current_run_result = None
+    fresh_client = TestClient(tb.app)
+    fresh_client.post(
+        "/api/run/start",
+        json={
+            "mode": 0,
+            "scenario": {
+                "steps": [
+                    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10},
+                    {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.20},
+                ]
+            },
+        },
+    )
+    md_text = fresh_client.get("/api/run/report/markdown").text
+    # Must NOT have two separate rows
+    assert "| Blocked steps |" not in md_text, (
+        "Markdown must not show 'Blocked steps' as a separate row"
+    )
+    assert "| Skipped steps |" not in md_text, (
+        "Markdown must not show 'Skipped steps' as a separate row"
+    )
+
+
+def test_run_report_markdown_has_combined_blocked_or_skipped_row():
+    """Per-run Markdown report must show a single 'Blocked or skipped' combined row."""
+    from fastapi.testclient import TestClient
+    import testing_backend as tb
+
+    tb._current_run_result = None
+    fresh_client = TestClient(tb.app)
+    fresh_client.post(
+        "/api/run/start",
+        json={
+            "mode": 0,
+            "scenario": {
+                "steps": [
+                    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10},
+                    {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.20},
+                ]
+            },
+        },
+    )
+    md_text = fresh_client.get("/api/run/report/markdown").text
+    # Must have one combined row
+    assert "Blocked or skipped" in md_text, (
+        "Markdown must contain a 'Blocked or skipped' combined row"
+    )

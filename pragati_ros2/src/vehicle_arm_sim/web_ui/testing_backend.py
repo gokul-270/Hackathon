@@ -1301,8 +1301,7 @@ async def run_start(req: RunStartRequest):
         f"| Total steps | {summary.get('total_steps', 0)} |",
         f"| Near-collision steps | {summary.get('steps_with_near_collision', 0)} |",
         f"| Collision steps | {summary.get('steps_with_collision', 0)} |",
-        f"| Blocked steps | {summary.get('steps_with_motion_blocked', 0)} |",
-        f"| Skipped steps | {summary.get('steps_with_skipped', 0)} |",
+        f"| Blocked or skipped | {summary.get('steps_with_blocked_or_skipped', 0)} |",
         f"| Completed picks | {summary.get('completed_picks', 0)} |",
         f"",
     ]

@@ -185,3 +185,32 @@ def test_run_controller_step_reports_include_terminal_status_for_all_arms():
         assert "terminal_status" in r
         assert "pick_completed" in r
         assert "executed_in_gazebo" in r
+
+
+# ---------------------------------------------------------------------------
+# S1 fix: StepReport.pick_completed must default to False (fail-safe)
+# ---------------------------------------------------------------------------
+
+
+def test_step_report_default_pick_completed_is_false():
+    """StepReport.pick_completed must default to False, not True.
+
+    A StepReport created without an explicit pick_completed value should
+    default to False (fail-safe) rather than True (fail-open), to prevent
+    future code that forgets to wire the executor from silently over-counting
+    completed picks.
+    """
+    report = StepReport(
+        step_id=1,
+        arm_id="arm1",
+        mode="unrestricted",
+        candidate_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+        j5_blocked=False,
+        near_collision=False,
+        collision=False,
+        min_j4_distance=None,
+    )
+    assert report.pick_completed is False, (
+        "StepReport.pick_completed must default to False (fail-safe)"
+    )

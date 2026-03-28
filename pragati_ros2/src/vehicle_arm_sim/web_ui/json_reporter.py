@@ -18,7 +18,7 @@ class StepReport:
     skipped: bool = False  # True when overlap_zone_wait skips the step
     # Explicit terminal outcome fields (added by gazebo-scenario-execution change)
     terminal_status: str = "completed"  # "completed" | "blocked" | "skipped"
-    pick_completed: bool = True
+    pick_completed: bool = False
     executed_in_gazebo: bool = False
 
 
