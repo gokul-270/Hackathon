@@ -44,9 +44,12 @@ class RunController:
     def load_scenario(self, data: dict) -> None:
         """Parse scenario JSON and load into both arm runtimes.
 
-        Allows multiple entries with the same step_id (one per arm_id), which
-        parse_scenario() does not permit due to its global uniqueness constraint.
-        Validates required fields but accepts paired steps (same step_id, different arm_id).
+        Note: this intentionally bypasses scenario_json.parse_scenario() because
+        parse_scenario() enforces globally-unique step_ids across the whole file.
+        Dual-arm paired execution requires both arms to share the same step_id
+        (e.g. step_id=0 for arm1 AND step_id=0 for arm2 means they run simultaneously).
+        parse_scenario() would reject that as a duplicate. RunController constructs
+        ScenarioStep objects directly so the paired-step contract is preserved.
         """
         raw_steps = data.get("steps", [])
         steps = [
@@ -118,13 +121,15 @@ class RunController:
                     )
                 applied[arm_id] = self._baseline.apply(self._mode, own_cand, peer_state)
 
-            # Truth monitor observation (only when both arms active)
+            # Truth monitor observation (only when both arms active).
+            # Feed *candidate* (pre-mode) j4 values so the truth record reflects
+            # the raw FK geometry, independent of any planner/mode decision.
             min_j4_dist: float | None = None
             near_col = False
             col = False
             if both_active:
-                j4_arm1 = applied["arm1"]["j4"]
-                j4_arm2 = applied["arm2"]["j4"]
+                j4_arm1 = candidates["arm1"]["j4"]
+                j4_arm2 = candidates["arm2"]["j4"]
                 self._truth_monitor.observe(step_id, j4_arm1, j4_arm2)
                 record = self._truth_monitor.get_step_record(step_id)
                 if record is not None:
@@ -185,9 +190,3 @@ class RunController:
         self._truth_monitor.reset()
         self._reporter.reset()
         self._last_summary = {}
-        prev_joints: dict[str, dict] = {
-            "arm1": dict(_SAFE_HOME),
-            "arm2": dict(_SAFE_HOME),
-        }
-        # Re-initialise prev_joints reference (run() uses a local; reset just clears reporter)
-        _ = prev_joints  # only used in run(); no persistent state needed here
