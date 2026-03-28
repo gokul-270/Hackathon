@@ -328,6 +328,16 @@ async def serve_js():
     return _no_cache_file(_SCRIPT_DIR / "testing_ui.js", "application/javascript")
 
 
+@app.get("/scenarios/{name}.json")
+async def serve_scenario(name: str):
+    """Serve a preset scenario JSON file from the scenarios/ directory."""
+    scenario_path = _SCRIPT_DIR / "scenarios" / f"{name}.json"
+    if not scenario_path.exists():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Scenario '{name}' not found")
+    return _no_cache_file(scenario_path, "application/json")
+
+
 # ---------------------------------------------------------------------------
 # Status & URDF list
 # ---------------------------------------------------------------------------
