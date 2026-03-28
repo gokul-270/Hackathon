@@ -16,6 +16,7 @@ from truth_monitor import TruthMonitor
 _MODE_NAMES = {
     BaselineMode.UNRESTRICTED: "unrestricted",
     BaselineMode.BASELINE_J5_BLOCK_SKIP: "baseline_j5_block_skip",
+    BaselineMode.GEOMETRY_BLOCK: "geometry_block",
 }
 
 _SAFE_HOME = {"j3": 0.0, "j4": 0.0, "j5": 0.0}
@@ -141,8 +142,9 @@ class RunController:
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
                 own_applied = applied[arm_id]
+                # j5_blocked: any blocking mode that zeroed j5 when candidate was non-zero
                 j5_blocked = (
-                    self._mode == BaselineMode.BASELINE_J5_BLOCK_SKIP
+                    self._mode in (BaselineMode.BASELINE_J5_BLOCK_SKIP, BaselineMode.GEOMETRY_BLOCK)
                     and own_applied["j5"] == 0.0
                     and own_cand["j5"] > 0.0
                 )

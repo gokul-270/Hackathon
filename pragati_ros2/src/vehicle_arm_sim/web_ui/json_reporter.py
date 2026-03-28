@@ -29,6 +29,7 @@ class JsonReporter:
 
     def build_run_summary(self, mode: str, total_steps: int) -> dict:
         """Build per-run JSON summary dict."""
+        j5_blocked_count = sum(1 for s in self._steps if s.j5_blocked)
         return {
             "mode": mode,
             "total_steps": total_steps,
@@ -38,9 +39,9 @@ class JsonReporter:
             "steps_with_collision": sum(
                 1 for s in self._steps if s.collision
             ),
-            "steps_with_j5_blocked": sum(
-                1 for s in self._steps if s.j5_blocked
-            ),
+            "steps_with_j5_blocked": j5_blocked_count,
+            # Alias used by MarkdownReporter for unified three-mode comparison
+            "steps_with_motion_blocked": j5_blocked_count,
             "step_reports": [asdict(s) for s in self._steps],
         }
 

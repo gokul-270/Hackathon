@@ -6,18 +6,28 @@ Modes
 0  UNRESTRICTED           : pass joints through unchanged.
 1  BASELINE_J5_BLOCK_SKIP : zero out j5 (extension) when peer arm is active at
                             this step AND the lateral gap |j4_own - j4_peer| < 0.05 m.
+2  GEOMETRY_BLOCK         : two-stage geometry check.  Stage 1 screens on lateral
+                            distance (< 0.12 m → risky).  Stage 2 checks the
+                            combined j5 extension (> 0.5) AND close lateral gap
+                            (< 0.06 m) → unsafe → zero out j5.
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from geometry_check import GeometryStage1Screen, GeometryStage2Check
+
 if TYPE_CHECKING:  # pragma: no cover
     from arm_runtime import PeerStatePacket
+
+_stage1 = GeometryStage1Screen()
+_stage2 = GeometryStage2Check()
 
 
 class BaselineMode:
     UNRESTRICTED = 0
     BASELINE_J5_BLOCK_SKIP = 1
+    GEOMETRY_BLOCK = 2
 
     def apply(
         self,
@@ -28,7 +38,7 @@ class BaselineMode:
         """Apply mode logic to joints.
 
         Args:
-            mode: 0=unrestricted, 1=baseline_j5_block_skip
+            mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
 
@@ -40,6 +50,9 @@ class BaselineMode:
 
         if mode == self.BASELINE_J5_BLOCK_SKIP:
             return self._apply_baseline_j5_block_skip(own_joints, peer_state)
+
+        if mode == self.GEOMETRY_BLOCK:
+            return self._apply_geometry_block(own_joints, peer_state)
 
         raise ValueError(f"Unknown mode: {mode!r}")
 
@@ -64,6 +77,40 @@ class BaselineMode:
         lateral_gap = abs(own_joints["j4"] - peer_joints["j4"])
         if lateral_gap < 0.05:
             # Collision risk: suppress extension.
+            return {**own_joints, "j5": 0.0}
+
+        return own_joints
+
+    def _apply_geometry_block(
+        self,
+        own_joints: dict,
+        peer_state: "PeerStatePacket | None",
+    ) -> dict:
+        """Two-stage geometry check.
+
+        Stage 1: quick lateral-distance screen (threshold 0.12 m).
+          → "safe"  : return joints unchanged.
+          → "risky" : proceed to Stage 2.
+
+        Stage 2: link-level check (lateral gap < 0.06 m AND combined j5 > 0.5).
+          → "safe"   : return joints unchanged.
+          → "unsafe" : zero out j5 (block the pick immediately).
+        """
+        if peer_state is None:
+            return own_joints
+
+        peer_joints = peer_state.candidate_joints
+        if peer_joints is None:
+            # Peer is idle at this step – no collision risk.
+            return own_joints
+
+        stage1_result = _stage1.screen(own_joints, peer_joints)
+        if stage1_result == "safe":
+            return own_joints
+
+        # Stage 1 flagged risky – consult Stage 2.
+        stage2_result = _stage2.check(own_joints, peer_joints)
+        if stage2_result == "unsafe":
             return {**own_joints, "j5": 0.0}
 
         return own_joints
