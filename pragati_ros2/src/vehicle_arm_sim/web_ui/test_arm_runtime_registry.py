@@ -1,7 +1,5 @@
 """Tests for arm_runtime_registry module — dual-arm launch/runtime manifest."""
 
-import pytest
-
 
 def test_arm_runtime_registry_can_be_imported():
     import arm_runtime_registry  # noqa: F401

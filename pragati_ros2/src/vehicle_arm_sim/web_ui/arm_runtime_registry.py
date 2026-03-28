@@ -27,6 +27,8 @@ def get_runtime_manifest() -> list[ArmRuntimeDescriptor]:
     Returns a list of ArmRuntimeDescriptor objects, one per arm. This is the
     canonical reference for what arms exist and how they are configured.
     """
+    # Both arms share the same backend port: the hackathon implementation is a single
+    # in-process server. In a distributed deployment each arm would bind a distinct port.
     return [
         ArmRuntimeDescriptor(arm_id="arm1", port=HACKATHON_BACKEND_PORT, role="primary"),
         ArmRuntimeDescriptor(arm_id="arm2", port=HACKATHON_BACKEND_PORT, role="secondary"),
