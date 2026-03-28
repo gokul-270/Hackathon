@@ -17,6 +17,7 @@ _MODE_NAMES = {
     BaselineMode.UNRESTRICTED: "unrestricted",
     BaselineMode.BASELINE_J5_BLOCK_SKIP: "baseline_j5_block_skip",
     BaselineMode.GEOMETRY_BLOCK: "geometry_block",
+    BaselineMode.OVERLAP_ZONE_WAIT: "overlap_zone_wait",
 }
 
 _SAFE_HOME = {"j3": 0.0, "j4": 0.0, "j5": 0.0}
@@ -108,6 +109,7 @@ class RunController:
 
             # Apply mode logic and build peer state packets
             applied: dict[str, dict] = {}
+            skipped_flags: dict[str, bool] = {}
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
                 peer_id = "arm2" if arm_id == "arm1" else "arm1"
@@ -120,7 +122,11 @@ class RunController:
                         current_joints=prev_joints[peer_id],
                         candidate_joints=candidates[peer_id],
                     )
-                applied[arm_id] = self._baseline.apply(self._mode, own_cand, peer_state)
+                result_joints, skipped = self._baseline.apply_with_skip(
+                    self._mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id
+                )
+                applied[arm_id] = result_joints
+                skipped_flags[arm_id] = skipped
 
             # Truth monitor observation (only when both arms active).
             # Feed *candidate* (pre-mode) j4 values so the truth record reflects
@@ -142,7 +148,9 @@ class RunController:
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
                 own_applied = applied[arm_id]
+                own_skipped = skipped_flags[arm_id]
                 # j5_blocked: any blocking mode that zeroed j5 when candidate was non-zero
+                # (does not include overlap_zone_wait skips — those are tracked separately)
                 j5_blocked = (
                     self._mode in (BaselineMode.BASELINE_J5_BLOCK_SKIP, BaselineMode.GEOMETRY_BLOCK)
                     and own_applied["j5"] == 0.0
@@ -167,6 +175,7 @@ class RunController:
                         near_collision=near_col,
                         collision=col,
                         min_j4_distance=min_j4_dist,
+                        skipped=own_skipped,
                     )
                 )
                 # Update previous joints for this arm

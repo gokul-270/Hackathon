@@ -10,12 +10,17 @@ Modes
                             distance (< 0.12 m → risky).  Stage 2 checks the
                             combined j5 extension (> 0.5) AND close lateral gap
                             (< 0.06 m) → unsafe → zero out j5.
+3  OVERLAP_ZONE_WAIT      : alternating-turn wait arbitration.  When both arms are
+                            in the overlap zone (|j4| < 0.10 m) and both extending,
+                            the non-priority arm waits (j5=0).  After timeout_steps
+                            the waiting arm skips (j5=0, skipped=True).
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from geometry_check import GeometryStage1Screen, GeometryStage2Check
+from wait_mode_policy import WaitModePolicy
 
 if TYPE_CHECKING:  # pragma: no cover
     from arm_runtime import PeerStatePacket
@@ -28,6 +33,10 @@ class BaselineMode:
     UNRESTRICTED = 0
     BASELINE_J5_BLOCK_SKIP = 1
     GEOMETRY_BLOCK = 2
+    OVERLAP_ZONE_WAIT = 3
+
+    def __init__(self, wait_timeout_steps: int = 0) -> None:
+        self._wait_policy = WaitModePolicy(timeout_steps=wait_timeout_steps)
 
     def apply(
         self,
@@ -38,21 +47,51 @@ class BaselineMode:
         """Apply mode logic to joints.
 
         Args:
-            mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block
+            mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
+                  3=overlap_zone_wait
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
 
         Returns:
-            Modified joints dict (may be same or different from own_joints)
+            Modified joints dict (may be same or different from own_joints).
+            For overlap_zone_wait use apply_with_skip() to also get the skipped flag.
+        """
+        joints, _ = self.apply_with_skip(mode, own_joints, peer_state)
+        return joints
+
+    def apply_with_skip(
+        self,
+        mode: int,
+        own_joints: dict,
+        peer_state: "PeerStatePacket | None",
+        step_id: int = 0,
+        arm_id: str = "arm1",
+    ) -> tuple[dict, bool]:
+        """Apply mode logic and return (applied_joints, skipped).
+
+        Args:
+            mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
+                  3=overlap_zone_wait
+            own_joints: {"j3": float, "j4": float, "j5": float}
+            peer_state: peer arm's PeerStatePacket or None
+            step_id: current step identifier (used by overlap_zone_wait)
+            arm_id: "arm1" or "arm2" (used by overlap_zone_wait)
+
+        Returns:
+            (applied_joints, skipped) where skipped is True only when
+            overlap_zone_wait times out and skips a pick.
         """
         if mode == self.UNRESTRICTED:
-            return own_joints
+            return own_joints, False
 
         if mode == self.BASELINE_J5_BLOCK_SKIP:
-            return self._apply_baseline_j5_block_skip(own_joints, peer_state)
+            return self._apply_baseline_j5_block_skip(own_joints, peer_state), False
 
         if mode == self.GEOMETRY_BLOCK:
-            return self._apply_geometry_block(own_joints, peer_state)
+            return self._apply_geometry_block(own_joints, peer_state), False
+
+        if mode == self.OVERLAP_ZONE_WAIT:
+            return self._apply_overlap_zone_wait(own_joints, peer_state, step_id, arm_id)
 
         raise ValueError(f"Unknown mode: {mode!r}")
 
@@ -114,3 +153,20 @@ class BaselineMode:
             return {**own_joints, "j5": 0.0}
 
         return own_joints
+
+    def _apply_overlap_zone_wait(
+        self,
+        own_joints: dict,
+        peer_state: "PeerStatePacket | None",
+        step_id: int,
+        arm_id: str,
+    ) -> tuple[dict, bool]:
+        """Overlap-zone wait arbitration (Mode 3).
+
+        Delegates to WaitModePolicy which tracks turn state and timeout.
+        Returns (applied_joints, skipped).
+        """
+        peer_joints = None
+        if peer_state is not None:
+            peer_joints = peer_state.candidate_joints
+        return self._wait_policy.apply(step_id, arm_id, own_joints, peer_joints)

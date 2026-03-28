@@ -8,13 +8,14 @@ from typing import Optional
 class StepReport:
     step_id: int
     arm_id: str
-    mode: str  # "unrestricted" | "baseline_j5_block_skip"
+    mode: str  # "unrestricted" | "baseline_j5_block_skip" | "geometry_block" | "overlap_zone_wait"
     candidate_joints: dict  # {"j3": float, "j4": float, "j5": float}
     applied_joints: dict    # after mode logic
     j5_blocked: bool
     near_collision: bool
     collision: bool
     min_j4_distance: Optional[float]  # None if only one arm active in this step
+    skipped: bool = False  # True when overlap_zone_wait skips the step
 
 
 class JsonReporter:
@@ -30,6 +31,7 @@ class JsonReporter:
     def build_run_summary(self, mode: str, total_steps: int) -> dict:
         """Build per-run JSON summary dict."""
         j5_blocked_count = sum(1 for s in self._steps if s.j5_blocked)
+        skipped_count = sum(1 for s in self._steps if s.skipped)
         return {
             "mode": mode,
             "total_steps": total_steps,
@@ -42,6 +44,8 @@ class JsonReporter:
             "steps_with_j5_blocked": j5_blocked_count,
             # Alias used by MarkdownReporter for unified three-mode comparison
             "steps_with_motion_blocked": j5_blocked_count,
+            "steps_with_skipped": skipped_count,
+            "steps_with_blocked_or_skipped": j5_blocked_count + skipped_count,
             "step_reports": [asdict(s) for s in self._steps],
         }
 
