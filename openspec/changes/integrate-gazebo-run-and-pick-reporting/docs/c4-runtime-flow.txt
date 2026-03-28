@@ -1,0 +1,56 @@
+Current runtime split
+=====================
+
+UI Start
+  -> /api/run/start
+  -> RunController
+  -> in-memory replay + report
+
+Manual pick endpoints
+  -> Gazebo joint publish
+  -> pick status / cotton side effects
+
+
+Target runtime flow
+===================
+
+UI Start
+  -> /api/run/start
+  -> RunController
+  -> RunStepExecutor
+  -> Gazebo joint publish
+  -> ArmStepOutcome
+  -> JsonReporter / MarkdownReporter
+
+
+C4-style container sketch
+=========================
+
++-----------------------------+
+| UI                          |
+| mode select + Start         |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Backend run API             |
+| /api/run/start              |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Run Controller              |
+| step sync + mode logic      |
++--------+------------+-------+
+         |            |
+         v            v
++---------------+   +----------------+
+| Step Executor |   | Truth Monitor  |
+| Gazebo motion |   | geometry truth |
++-------+-------+   +--------+-------+
+        |                    |
+        v                    v
+   +---------+         +-----------+
+   | Gazebo  |         | Reporter  |
+   | arms    |         | JSON / MD |
+   +---------+         +-----------+
