@@ -1,49 +1,13 @@
-## ADDED Requirements
+## REMOVED Requirements
 
 ### Requirement: Single poll interval per pick
-
-The frontend `pollPickStatus()` function SHALL maintain at most one active `setInterval` at any time. A module-level variable SHALL track the current interval ID. Before creating a new interval, any existing interval MUST be cleared.
-
-#### Scenario: Rapid button clicks do not stack intervals
-
-- **WHEN** the user clicks the pick button twice within 500ms
-- **THEN** only one `setInterval` poll loop is active
-- **AND** the first interval is cleared before the second is created
-
-#### Scenario: Single completion message per pick
-
-- **WHEN** a pick animation completes (backend returns `status: "done"`)
-- **THEN** the frontend logs exactly one "Pick sequence complete" message
-- **AND** the poll interval is cleared immediately
+**Reason**: Frontend now drives the pick animation directly via async/await. There is no backend status to poll — the frontend knows its own animation state at each step. The `pollPickStatus()` function and `_pickPollInterval` variable are removed entirely.
+**Migration**: Frontend `cottonPick()` calls `executePickAnimation()` directly after receiving compute-only response from `POST /api/cotton/pick`. Status display is updated inline at each animation step.
 
 ### Requirement: Backend status reset between picks
-
-The backend SHALL reset the per-arm `ArmPickState.status` to `"idle"` at the start of each `POST /api/cotton/pick` request for the relevant arm, before spawning the pick thread.
-
-#### Scenario: Status is idle before new pick starts
-
-- **WHEN** a previous pick on arm1 has completed (`arm1.status == "done"`) and a new pick on arm1 is initiated
-- **THEN** `arm1.status` is set to `"idle"` before the pick thread fires
-- **AND** a poll during the reset window returns arm1 status as `"idle"`, not `"done"`
+**Reason**: The `ArmPickState` class and `_arm_pick_state` dictionary are removed. The backend no longer tracks per-arm animation status because it no longer runs animations. The `/api/cotton/pick` endpoint is compute-only — it returns joint values and exits immediately.
+**Migration**: No migration needed. Frontend animation state is managed by module-level `pickRunning`/`pickAborted` booleans that reset naturally between picks.
 
 ### Requirement: Thread-safe pick status access
-
-The backend SHALL protect each `ArmPickState`'s `in_progress` and `status` with the arm's own `threading.Lock`. Both the status endpoint and the pick thread callbacks MUST acquire the arm's lock before reading or writing that arm's state. Different arms' locks are independent.
-
-#### Scenario: Concurrent status read during pick update
-
-- **WHEN** a pick thread is updating arm1's status from `"j4_lateral"` to `"j3_tilt"`
-- **AND** the status endpoint is called simultaneously
-- **THEN** the endpoint returns a consistent snapshot for arm1 (either the old or new state, never a mix)
-
-#### Scenario: Lock does not cause deadlock with pick thread
-
-- **WHEN** a pick animation is in progress on arm1 with multiple steps
-- **THEN** each step acquires and releases arm1's lock without blocking subsequent steps
-- **AND** the pick completes within the expected 5.5s window (+/-0.5s tolerance)
-
-#### Scenario: Arm locks are independent
-
-- **WHEN** arm1's lock is held by a pick thread
-- **AND** the status endpoint queries arm2's state
-- **THEN** arm2's state is returned immediately without waiting for arm1's lock
+**Reason**: No background pick threads exist. The backend no longer spawns `threading.Thread` for pick animations, so there is no concurrent state to protect. The `_arm_joint_locks` dictionary and per-arm `threading.Lock` instances are removed.
+**Migration**: The `POST /api/cotton/{name}/mark-picked` endpoint is a simple synchronous status update — no locking needed as FastAPI handles request serialization within a single event loop.
