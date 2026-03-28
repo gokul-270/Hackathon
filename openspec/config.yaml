@@ -1,0 +1,24 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+# Add your tech stack, conventions, style guides, domain knowledge, etc.
+# Example:
+#   context: |
+#     Tech stack: TypeScript, React, Node.js
+#     We use conventional commits
+#     Domain: e-commerce platform
+
+rules:
+  tasks:
+    - >-
+      Label each task group heading as either [SEQUENTIAL] or [PARALLEL].
+      SEQUENTIAL means the group must complete before subsequent groups can
+      start. PARALLEL means the group can be dispatched to a subagent
+      concurrently with other [PARALLEL] groups — list which group numbers
+      it can run alongside in parentheses, e.g. [PARALLEL with 3, 4].
+    - >-
+      Add a "## Execution Plan" section at the very top of tasks.md containing
+      a table with columns: Group | Depends On | Can Parallelize With.
+      This is the primary guide for subagent dispatch decisions.
+    - Break tasks into chunks completable in a single 1-2 hour session.
