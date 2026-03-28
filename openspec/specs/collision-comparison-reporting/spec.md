@@ -6,11 +6,19 @@ The system SHALL emit JSON per-step and per-run outputs for the baseline replay 
 - **WHEN** the replay run completes
 - **THEN** JSON step and run summaries are produced
 
-### Requirement: Produce Three-Mode Markdown Comparison
+### Requirement: Produce Final Four-Mode Recommendation
 
-The system SHALL produce a Markdown comparison report for unrestricted replay, baseline replay, and
-geometry block replay.
+The system SHALL produce a final recommendation across unrestricted replay, baseline replay,
+geometry block, and overlap wait.
 
-#### Scenario: Markdown report emitted after three-mode run set
-- **WHEN** the three-mode run set completes
-- **THEN** a Markdown comparison report is produced
+#### Scenario: Recommendation prefers zero collisions first
+- **WHEN** four-mode results are available
+- **THEN** the report recommends a zero-collision mode before comparing raw success counts
+
+### Requirement: Summarize Blocked And Skipped Together
+
+The final summary SHALL combine blocked and skipped picks in the high-level report summary.
+
+#### Scenario: Blocked and skipped combined in summary
+- **WHEN** the final run summary is generated
+- **THEN** blocked and skipped picks appear as one combined summary count
