@@ -707,13 +707,13 @@
         <plugin filename="libgz-sim-joint-position-controller-system.so" name="gz::sim::systems::JointPositionController">
             <joint_name>arm_joint3</joint_name>
             <topic>joint3_cmd</topic>
-            <p_gain>800</p_gain>
-            <i_gain>10.0</i_gain>
-            <d_gain>80</d_gain>
-            <i_max>100</i_max>
-            <i_min>-100</i_min>
-            <cmd_max>500</cmd_max>
-            <cmd_min>-500</cmd_min>
+            <p_gain>200</p_gain>
+            <i_gain>1.0</i_gain>
+            <d_gain>50</d_gain>
+            <i_max>30</i_max>
+            <i_min>-30</i_min>
+            <cmd_max>100</cmd_max>
+            <cmd_min>-100</cmd_min>
             <cmd_offset>0.0</cmd_offset>
         </plugin>
     </gazebo>
@@ -1360,13 +1360,13 @@
         <plugin filename="libgz-sim-joint-position-controller-system.so" name="gz::sim::systems::JointPositionController">
             <joint_name>arm_joint3_copy</joint_name>
             <topic>joint3_copy_cmd</topic>
-            <p_gain>800</p_gain>
-            <i_gain>10.0</i_gain>
-            <d_gain>80</d_gain>
-            <i_max>100</i_max>
-            <i_min>-100</i_min>
-            <cmd_max>500</cmd_max>
-            <cmd_min>-500</cmd_min>
+            <p_gain>200</p_gain>
+            <i_gain>1.0</i_gain>
+            <d_gain>50</d_gain>
+            <i_max>30</i_max>
+            <i_min>-30</i_min>
+            <cmd_max>100</cmd_max>
+            <cmd_min>-100</cmd_min>
             <cmd_offset>0.0</cmd_offset>
         </plugin>
     </gazebo>
@@ -1583,13 +1583,13 @@
         <plugin filename="libgz-sim-joint-position-controller-system.so" name="gz::sim::systems::JointPositionController">
             <joint_name>arm_joint3_copy1</joint_name>
             <topic>arm_joint3_copy1_cmd</topic>
-            <p_gain>800</p_gain>
-            <i_gain>10.0</i_gain>
-            <d_gain>80</d_gain>
-            <i_max>100</i_max>
-            <i_min>-100</i_min>
-            <cmd_max>500</cmd_max>
-            <cmd_min>-500</cmd_min>
+            <p_gain>200</p_gain>
+            <i_gain>1.0</i_gain>
+            <d_gain>50</d_gain>
+            <i_max>30</i_max>
+            <i_min>-30</i_min>
+            <cmd_max>100</cmd_max>
+            <cmd_min>-100</cmd_min>
             <cmd_offset>0.0</cmd_offset>
         </plugin>
     </gazebo><gazebo>
