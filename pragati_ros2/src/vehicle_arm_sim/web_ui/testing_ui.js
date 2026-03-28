@@ -48,6 +48,10 @@
     var tfReady       = false;
     var tfMatrix      = null;   // 4×4 camera_link → arm_yanthra_link transform
 
+    // Pick animation state
+    var pickRunning = false;
+    var pickAborted = false;
+
     // Cotton sequence — named constants
     var CAM_SEQ_TF_FRAME_FIXED  = 'camera_link';
     var CAM_SEQ_TF_FRAME_ARM    = 'arm_yanthra_link';
@@ -124,6 +128,14 @@
         while (logArea.children.length > 200) {
             logArea.removeChild(logArea.firstChild);
         }
+    }
+
+    function showToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-' + (type || 'info');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.remove(); }, 5000);
     }
 
     // =========================================================================
@@ -653,6 +665,64 @@
 
     function sleep(ms) {
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
+    }
+
+    async function triplePublish(topic, value) {
+        for (var i = 0; i < 3; i++) {
+            publishArmJoint(topic, value);
+            if (i < 2) await sleep(500);
+        }
+    }
+
+    async function executePickAnimation(armKey, cottonName, j3, j4, j5) {
+        var cfg = ARM_CONFIGS[armKey];
+        if (!cfg) { log('Unknown arm: ' + armKey, 'error'); return; }
+
+        function shouldAbort() { return estopActive || pickAborted; }
+
+        // Step 1: J4 lateral
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j4, j4);
+        updateSliderUI(armKey, 0, j4, 0);
+        await sleep(800);
+
+        // Step 2: J3 tilt
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j3, j3);
+        updateSliderUI(armKey, j3, j4, 0);
+        await sleep(800);
+
+        // Step 3: J5 extend
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j5, j5);
+        updateSliderUI(armKey, j3, j4, j5);
+        await sleep(1400);
+
+        // Step 4: mark-picked
+        if (shouldAbort()) return;
+        try {
+            await fetch('/api/cotton/' + cottonName + '/mark-picked', { method: 'POST' });
+        } catch (e) {
+            log('mark-picked failed: ' + e, 'error');
+        }
+
+        // Step 5: J5 retract
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j5, 0);
+        updateSliderUI(armKey, j3, j4, 0);
+        await sleep(800);
+
+        // Step 6: J3 home
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j3, 0);
+        updateSliderUI(armKey, 0, j4, 0);
+        await sleep(800);
+
+        // Step 7: J4 home
+        if (shouldAbort()) return;
+        await triplePublish(cfg.j4, 0);
+        updateSliderUI(armKey, 0, 0, 0);
+        await sleep(900);
     }
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -1433,106 +1503,82 @@
         .catch(function (e) { log('Remove all error: ' + e, 'error'); });
     }
 
-    function cottonPickAll() {
+    async function pickArmCottons(armKey, cottons) {
+        for (var i = 0; i < cottons.length; i++) {
+            if (pickAborted || estopActive) break;
+            var c = cottons[i];
+            log('[' + armKey + '] Picking ' + c.name + ' (' + (i + 1) + '/' + cottons.length + ')');
+            await executePickAnimation(armKey, c.name, c.j3, c.j4, c.j5);
+        }
+    }
+
+    async function cottonPickAll() {
         var params = getCottonParams();
         var pickAllBtn = document.getElementById('cotton-pick-all-btn');
         var removeAllBtn = document.getElementById('cotton-remove-all-btn');
         var statusDiv = document.getElementById('cotton-pick-status');
         var statusText = document.getElementById('cotton-pick-status-text');
 
+        if (pickRunning) return;
+        pickRunning = true;
+        pickAborted = false;
         if (pickAllBtn) pickAllBtn.disabled = true;
         if (removeAllBtn) removeAllBtn.disabled = true;
         statusDiv.style.display = 'block';
         statusDiv.className = 'pick-status picking';
-        statusText.textContent = 'Picking all...';
+        statusText.textContent = 'Computing...';
 
-        log('Starting pick-all sequence on ' + params.arm + '...');
-        fetch('/api/cotton/pick-all', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                arm: params.arm,
-                enable_phi_compensation: params.enable_phi_compensation,
-            }),
-        })
-        .then(function (r) {
-            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
-        })
-        .then(function (resp) {
+        try {
+            var resp = await fetch('/api/cotton/pick-all', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    enable_phi_compensation: params.enable_phi_compensation,
+                }),
+            });
+
+            var data = await resp.json();
             if (!resp.ok) {
-                log('Pick-all error: ' + resp.data.detail, 'error');
-                if (pickAllBtn) pickAllBtn.disabled = false;
-                if (removeAllBtn) removeAllBtn.disabled = false;
+                log('Pick-all error: ' + (data.detail || 'unknown'), 'error');
                 statusDiv.className = 'pick-status';
                 statusText.textContent = 'Error';
                 return;
             }
-            if (resp.data.status === 'nothing_to_pick') {
+
+            if (data.status === 'nothing_to_pick') {
                 log('No cottons to pick', 'warn');
-                if (pickAllBtn) pickAllBtn.disabled = false;
-                if (removeAllBtn) removeAllBtn.disabled = false;
                 statusDiv.style.display = 'none';
                 return;
             }
-            log('Pick-all started: ' + resp.data.total + ' cotton(s)', 'success');
-            pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText);
-        })
-        .catch(function (e) {
+
+            if (data.warnings && data.warnings.length > 0) {
+                data.warnings.forEach(function (w) { log('Warning: ' + w, 'warn'); });
+            }
+
+            var armKeys = Object.keys(data.arms);
+            var total = armKeys.reduce(function (sum, k) { return sum + data.arms[k].length; }, 0);
+            log('Pick-all: ' + total + ' cotton(s) across ' + armKeys.length + ' arm(s)', 'success');
+            statusText.textContent = 'Animating ' + total + ' cotton(s)...';
+
+            // Parallel across arms, sequential within each arm
+            var promises = armKeys.map(function (armKey) {
+                return pickArmCottons(armKey, data.arms[armKey]);
+            });
+            await Promise.all(promises);
+
+            statusDiv.className = 'pick-status done';
+            statusText.textContent = 'Done';
+            log('Pick-all complete', 'success');
+            setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+        } catch (e) {
             log('Pick-all error: ' + e, 'error');
-            if (pickAllBtn) pickAllBtn.disabled = false;
-            if (removeAllBtn) removeAllBtn.disabled = false;
             statusDiv.className = 'pick-status';
             statusText.textContent = 'Error';
-        });
-    }
-
-    var _pickAllPollInterval = null;
-
-    function pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText) {
-        if (_pickAllPollInterval) {
-            clearInterval(_pickAllPollInterval);
-            _pickAllPollInterval = null;
+        } finally {
+            pickRunning = false;
+            if (pickAllBtn) pickAllBtn.disabled = false;
+            if (removeAllBtn) removeAllBtn.disabled = false;
         }
-        _pickAllPollInterval = setInterval(function () {
-            fetch('/api/cotton/pick/status')
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-                // Per-arm status: aggregate progress across all arms
-                var arms = d.arms || {};
-                var anyPicking = false;
-                var totalCompleted = 0;
-                var totalCount = 0;
-                var currentNames = [];
-                Object.keys(arms).forEach(function (armName) {
-                    var arm = arms[armName];
-                    if (arm.in_progress) {
-                        anyPicking = true;
-                        if (arm.current) currentNames.push(arm.current);
-                    }
-                    if (arm.progress && arm.progress.length === 2) {
-                        totalCompleted += arm.progress[0];
-                        totalCount += arm.progress[1];
-                    }
-                });
-
-                if (totalCount > 0) {
-                    statusText.textContent = 'Picking ' + totalCompleted +
-                        '/' + totalCount + ' (' + currentNames.join(', ') + ')';
-                }
-                if (!anyPicking) {
-                    clearInterval(_pickAllPollInterval);
-                    _pickAllPollInterval = null;
-                    if (pickAllBtn) pickAllBtn.disabled = false;
-                    if (removeAllBtn) removeAllBtn.disabled = false;
-                    statusDiv.className = 'pick-status done';
-                    statusText.textContent = 'Done';
-                    log('Pick-all sequence complete', 'success');
-                    refreshCottonTable();
-                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
-                }
-            })
-            .catch(function () { /* ignore poll errors */ });
-        }, 500);
     }
 
     function cottonCompute() {
@@ -1567,78 +1613,62 @@
         .catch(function (e) { log('Compute error: ' + e, 'error'); });
     }
 
-    function cottonPick() {
+    async function cottonPick() {
         var params = getCottonParams();
         var pickBtn = document.getElementById('cotton-pick-btn');
         var statusDiv = document.getElementById('cotton-pick-status');
         var statusText = document.getElementById('cotton-pick-status-text');
 
+        if (pickRunning) return;
+        pickRunning = true;
+        pickAborted = false;
         pickBtn.disabled = true;
         statusDiv.style.display = 'block';
         statusDiv.className = 'pick-status picking';
-        statusText.textContent = 'Picking...';
+        statusText.textContent = 'Computing...';
 
-        log('Starting pick sequence on ' + params.arm + '...');
-        fetch('/api/cotton/pick', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                arm: params.arm,
-                enable_j4_compensation: params.enable_j4_compensation,
-                enable_phi_compensation: params.enable_phi_compensation,
-            }),
-        })
-        .then(function (r) {
-            if (!r.ok) {
-                return r.json().then(function (err) {
-                    throw new Error(err.detail || ('HTTP ' + r.status));
-                });
+        try {
+            var resp = await fetch('/api/cotton/pick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    arm: params.arm,
+                    enable_phi_compensation: params.enable_phi_compensation,
+                }),
+            });
+
+            if (!resp.ok) {
+                var err = await resp.json();
+                throw new Error(err.detail || ('HTTP ' + resp.status));
             }
-            return r.json();
-        })
-        .then(function (d) {
-            log('Pick started: J3=' + d.j3.toFixed(3) + ' J4=' + d.j4.toFixed(3) +
-                ' J5=' + d.j5.toFixed(3), 'success');
-            pollPickStatus(pickBtn, statusDiv, statusText);
-        })
-        .catch(function (e) {
+
+            var d = await resp.json();
+            if (!d.reachable) {
+                log('Unreachable: ' + (d.reason || 'target out of range'), 'error');
+                showToast('Unreachable: ' + (d.reason || 'target out of range'), 'error');
+                statusDiv.className = 'pick-status';
+                statusText.textContent = 'Unreachable';
+                return;
+            }
+
+            log('Pick: J3=' + d.j3.toFixed(3) + ' J4=' + d.j4.toFixed(3) +
+                ' J5=' + d.j5.toFixed(3) + ' → animating...', 'success');
+            statusText.textContent = 'Animating...';
+
+            await executePickAnimation(d.arm, d.cotton_name, d.j3, d.j4, d.j5);
+
+            statusDiv.className = 'pick-status done';
+            statusText.textContent = 'Done';
+            log('Pick complete', 'success');
+            setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+        } catch (e) {
             log('Pick error: ' + e, 'error');
-            pickBtn.disabled = false;
             statusDiv.className = 'pick-status';
             statusText.textContent = 'Error';
-        });
-    }
-
-    var _pickPollInterval = null;
-
-    function pollPickStatus(pickBtn, statusDiv, statusText) {
-        // Clear any existing poll to prevent stacking (D2)
-        if (_pickPollInterval) {
-            clearInterval(_pickPollInterval);
-            _pickPollInterval = null;
+        } finally {
+            pickRunning = false;
+            pickBtn.disabled = false;
         }
-        var selectedArm = (document.getElementById('cotton-arm-select') || {}).value || 'arm1';
-        _pickPollInterval = setInterval(function () {
-            fetch('/api/cotton/pick/status')
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-                // Read per-arm status for the selected arm
-                var armData = (d.arms || {})[selectedArm] || {};
-                if (armData.status && armData.status !== 'idle' && armData.status !== 'done') {
-                    statusText.textContent = armData.status + (armData.current ? ' (' + armData.current + ')' : '');
-                }
-                if (!armData.in_progress) {
-                    clearInterval(_pickPollInterval);
-                    _pickPollInterval = null;
-                    pickBtn.disabled = false;
-                    statusDiv.className = 'pick-status done';
-                    statusText.textContent = 'Done';
-                    log('Pick sequence complete', 'success');
-                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
-                }
-            })
-            .catch(function () { /* ignore poll errors */ });
-        }, 500);
     }
 
     // =========================================================================

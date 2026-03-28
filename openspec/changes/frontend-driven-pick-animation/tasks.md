@@ -55,40 +55,40 @@
 
 ## 5. Frontend: triplePublish + executePickAnimation [SEQUENTIAL]
 
-- [ ] 5.1 Write JS test: `triplePublish()` calls `publishArmJoint()` 3 times with 500ms gaps (RED)
-- [ ] 5.2 Implement `triplePublish(topic, value)` async function in testing_ui.js (GREEN)
-- [ ] 5.3 Write JS test: `executePickAnimation()` executes 6 steps in correct order with correct topics per arm (RED)
-- [ ] 5.4 Write JS test: `executePickAnimation()` calls mark-picked after step 3 (RED)
-- [ ] 5.5 Write JS test: `executePickAnimation()` aborts on `pickAborted` flag — does not call mark-picked if before step 3 (RED)
-- [ ] 5.6 Write JS test: `executePickAnimation()` aborts on `estopActive` flag (RED)
-- [ ] 5.7 Write JS test: `pickRunning` transitions true→false across animation lifecycle (RED)
-- [ ] 5.8 Implement `executePickAnimation(armKey, cottonName, j3, j4, j5)` with abort checks, mark-picked call, status UI updates (GREEN for 5.3–5.7)
-- [ ] 5.9 Run JS test suite, confirm all pass (GREEN gate)
+- [x] 5.1 Write JS test: `triplePublish()` calls `publishArmJoint()` 3 times with 500ms gaps (RED)
+- [x] 5.2 Implement `triplePublish(topic, value)` async function in testing_ui.js (GREEN)
+- [x] 5.3 Write JS test: `executePickAnimation()` executes 6 steps in correct order with correct topics per arm (RED)
+- [x] 5.4 Write JS test: `executePickAnimation()` calls mark-picked after step 3 (RED)
+- [x] 5.5 Write JS test: `executePickAnimation()` aborts on `pickAborted` flag — does not call mark-picked if before step 3 (RED)
+- [x] 5.6 Write JS test: `executePickAnimation()` aborts on `estopActive` flag (RED)
+- [x] 5.7 Write JS test: `pickRunning` transitions true→false across animation lifecycle (RED)
+- [x] 5.8 Implement `executePickAnimation(armKey, cottonName, j3, j4, j5)` with abort checks, mark-picked call, status UI updates (GREEN for 5.3–5.7)
+- [x] 5.9 Run JS test suite, confirm all pass (GREEN gate)
 
 ## 6. Frontend: Refactored cottonPick/cottonPickAll [SEQUENTIAL]
 
-- [ ] 6.1 Write JS test: `cottonPick()` calls compute-only endpoint then `executePickAnimation()` (RED)
-- [ ] 6.2 Write JS test: `cottonPick()` shows red toast and does not animate when `reachable: false` (RED)
-- [ ] 6.3 Refactor `cottonPick()` to call compute-only endpoint + `executePickAnimation()` (GREEN)
-- [ ] 6.4 Write JS test: `cottonPickAll()` launches parallel `Promise.all()` per arm, sequential within arm (RED)
-- [ ] 6.5 Write JS test: `cottonPickAll()` handles `nothing_to_pick` response (RED)
-- [ ] 6.6 Implement `pickArmCottons(armKey, cottons)` helper and refactor `cottonPickAll()` (GREEN)
-- [ ] 6.7 Write JS test: Pick and Pick All buttons disabled during animation, re-enabled after (RED then GREEN)
-- [ ] 6.8 Run JS test suite, confirm all pass (GREEN gate)
+- [x] 6.1 Write JS test: `cottonPick()` calls compute-only endpoint then `executePickAnimation()` (RED)
+- [x] 6.2 Write JS test: `cottonPick()` shows red toast and does not animate when `reachable: false` (RED)
+- [x] 6.3 Refactor `cottonPick()` to call compute-only endpoint + `executePickAnimation()` (GREEN)
+- [x] 6.4 Write JS test: `cottonPickAll()` launches parallel `Promise.all()` per arm, sequential within arm (RED)
+- [x] 6.5 Write JS test: `cottonPickAll()` handles `nothing_to_pick` response (RED)
+- [x] 6.6 Implement `pickArmCottons(armKey, cottons)` helper and refactor `cottonPickAll()` (GREEN)
+- [x] 6.7 Write JS test: Pick and Pick All buttons disabled during animation, re-enabled after (RED then GREEN)
+- [x] 6.8 Run JS test suite, confirm all pass (GREEN gate)
 
 ## 7. Frontend: Remove polling code [SEQUENTIAL]
 
-- [ ] 7.1 Write JS test: no function `pollPickStatus` or `pollPickAllStatus` exists in source (RED)
-- [ ] 7.2 Write JS test: no variable `_pickPollInterval` or `_pickAllPollInterval` exists in source (RED)
-- [ ] 7.3 Remove `pollPickStatus()`, `pollPickAllStatus()`, `_pickPollInterval`, `_pickAllPollInterval` from testing_ui.js (GREEN)
-- [ ] 7.4 Remove any references to removed polling functions from other code paths (REFACTOR)
-- [ ] 7.5 Run full test suite (Python + JS), confirm all pass (GREEN gate)
+- [x] 7.1 Write JS test: no function `pollPickStatus` or `pollPickAllStatus` exists in source (RED)
+- [x] 7.2 Write JS test: no variable `_pickPollInterval` or `_pickAllPollInterval` exists in source (RED)
+- [x] 7.3 Remove `pollPickStatus()`, `pollPickAllStatus()`, `_pickPollInterval`, `_pickAllPollInterval` from testing_ui.js (GREEN)
+- [x] 7.4 Remove any references to removed polling functions from other code paths (REFACTOR)
+- [x] 7.5 Run full test suite (Python + JS), confirm all pass (GREEN gate)
 
 ## 8. Integration verification [SEQUENTIAL]
 
-- [ ] 8.1 Run full Python test suite: `python3 -m pytest web_ui/test_fk_chain.py web_ui/test_cam_markers_backend.py -v`
-- [ ] 8.2 Run full JS test suite: `node --test web_ui/tests/test_cam_to_joint.js`
-- [ ] 8.3 Verify no `gz topic` subprocess calls remain in testing_backend.py
-- [ ] 8.4 Verify no polling functions remain in testing_ui.js
-- [ ] 8.5 Verify no `ArmPickState` or `_arm_pick_state` remain in testing_backend.py
-- [ ] 8.6 Commit all changes with message `feat: frontend-driven pick animation via rosbridge`
+- [x] 8.1 Run full Python test suite: `python3 -m pytest web_ui/test_fk_chain.py web_ui/test_cam_markers_backend.py -v`
+- [x] 8.2 Run full JS test suite: `node --test web_ui/tests/test_cam_to_joint.js`
+- [x] 8.3 Verify no `gz topic` subprocess calls remain in testing_backend.py
+- [x] 8.4 Verify no polling functions remain in testing_ui.js
+- [x] 8.5 Verify no `ArmPickState` or `_arm_pick_state` remain in testing_backend.py
+- [x] 8.6 Commit all changes with message `feat: frontend-driven pick animation via rosbridge`
