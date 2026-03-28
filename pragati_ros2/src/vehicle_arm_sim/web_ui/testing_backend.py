@@ -558,29 +558,18 @@ async def get_joint_limits():
 # ---------------------------------------------------------------------------
 # Camera → World FK
 # ---------------------------------------------------------------------------
-# T_world_camera derived from vehicle_arm_merged.urdf + spawn pose (Rx 90°, z=1.0).
-# Camera joint: xyz=(1.55, -0.25, 0.9) rpy=(-1.5708, 0, -0.2618) rel. base-v1.
-# Vehicle spawn: z=1.0, orientation=(x=0.7071068, y=0, z=0, w=0.7071068) = Rx(90°).
-#
-# Row 0: [ 0.9659,  0.0,    0.2588,  1.55 ]
-# Row 1: [ 0.0,     1.0,    0.0,    -0.90 ]
-# Row 2: [-0.2588,  0.0,    0.9659,  0.75 ]
-# Row 3: [ 0.0,     0.0,    0.0,     1.0  ]
-_T_WC_R00 = 0.9659
-_T_WC_R02 = 0.2588
-_T_WC_TX  = 1.55
-_T_WC_TY  = -0.90
-_T_WC_R20 = -0.2588
-_T_WC_R22 = 0.9659
-_T_WC_TZ  = 0.75
 
 
 def cam_to_world(cam_x: float, cam_y: float, cam_z: float) -> tuple[float, float, float]:
-    """Convert camera-frame point to Gazebo world frame via pre-computed FK matrix."""
-    wx = _T_WC_R00 * cam_x + _T_WC_R02 * cam_z + _T_WC_TX
-    wy = cam_y + _T_WC_TY
-    wz = _T_WC_R20 * cam_x + _T_WC_R22 * cam_z + _T_WC_TZ
-    return wx, wy, wz
+    """Convert camera-frame point to Gazebo world frame via FK.
+
+    Uses Arm 1 with J3=0, J4=0 as default (camera is on Arm 1).
+    """
+    return camera_to_world_fk(
+        cam_x, cam_y, cam_z,
+        j3=0.0, j4=0.0,
+        arm_config=ARM_CONFIGS['arm1'],
+    )
 
 
 # ---------------------------------------------------------------------------
