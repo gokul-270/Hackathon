@@ -1317,15 +1317,19 @@
     // =========================================================================
 
     function setupCottonPlacement() {
-        var spawnBtn   = document.getElementById('cotton-spawn-btn');
-        var removeBtn  = document.getElementById('cotton-remove-btn');
-        var computeBtn = document.getElementById('cotton-compute-btn');
-        var pickBtn    = document.getElementById('cotton-pick-btn');
+        var spawnBtn     = document.getElementById('cotton-spawn-btn');
+        var removeBtn    = document.getElementById('cotton-remove-btn');
+        var computeBtn   = document.getElementById('cotton-compute-btn');
+        var pickBtn      = document.getElementById('cotton-pick-btn');
+        var removeAllBtn = document.getElementById('cotton-remove-all-btn');
+        var pickAllBtn   = document.getElementById('cotton-pick-all-btn');
 
-        if (spawnBtn)   spawnBtn.addEventListener('click', cottonSpawn);
-        if (removeBtn)  removeBtn.addEventListener('click', cottonRemove);
-        if (computeBtn) computeBtn.addEventListener('click', cottonCompute);
-        if (pickBtn)    pickBtn.addEventListener('click', cottonPick);
+        if (spawnBtn)     spawnBtn.addEventListener('click', cottonSpawn);
+        if (removeBtn)    removeBtn.addEventListener('click', cottonRemove);
+        if (computeBtn)   computeBtn.addEventListener('click', cottonCompute);
+        if (pickBtn)      pickBtn.addEventListener('click', cottonPick);
+        if (removeAllBtn) removeAllBtn.addEventListener('click', cottonRemoveAll);
+        if (pickAllBtn)   pickAllBtn.addEventListener('click', cottonPickAll);
     }
 
     function getCottonParams() {
@@ -1363,6 +1367,7 @@
             var d = resp.data;
             log('Cotton spawned at world(' + d.world_x.toFixed(3) + ', ' +
                 d.world_y.toFixed(3) + ', ' + d.world_z.toFixed(3) + ')', 'success');
+            refreshCottonTable();
         })
         .catch(function (e) { log('Cotton spawn error: ' + e, 'error'); });
     }
@@ -1370,8 +1375,136 @@
     function cottonRemove() {
         fetch('/api/cotton/remove', { method: 'POST' })
         .then(function (r) { return r.json(); })
-        .then(function () { log('Cotton removed', 'success'); })
+        .then(function () {
+            log('Cotton removed', 'success');
+            refreshCottonTable();
+        })
         .catch(function (e) { log('Cotton remove error: ' + e, 'error'); });
+    }
+
+    function refreshCottonTable() {
+        fetch('/api/cotton/list')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+            var container = document.getElementById('cotton-table-container');
+            var tbody = document.getElementById('cotton-table-body');
+            if (!container || !tbody) return;
+
+            tbody.innerHTML = '';
+            var cottons = d.cottons || [];
+
+            if (cottons.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            cottons.forEach(function (c) {
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td>' + c.name + '</td>' +
+                    '<td>' + c.cam_x.toFixed(3) + '</td>' +
+                    '<td>' + c.cam_y.toFixed(3) + '</td>' +
+                    '<td>' + c.cam_z.toFixed(3) + '</td>' +
+                    '<td class="status-' + c.status + '">' + c.status + '</td>';
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(function () { /* ignore refresh errors */ });
+    }
+
+    function cottonRemoveAll() {
+        fetch('/api/cotton/remove-all', { method: 'POST' })
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                log('Remove all failed: ' + resp.data.detail, 'error');
+                return;
+            }
+            log('Removed ' + resp.data.removed + ' cotton(s)', 'success');
+            refreshCottonTable();
+        })
+        .catch(function (e) { log('Remove all error: ' + e, 'error'); });
+    }
+
+    function cottonPickAll() {
+        var params = getCottonParams();
+        var pickAllBtn = document.getElementById('cotton-pick-all-btn');
+        var statusDiv = document.getElementById('cotton-pick-status');
+        var statusText = document.getElementById('cotton-pick-status-text');
+
+        if (pickAllBtn) pickAllBtn.disabled = true;
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'pick-status picking';
+        statusText.textContent = 'Picking all...';
+
+        log('Starting pick-all sequence on ' + params.arm + '...');
+        fetch('/api/cotton/pick-all', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                arm: params.arm,
+                enable_phi_compensation: params.enable_phi_compensation,
+            }),
+        })
+        .then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        })
+        .then(function (resp) {
+            if (!resp.ok) {
+                log('Pick-all error: ' + resp.data.detail, 'error');
+                if (pickAllBtn) pickAllBtn.disabled = false;
+                statusDiv.className = 'pick-status';
+                statusText.textContent = 'Error';
+                return;
+            }
+            if (resp.data.status === 'nothing_to_pick') {
+                log('No cottons to pick', 'warn');
+                if (pickAllBtn) pickAllBtn.disabled = false;
+                statusDiv.style.display = 'none';
+                return;
+            }
+            log('Pick-all started: ' + resp.data.total + ' cotton(s)', 'success');
+            pollPickAllStatus(pickAllBtn, statusDiv, statusText);
+        })
+        .catch(function (e) {
+            log('Pick-all error: ' + e, 'error');
+            if (pickAllBtn) pickAllBtn.disabled = false;
+            statusDiv.className = 'pick-status';
+            statusText.textContent = 'Error';
+        });
+    }
+
+    var _pickAllPollInterval = null;
+
+    function pollPickAllStatus(pickAllBtn, statusDiv, statusText) {
+        if (_pickAllPollInterval) {
+            clearInterval(_pickAllPollInterval);
+            _pickAllPollInterval = null;
+        }
+        _pickAllPollInterval = setInterval(function () {
+            fetch('/api/cotton/pick/status')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.progress) {
+                    statusText.textContent = 'Picking ' + d.progress.current +
+                        '/' + d.progress.total + ' (' + (d.current || '') + ')';
+                }
+                if (!d.in_progress) {
+                    clearInterval(_pickAllPollInterval);
+                    _pickAllPollInterval = null;
+                    if (pickAllBtn) pickAllBtn.disabled = false;
+                    statusDiv.className = 'pick-status done';
+                    statusText.textContent = 'Done';
+                    log('Pick-all sequence complete', 'success');
+                    refreshCottonTable();
+                    setTimeout(function () { statusDiv.style.display = 'none'; }, 3000);
+                }
+            })
+            .catch(function () { /* ignore poll errors */ });
+        }, 500);
     }
 
     function cottonCompute() {

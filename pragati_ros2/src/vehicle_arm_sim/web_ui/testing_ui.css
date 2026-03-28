@@ -940,3 +940,38 @@ input[type="range"]::-moz-range-thumb {
     background: rgba(102, 187, 106, 0.15);
     color: var(--success);
 }
+
+/* Multi-cotton table */
+.cotton-table-container {
+    margin-top: 12px;
+}
+.cotton-table-container h3 {
+    margin: 0 0 6px 0;
+    font-size: 0.95rem;
+}
+.cotton-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+.cotton-table th,
+.cotton-table td {
+    padding: 4px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.cotton-table th {
+    font-weight: 600;
+    color: var(--text-secondary, #aaa);
+}
+.cotton-table .status-spawned {
+    color: var(--accent, #4fc3f7);
+}
+.cotton-table .status-picked {
+    color: var(--success, #66bb6a);
+}
+.cotton-table-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+}

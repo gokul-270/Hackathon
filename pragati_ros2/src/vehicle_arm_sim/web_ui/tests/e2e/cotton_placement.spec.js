@@ -62,3 +62,90 @@ test('Spawn unreachable cotton shows error message in log', async ({ page }) => 
   await expect(errorEntry.first()).toBeVisible({ timeout: 3000 });
   await expect(errorEntry.first()).toContainText('Unreachable');
 });
+
+test('Cotton table shows spawned cottons', async ({ page }) => {
+  await page.goto('/');
+  // Mock spawn to succeed and list to return cottons
+  await page.route('/api/cotton/spawn', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        status: 'ok',
+        cotton_name: 'cotton_0',
+        world_x: 1.0, world_y: 2.0, world_z: 0.5,
+      }),
+    });
+  });
+  await page.route('/api/cotton/list', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        cottons: [
+          { name: 'cotton_0', cam_x: 0.494, cam_y: -0.001, cam_z: 0.004, arm: 'arm1', status: 'spawned' },
+          { name: 'cotton_1', cam_x: 0.525, cam_y: 0.020, cam_z: 0.008, arm: 'arm1', status: 'spawned' },
+        ],
+      }),
+    });
+  });
+  await page.locator('#cotton-spawn-btn').click();
+  const table = page.locator('#cotton-table-container');
+  await expect(table).toBeVisible({ timeout: 3000 });
+  const rows = page.locator('#cotton-table-body tr');
+  await expect(rows).toHaveCount(2);
+});
+
+test('Remove All clears cotton table', async ({ page }) => {
+  await page.goto('/');
+  // First show a populated table by mocking list
+  await page.route('/api/cotton/list', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ cottons: [] }),
+    });
+  });
+  await page.route('/api/cotton/remove-all', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'ok', removed: 2 }),
+    });
+  });
+  await page.locator('#cotton-remove-all-btn').click();
+  const table = page.locator('#cotton-table-container');
+  await expect(table).toBeHidden({ timeout: 3000 });
+});
+
+test('Pick All button starts pick-all sequence', async ({ page }) => {
+  await page.goto('/');
+  await page.route('/api/cotton/pick-all', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'picking', total: 2 }),
+    });
+  });
+  await page.route('/api/cotton/pick/status', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        in_progress: false,
+        status: 'done',
+      }),
+    });
+  });
+  await page.route('/api/cotton/list', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ cottons: [] }),
+    });
+  });
+  await page.locator('#cotton-pick-all-btn').click();
+  const logArea = page.locator('#log-area');
+  const successEntry = logArea.locator('.log-success');
+  await expect(successEntry.last()).toContainText('Pick-all', { timeout: 3000 });
+});

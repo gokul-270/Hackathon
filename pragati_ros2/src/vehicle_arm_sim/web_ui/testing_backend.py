@@ -680,6 +680,8 @@ _last_cotton_arm: str | None = None
 _last_cotton_j4: float = 0.0
 _pick_in_progress: bool = False
 _pick_status: str = "idle"
+_pick_current: str | None = None  # Name of cotton currently being picked
+_pick_progress: dict | None = None  # {"current": N, "total": M} during pick-all
 _pick_lock = threading.Lock()  # Protects _pick_in_progress and _pick_status
 
 # SDF template for cotton ball (white sphere, 0.04m radius)
@@ -1083,10 +1085,144 @@ def cotton_pick(req: CottonPickRequest):
 def cotton_pick_status():
     """Get the current status of the pick animation."""
     with _pick_lock:
-        return {
+        resp = {
             "in_progress": _pick_in_progress,
             "status": _pick_status,
         }
+        if _pick_current is not None:
+            resp["current"] = _pick_current
+        if _pick_progress is not None:
+            resp["progress"] = _pick_progress
+        return resp
+
+
+# ---------------------------------------------------------------------------
+# Cotton pick-all endpoint + sequential animation
+# ---------------------------------------------------------------------------
+class CottonPickAllRequest(BaseModel):
+    arm: str = "arm1"
+    enable_phi_compensation: bool = False
+
+
+def _execute_pick_all_sequence(
+    to_pick: list[CottonState], arm_config: dict, enable_phi_comp: bool
+):
+    """Run pick animation for multiple cottons sequentially in a background thread."""
+    global _pick_in_progress, _pick_status, _pick_current, _pick_progress
+    global _cotton_spawned
+
+    total = len(to_pick)
+    try:
+        for idx, cotton in enumerate(to_pick):
+            with _pick_lock:
+                _pick_current = cotton.name
+                _pick_progress = {"current": idx + 1, "total": total}
+
+            # Compute joint values for this cotton
+            ax, ay, az = camera_to_arm(
+                cotton.cam_x, cotton.cam_y, cotton.cam_z, j4_pos=cotton.j4_pos
+            )
+            result = polar_decompose(ax, ay, az)
+            j3 = result["j3"]
+            j5 = result["j5"]
+
+            if enable_phi_comp:
+                j3 = phi_compensation(j3, j5)
+
+            j3_c = max(J3_MIN, min(J3_MAX, j3))
+            j4_c = max(J4_MIN, min(J4_MAX, result["j4"]))
+            j5_c = max(J5_MIN, min(J5_MAX, j5))
+
+            j3_topic = arm_config["j3_topic"]
+            j4_topic = arm_config["j4_topic"]
+            j5_topic = arm_config["j5_topic"]
+
+            # Pick animation for this cotton
+            with _pick_lock:
+                _pick_status = "j4_lateral"
+            _publish_joint_gz(j4_topic, j4_c)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j3_tilt"
+            _publish_joint_gz(j3_topic, j3_c)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j5_extend"
+            _publish_joint_gz(j5_topic, j5_c)
+            time.sleep(1.4)
+
+            with _pick_lock:
+                _pick_status = "j5_retract"
+            _publish_joint_gz(j5_topic, 0.0)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j3_home"
+            _publish_joint_gz(j3_topic, 0.0)
+            time.sleep(0.8)
+
+            with _pick_lock:
+                _pick_status = "j4_home"
+            _publish_joint_gz(j4_topic, 0.0)
+            time.sleep(0.9)
+
+            # Remove this cotton from Gazebo and mark as picked
+            try:
+                world_name = _detect_gz_world_name()
+                _gz_remove_model(cotton.name, world_name)
+            except Exception:
+                pass
+            cotton.status = "picked"
+
+        with _pick_lock:
+            _pick_status = "done"
+    except Exception as e:
+        logger.error("Pick-all sequence error: %s", e)
+        with _pick_lock:
+            _pick_status = f"error: {e}"
+    finally:
+        with _pick_lock:
+            _pick_in_progress = False
+            _pick_current = None
+            _pick_progress = None
+
+
+@app.post("/api/cotton/pick-all")
+def cotton_pick_all(req: CottonPickAllRequest):
+    """Pick all spawned (unpicked) cottons sequentially."""
+    global _pick_in_progress, _pick_status, _pick_current, _pick_progress
+
+    arm_config = ARM_CONFIGS.get(req.arm)
+    if arm_config is None:
+        raise HTTPException(status_code=400, detail=f"Unknown arm: {req.arm}")
+
+    # Filter to unpicked cottons in spawn order
+    to_pick = [c for c in _cottons.values() if c.status == "spawned"]
+
+    if not to_pick:
+        return {"status": "nothing_to_pick", "total": 0}
+
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(status_code=409, detail="Pick already in progress")
+        _pick_in_progress = True
+        _pick_status = "starting"
+        _pick_current = to_pick[0].name
+        _pick_progress = {"current": 1, "total": len(to_pick)}
+
+    t = threading.Thread(
+        target=_execute_pick_all_sequence,
+        args=(to_pick, arm_config, req.enable_phi_compensation),
+        daemon=True,
+    )
+    t.start()
+
+    return {
+        "status": "picking",
+        "total": len(to_pick),
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -562,3 +562,120 @@ class TestMultiCottonState:
 
         testing_backend._pick_in_progress = False
         self._reset_cotton_state()
+
+
+# ---------------------------------------------------------------------------
+# Sequential pick-all tests (Group 6)
+# ---------------------------------------------------------------------------
+class TestPickAll:
+    """Tests for POST /api/cotton/pick-all sequential picking."""
+
+    def _reset_cotton_state(self):
+        """Reset all cotton globals to clean state."""
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+        testing_backend._cottons.clear()
+        testing_backend._cotton_counter = 0
+
+    def _spawn_cottons(self, client, count=2):
+        """Spawn N cottons using known-reachable coords."""
+        coords = [
+            (0.494, -0.001, 0.004),
+            (0.525, 0.020, 0.008),
+            (0.541, 0.014, 0.011),
+        ]
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            for i in range(count):
+                cx, cy, cz = coords[i % len(coords)]
+                client.post(
+                    "/api/cotton/spawn",
+                    json={"cam_x": cx, "cam_y": cy, "cam_z": cz, "arm": "arm1"},
+                )
+
+    def test_pick_all_sequential_order(self, client):
+        """POST /api/cotton/pick-all picks cottons in spawn order."""
+        self._reset_cotton_state()
+        self._spawn_cottons(client, 2)
+
+        with mock.patch("testing_backend._publish_joint_gz"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend.time.sleep"):
+            resp = client.post(
+                "/api/cotton/pick-all",
+                json={"arm": "arm1"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "picking"
+        assert body["total"] == 2
+        self._reset_cotton_state()
+
+    def test_pick_all_skips_picked_cottons(self, client):
+        """POST /api/cotton/pick-all skips already-picked cottons."""
+        import testing_backend
+        self._reset_cotton_state()
+        self._spawn_cottons(client, 2)
+
+        # Manually mark first cotton as picked
+        testing_backend._cottons["cotton_0"].status = "picked"
+
+        with mock.patch("testing_backend._publish_joint_gz"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend.time.sleep"):
+            resp = client.post(
+                "/api/cotton/pick-all",
+                json={"arm": "arm1"},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        # Only 1 cotton should be picked (cotton_1), cotton_0 is skipped
+        assert body["total"] == 1
+        self._reset_cotton_state()
+
+    def test_pick_all_nothing_to_pick(self, client):
+        """POST /api/cotton/pick-all with no spawned cottons returns nothing_to_pick."""
+        self._reset_cotton_state()
+
+        resp = client.post(
+            "/api/cotton/pick-all",
+            json={"arm": "arm1"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "nothing_to_pick"
+        self._reset_cotton_state()
+
+    def test_pick_status_progress_during_multi(self, client):
+        """GET /api/cotton/pick/status returns current and progress during pick-all."""
+        import testing_backend
+        self._reset_cotton_state()
+
+        # Simulate in-progress multi-pick state
+        testing_backend._pick_in_progress = True
+        testing_backend._pick_status = "j4_lateral"
+        testing_backend._pick_current = "cotton_1"
+        testing_backend._pick_progress = {"current": 2, "total": 3}
+
+        resp = client.get("/api/cotton/pick/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["in_progress"] is True
+        assert body["current"] == "cotton_1"
+        assert body["progress"]["current"] == 2
+        assert body["progress"]["total"] == 3
+
+        # Cleanup
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+        testing_backend._pick_current = None
+        testing_backend._pick_progress = None
+        self._reset_cotton_state()

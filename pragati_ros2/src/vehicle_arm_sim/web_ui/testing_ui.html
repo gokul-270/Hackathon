@@ -274,6 +274,27 @@
                 <div id="cotton-pick-status" class="pick-status" style="display:none;">
                     <span id="cotton-pick-status-text">Idle</span>
                 </div>
+
+                <!-- Multi-cotton table -->
+                <div id="cotton-table-container" class="cotton-table-container" style="display:none;">
+                    <h3>Spawned Cottons</h3>
+                    <table class="cotton-table compact-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Cam X</th>
+                                <th>Cam Y</th>
+                                <th>Cam Z</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cotton-table-body"></tbody>
+                    </table>
+                    <div class="cotton-table-actions">
+                        <button id="cotton-remove-all-btn" class="btn btn-danger">Remove All</button>
+                        <button id="cotton-pick-all-btn" class="btn btn-success">Pick All</button>
+                    </div>
+                </div>
             </section>
 
             <!-- ──────── COTTON POSITION SEQUENCE ──────── -->
