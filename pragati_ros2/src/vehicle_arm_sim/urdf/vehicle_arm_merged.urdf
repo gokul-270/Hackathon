@@ -500,8 +500,8 @@
         </inertial>
     </link>
     <joint name="camera_joint" type="fixed">
-        <origin xyz="1.55 -0.25 0.9" rpy="-1.5707963267948966 0.0 -0.2618"/>
-        <parent link="base-v1"/>
+        <origin xyz="0.016845 0.100461 -0.077129" rpy="1.5708 0.785398 0"/>
+        <parent link="arm_yanthra_link"/>
         <child link="camera_link"/>
     </joint>
     <joint name="camera_optical_joint" type="fixed">

@@ -141,3 +141,43 @@ def test_phi_compensation_zone3():
     # comp_rad = -0.01867 * 2 * pi = -0.11731
     expected = -1.06 + (-0.014) * (1.0 + 0.5 * (0.3 / 0.450)) * 2 * math.pi
     assert abs(j3_compensated - expected) < 1e-9
+
+
+# ---------------------------------------------------------------------------
+# URDF validation tests
+# ---------------------------------------------------------------------------
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+_PKG_DIR = Path(__file__).resolve().parent.parent
+_URDF_PATH = _PKG_DIR / "urdf" / "vehicle_arm_merged.urdf"
+
+
+def test_urdf_camera_joint_parent_is_arm_yanthra_link():
+    """camera_joint parent link must be arm_yanthra_link (not base-v1)."""
+    tree = ET.parse(_URDF_PATH)
+    root = tree.getroot()
+    camera_joint = root.find(".//joint[@name='camera_joint']")
+    assert camera_joint is not None, "camera_joint not found in URDF"
+    parent = camera_joint.find("parent")
+    assert parent is not None, "camera_joint has no <parent> element"
+    assert parent.get("link") == "arm_yanthra_link", (
+        f"camera_joint parent is '{parent.get('link')}', expected 'arm_yanthra_link'"
+    )
+
+
+def test_urdf_camera_joint_origin_matches_yanthra_move():
+    """camera_joint origin must match yanthra_move values."""
+    tree = ET.parse(_URDF_PATH)
+    root = tree.getroot()
+    camera_joint = root.find(".//joint[@name='camera_joint']")
+    origin = camera_joint.find("origin")
+    xyz = origin.get("xyz").split()
+    rpy = origin.get("rpy").split()
+    # Expected: xyz="0.016845 0.100461 -0.077129" rpy="1.5708 0.785398 0"
+    assert abs(float(xyz[0]) - 0.016845) < 1e-4
+    assert abs(float(xyz[1]) - 0.100461) < 1e-4
+    assert abs(float(xyz[2]) - (-0.077129)) < 1e-4
+    assert abs(float(rpy[0]) - 1.5708) < 1e-3
+    assert abs(float(rpy[1]) - 0.785398) < 1e-3
+    assert abs(float(rpy[2]) - 0.0) < 1e-3
