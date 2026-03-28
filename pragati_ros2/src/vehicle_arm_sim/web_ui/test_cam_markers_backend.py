@@ -679,3 +679,133 @@ class TestPickAll:
         testing_backend._pick_current = None
         testing_backend._pick_progress = None
         self._reset_cotton_state()
+
+
+# ---------------------------------------------------------------------------
+# Verification fix: pick status idle reset
+# ---------------------------------------------------------------------------
+class TestPickStatusIdleReset:
+    """Pick status must reset between picks — no stale 'done' visible."""
+
+    def test_pick_status_not_stale_done_after_new_pick(self, client):
+        """POST /api/cotton/pick clears stale 'done' — poll returns 'starting' not 'done'."""
+        import testing_backend
+
+        # Simulate stale "done" from a previous pick
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "done"
+        testing_backend._last_cotton_cam = (0.494, -0.001, 0.004)
+        testing_backend._last_cotton_arm = "arm1"
+        testing_backend._last_cotton_j4 = 0.0
+
+        with mock.patch("testing_backend._execute_pick_sequence"):
+            with mock.patch("threading.Thread") as mock_thread:
+                mock_thread.return_value.start = mock.Mock()
+                resp = client.post(
+                    "/api/cotton/pick",
+                    json={"arm": "arm1"},
+                )
+        assert resp.status_code == 200
+
+        # Poll status — must NOT see stale "done"
+        status_resp = client.get("/api/cotton/pick/status")
+        body = status_resp.json()
+        assert body["status"] != "done", (
+            f"Stale 'done' visible after new pick — should be 'starting'"
+        )
+        assert body["status"] == "starting"
+        # Cleanup
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+
+
+# ---------------------------------------------------------------------------
+# Verification fix: CottonState arm_coords and joint_values
+# ---------------------------------------------------------------------------
+class TestCottonStateFields:
+    """CottonState must include arm_coords and joint_values per spec."""
+
+    def _reset_cotton_state(self):
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+        testing_backend._cottons.clear()
+        testing_backend._cotton_counter = 0
+
+    def test_cotton_state_has_arm_coords_field(self):
+        """CottonState dataclass must have an arm_coords field."""
+        import testing_backend
+        cs = testing_backend.CottonState(
+            name="test",
+            cam_x=0.5, cam_y=0.0, cam_z=0.0,
+            arm="arm1",
+        )
+        assert hasattr(cs, "arm_coords"), "CottonState missing 'arm_coords' field"
+
+    def test_cotton_state_has_joint_values_field(self):
+        """CottonState dataclass must have a joint_values field."""
+        import testing_backend
+        cs = testing_backend.CottonState(
+            name="test",
+            cam_x=0.5, cam_y=0.0, cam_z=0.0,
+            arm="arm1",
+        )
+        assert hasattr(cs, "joint_values"), "CottonState missing 'joint_values' field"
+
+    def test_spawn_stores_arm_coords_in_cotton_state(self, client):
+        """POST /api/cotton/spawn stores arm_coords in CottonState."""
+        import testing_backend
+        self._reset_cotton_state()
+
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+        cs = testing_backend._cottons["cotton_0"]
+        assert cs.arm_coords is not None, "arm_coords not stored at spawn time"
+        assert len(cs.arm_coords) == 3, "arm_coords should be (ax, ay, az)"
+        self._reset_cotton_state()
+
+    def test_spawn_stores_joint_values_in_cotton_state(self, client):
+        """POST /api/cotton/spawn stores joint_values in CottonState."""
+        import testing_backend
+        self._reset_cotton_state()
+
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+        cs = testing_backend._cottons["cotton_0"]
+        assert cs.joint_values is not None, "joint_values not stored at spawn time"
+        assert "j3" in cs.joint_values
+        assert "j4" in cs.joint_values
+        assert "j5" in cs.joint_values
+        self._reset_cotton_state()
+
+    def test_cotton_list_includes_arm_coords_and_joint_values(self, client):
+        """GET /api/cotton/list returns arm_coords and joint_values per cotton."""
+        import testing_backend
+        self._reset_cotton_state()
+
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+
+        resp = client.get("/api/cotton/list")
+        c0 = resp.json()["cottons"][0]
+        assert "arm_coords" in c0, "cotton list missing arm_coords"
+        assert "joint_values" in c0, "cotton list missing joint_values"
+        assert "j3" in c0["joint_values"]
+        self._reset_cotton_state()

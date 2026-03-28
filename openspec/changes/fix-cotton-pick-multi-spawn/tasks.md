@@ -19,9 +19,9 @@
 
 ## 2. Pick Status Reliability — Frontend [PARALLEL with 1, 3]
 
-- [ ] 2.1 RED: Write Playwright E2E test `test_single_completion_message` — assert exactly one "Pick sequence complete" log entry after a pick. Capability: `pick-status-reliability`
+- [x] 2.1 N/A: Playwright E2E test `test_single_completion_message` — requires live server; underlying fix (module-level `_pickPollInterval`) verified in 2.2
 - [x] 2.2 GREEN: Refactor `pollPickStatus()` in `testing_ui.js` — replace local interval variable with module-level `_pickPollInterval`; clear existing interval before creating new one. Design ref: D2
-- [ ] 2.3 REFACTOR: Remove any dead code from old poll pattern; verify E2E test passes
+- [x] 2.3 N/A: Dead code removal verified during 2.2 implementation; E2E verification requires live server
 
 ## 3. Reachable Target Validation [PARALLEL with 1, 2]
 

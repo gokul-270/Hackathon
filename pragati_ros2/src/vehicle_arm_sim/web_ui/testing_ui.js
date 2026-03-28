@@ -1400,12 +1400,19 @@
 
             container.style.display = 'block';
             cottons.forEach(function (c) {
+                var jv = c.joint_values || {};
+                var j3 = jv.j3 != null ? jv.j3.toFixed(3) : '—';
+                var j4 = jv.j4 != null ? jv.j4.toFixed(3) : '—';
+                var j5 = jv.j5 != null ? jv.j5.toFixed(3) : '—';
                 var tr = document.createElement('tr');
                 tr.innerHTML =
                     '<td>' + c.name + '</td>' +
                     '<td>' + c.cam_x.toFixed(3) + '</td>' +
                     '<td>' + c.cam_y.toFixed(3) + '</td>' +
                     '<td>' + c.cam_z.toFixed(3) + '</td>' +
+                    '<td>' + j3 + '</td>' +
+                    '<td>' + j4 + '</td>' +
+                    '<td>' + j5 + '</td>' +
                     '<td class="status-' + c.status + '">' + c.status + '</td>';
                 tbody.appendChild(tr);
             });
@@ -1432,10 +1439,12 @@
     function cottonPickAll() {
         var params = getCottonParams();
         var pickAllBtn = document.getElementById('cotton-pick-all-btn');
+        var removeAllBtn = document.getElementById('cotton-remove-all-btn');
         var statusDiv = document.getElementById('cotton-pick-status');
         var statusText = document.getElementById('cotton-pick-status-text');
 
         if (pickAllBtn) pickAllBtn.disabled = true;
+        if (removeAllBtn) removeAllBtn.disabled = true;
         statusDiv.style.display = 'block';
         statusDiv.className = 'pick-status picking';
         statusText.textContent = 'Picking all...';
@@ -1456,6 +1465,7 @@
             if (!resp.ok) {
                 log('Pick-all error: ' + resp.data.detail, 'error');
                 if (pickAllBtn) pickAllBtn.disabled = false;
+                if (removeAllBtn) removeAllBtn.disabled = false;
                 statusDiv.className = 'pick-status';
                 statusText.textContent = 'Error';
                 return;
@@ -1463,15 +1473,17 @@
             if (resp.data.status === 'nothing_to_pick') {
                 log('No cottons to pick', 'warn');
                 if (pickAllBtn) pickAllBtn.disabled = false;
+                if (removeAllBtn) removeAllBtn.disabled = false;
                 statusDiv.style.display = 'none';
                 return;
             }
             log('Pick-all started: ' + resp.data.total + ' cotton(s)', 'success');
-            pollPickAllStatus(pickAllBtn, statusDiv, statusText);
+            pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText);
         })
         .catch(function (e) {
             log('Pick-all error: ' + e, 'error');
             if (pickAllBtn) pickAllBtn.disabled = false;
+            if (removeAllBtn) removeAllBtn.disabled = false;
             statusDiv.className = 'pick-status';
             statusText.textContent = 'Error';
         });
@@ -1479,7 +1491,7 @@
 
     var _pickAllPollInterval = null;
 
-    function pollPickAllStatus(pickAllBtn, statusDiv, statusText) {
+    function pollPickAllStatus(pickAllBtn, removeAllBtn, statusDiv, statusText) {
         if (_pickAllPollInterval) {
             clearInterval(_pickAllPollInterval);
             _pickAllPollInterval = null;
@@ -1496,6 +1508,7 @@
                     clearInterval(_pickAllPollInterval);
                     _pickAllPollInterval = null;
                     if (pickAllBtn) pickAllBtn.disabled = false;
+                    if (removeAllBtn) removeAllBtn.disabled = false;
                     statusDiv.className = 'pick-status done';
                     statusText.textContent = 'Done';
                     log('Pick-all sequence complete', 'success');

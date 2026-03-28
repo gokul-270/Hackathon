@@ -668,6 +668,8 @@ class CottonState:
     cam_z: float
     arm: str
     j4_pos: float = 0.0
+    arm_coords: tuple | None = None  # (ax, ay, az) from camera_to_arm
+    joint_values: dict | None = None  # {"j3": ..., "j4": ..., "j5": ...}
     status: str = "spawned"  # spawned | picked
 
 
@@ -812,6 +814,12 @@ def cotton_spawn(req: CottonSpawnRequest):
         cam_z=req.cam_z,
         arm=req.arm,
         j4_pos=req.j4_pos,
+        arm_coords=(ax, ay, az),
+        joint_values={
+            "j3": result["j3"],
+            "j4": result["j4"],
+            "j5": result["j5"],
+        },
     )
 
     _cotton_spawned = True
@@ -854,6 +862,8 @@ def cotton_list():
                 "cam_z": c.cam_z,
                 "arm": c.arm,
                 "j4_pos": c.j4_pos,
+                "arm_coords": list(c.arm_coords) if c.arm_coords else None,
+                "joint_values": c.joint_values,
                 "status": c.status,
             }
             for c in _cottons.values()
