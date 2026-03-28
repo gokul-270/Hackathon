@@ -13,13 +13,24 @@ can compare how each strategy behaves under the same target sequence.
 
 ### Story 2: Replay The Same Scenario Across Modes
 
-As a demo operator, I want the same target sequence file to be reused for every mode so that the
+As a demo operator, I want the same scenario JSON file to be reused for every mode so that the
 comparison is fair and repeatable.
 
 ### Story 3: Execute Paired Targets Simultaneously
 
 As a reviewer, I want paired arm targets to execute simultaneously so that the demo shows the real
 collision risk in the overlap zone.
+
+### Story 3A: Compute Joints In Separate Arm Nodes
+
+As a reviewer, I want each arm to run in its own node and compute its own `j4`, `j3`, and `j5`
+values from camera/cotton points so that the hackathon system matches the intended distributed
+dual-arm architecture.
+
+### Story 3B: Exchange Peer Arm State
+
+As a reviewer, I want each arm node to publish its current and candidate joints to the other arm so
+that collision logic can use live peer-arm state when making decisions.
 
 ### Story 4: Continue Solo Targets Safely
 
@@ -61,10 +72,15 @@ Markdown for hackathon presentation updates.
 - one active mode per run
 - UI mode selection before `Start`
 - mode lock after `Start`
-- scenario file with many target pairs for both arms
+- scenario JSON with many camera-point targets for both arms
+- both arm nodes read the same scenario JSON once at run start
 - simultaneous execution for paired targets
 - solo-tail execution when one arm has remaining targets
 - finished arm returns to safe home pose during solo-tail phase
+- central step synchronization controller
+- separate `arm1` and `arm2` runtime nodes
+- per-arm runtime joint computation from camera/cotton points
+- peer-state exchange between arms
 - local collision validation before motion publish
 - `unrestricted` mode
 - `baseline_j5_block_skip` mode
@@ -78,11 +94,14 @@ Markdown for hackathon presentation updates.
 ### Should Have
 
 - per-step metrics tagging by mode name
+- per-step peer-state tagging by `step_id`
 - near-collision threshold in addition to hard collision threshold
 - workspace utilization metric
 - total run time metric
 - comparison table across all four modes
 - recommended deployment mode and parameter notes
+- fixed wait timeout per pick
+- alternating-turn overlap arbitration
 
 ### Could Have
 
@@ -102,13 +121,13 @@ Markdown for hackathon presentation updates.
 
 ## Acceptance Intent
 
-The demo is successful if all four modes can be run against the same sequence file, the metrics make
+The demo is successful if all four modes can be run against the same scenario JSON, the metrics make
 the difference between the modes visible, and the final report clearly supports a recommended mode
 for near-term field deployment.
 
 ## Open Review Items For Teammate Sync
 
-- confirm the scenario file schema for both arms' target lists
+- confirm the scenario JSON schema for both arms' camera-point target lists
 - confirm how cotton spawn/update hooks connect to the current Gazebo setup
-- confirm where the arm-specific target-to-joint conversion already exists
+- confirm where the arm-specific point-to-joint conversion already exists
 - confirm whether the UI already has a suitable mode selector or needs a small addition

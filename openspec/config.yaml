@@ -9,16 +9,26 @@ schema: spec-driven
 #     We use conventional commits
 #     Domain: e-commerce platform
 
-rules:
-  tasks:
-    - >-
-      Label each task group heading as either [SEQUENTIAL] or [PARALLEL].
-      SEQUENTIAL means the group must complete before subsequent groups can
-      start. PARALLEL means the group can be dispatched to a subagent
-      concurrently with other [PARALLEL] groups — list which group numbers
-      it can run alongside in parentheses, e.g. [PARALLEL with 3, 4].
-    - >-
-      Add a "## Execution Plan" section at the very top of tasks.md containing
-      a table with columns: Group | Depends On | Can Parallelize With.
-      This is the primary guide for subagent dispatch decisions.
-    - Break tasks into chunks completable in a single 1-2 hour session.
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+  rules:
+    proposal:
+      - Keep proposals under 500 words
+      - Always include a "Non-goals" section
+    design:
+      - Create a mermaid chart for the User Journey in design.md
+      - Create a C4  with ASCII diagram as separate folder named docs
+      - Use the MOSCOW method to design the spec
+    tasks:
+      - Break tasks into chunks of max 1 hour
+      - Label each task group heading as either [SEQUENTIAL] or [PARALLEL].
+        SEQUENTIAL means the group must complete before subsequent groups can
+        start. PARALLEL means the group can be dispatched to a subagent
+        concurrently with other [PARALLEL] groups — list which group numbers
+        it can run alongside in parentheses, e.g. [PARALLEL with 3, 4].
+      - Add a "## Execution Plan" section at the very top of tasks.md containing
+        a table with columns: Group | Depends On | Can Parallelize With.
+        This is the primary guide for subagent dispatch decisions.
+      - Use TDD for the implementation and git commit the code when it becomes green
+

@@ -28,20 +28,26 @@
 |    - cotton bowls in overlap zone                            |
 |                                                              |
 | 2. Scenario input container                                  |
-|    - file with many target pairs                             |
+|    - scenario JSON with camera/cotton points                 |
+|    - read by both arm nodes                                  |
 |    - arm1 targets                                            |
 |    - arm2 targets                                            |
 |                                                              |
-| 3. Per-arm motion container                                  |
-|    - target -> joint conversion                              |
+| 3. Run-control container                                     |
+|    - mode lock per run                                       |
+|    - central step synchronization                            |
+|                                                              |
+| 4. Per-arm motion container                                  |
+|    - camera point -> joint conversion                        |
+|    - peer-state publish/subscribe                            |
 |    - local collision validation                              |
 |    - mode-aware decision                                     |
 |                                                              |
-| 4. Runtime collision truth container                         |
+| 5. Runtime collision truth container                         |
 |    - actual minimum-distance monitoring                      |
 |    - collision / near-collision detection                    |
 |                                                              |
-| 5. Metrics and report container                              |
+| 6. Metrics and report container                              |
 |    - per-step logging                                        |
 |    - per-mode summary                                        |
 |    - JSON + Markdown outputs                                 |
@@ -52,26 +58,29 @@
 
 ```text
                     +----------------------+
-                    | UI / run controller  |
+                    | UI                   |
                     | mode select          |
                     | start / reset        |
                     +----------+-----------+
                                |
                                v
                     +----------------------+
-                    | scenario reader      |
-                    | many target pairs    |
+                    | central run          |
+                    | controller           |
+                    | step sync            |
                     +----------+-----------+
                                |
              +-----------------+-----------------+
              |                                   |
              v                                   v
    +----------------------+           +----------------------+
-   | arm1 pick pipeline   |           | arm2 pick pipeline   |
+   | arm1 node            |           | arm2 node            |
    +----------------------+           +----------------------+
-   | target -> joints     |           | target -> joints     |
-   | local validator      |<--------->| local validator      |
-   | mode switch          |           | mode switch          |
+   | read same JSON       |           | read same JSON       |
+   | camera point->joints |           | camera point->joints |
+   | publish peer state   |<--------->| publish peer state   |
+   | local validator      |           | local validator      |
+   | local mode decision  |           | local mode decision  |
    | joint publisher      |           | joint publisher      |
    +----------+-----------+           +-----------+----------+
               |                                   |
@@ -80,7 +89,7 @@
                                v
                     +----------------------+
                     | runtime monitor      |
-                    | true min distance    |
+                    | reads peer-state     |
                     | collision truth      |
                     +----------+-----------+
                                |
@@ -96,19 +105,22 @@
 1. Operator selects mode in UI
 2. Operator presses Start
 3. System locks the mode for this run
-4. System reads the full scenario file
-5. System validates file contents
-6. For each sequence step:
-      a. load paired targets or solo target
-      b. spawn/update cotton bowls in Gazebo
-      c. compute candidate joint values
-      d. run local collision validation
-      e. allow / clamp / wait / block
-      f. publish joint commands
-      g. Gazebo executes motion
-      h. runtime monitor records actual minimum distance
-      i. metrics logger stores outcome
-      j. successful pick removes cotton bowl
+4. Both arm nodes read the same scenario JSON file once
+5. Central controller validates file contents and activates step 1
+6. For each active sequence step:
+      a. arm1 reads its own target for the active step
+      b. arm2 reads its own target for the active step
+      c. spawn/update cotton bowls in Gazebo
+      d. each arm computes candidate `j4`, `j3`, `j5` values
+      e. each arm publishes peer state with `step_id`, `status`, `current_joints`, `candidate_joints`
+      f. each arm receives the peer arm state
+      g. each arm applies the selected mode locally
+      h. allow / wait / block
+      i. Gazebo executes allowed motion
+      j. runtime monitor records actual minimum distance
+      k. metrics logger stores outcome
+      l. successful pick removes cotton bowl
+      m. controller waits until all active arms are terminal before advancing
 7. After all steps finish, world resets
 8. Start button becomes available again
 9. Same file can be replayed under next mode
@@ -121,7 +133,7 @@ Exactly one mode is active at a time.
 ```text
 Mode 0 -> unrestricted
 Mode 1 -> baseline_j5_block_skip
-Mode 2 -> geometry_soft_clamp
+Mode 2 -> geometry_block
 Mode 3 -> overlap_zone_wait
 ```
 
@@ -130,7 +142,8 @@ Rules:
 - mode is chosen before `Start`
 - mode is locked during the run
 - both arms use the same active mode for the whole run
-- the same scenario file is replayed across all modes for fair comparison
+- both arm nodes read the same scenario JSON once at run start
+- the same scenario JSON is replayed across all modes for fair comparison
 
 ## Sequence Behavior
 
@@ -141,6 +154,8 @@ If both arms have a target at index i:
 If one arm has no target at index i:
     finished arm returns to safe home pose
     remaining arm continues solo
+
+Step completes only when all active arms are terminal.
 ```
 
 Example:
@@ -162,16 +177,61 @@ arm2 = 7 targets
 
 Use this with the teammate working on cotton spawning and target generation.
 
-- [ ] confirm the scenario file location and file format
+- [ ] confirm the scenario JSON location and file format
 - [ ] confirm how arm1 targets are exposed to the run controller
 - [ ] confirm how arm2 targets are exposed to the run controller
 - [ ] confirm how current cotton bowls are spawned or updated in Gazebo
 - [ ] confirm how picked cotton bowls are removed after successful picks
-- [ ] confirm where candidate target-to-joint conversion already exists for each arm
-- [ ] confirm how to read the other arm's current state inside local validation
+- [ ] confirm where candidate point-to-joint conversion already exists for each arm
+- [ ] confirm the peer-state topic contract for current and candidate joints
 - [ ] confirm the safe home pose used when an arm becomes idle
 - [ ] confirm the collision and near-collision thresholds used by the runtime truth monitor
 - [ ] confirm the output location for JSON and Markdown reports
+
+## Peer-State Contract
+
+Each arm publishes a peer-state packet with at least:
+
+```text
+arm_id
+step_id
+status
+timestamp
+current_joints
+candidate_joints
+```
+
+Recommended status values:
+
+```text
+idle
+ready
+waiting
+moving
+blocked
+skipped
+done
+```
+
+## Wait-Mode Rule
+
+`overlap_zone_wait` uses:
+
+- alternating-turn priority
+- fixed seconds per pick timeout
+- timeout -> skip that specific pick and continue
+
+## Recommendation Rule
+
+Final mode recommendation uses:
+
+1. zero actual collisions first
+2. then highest successful picks
+
+Summary reporting combines:
+
+- blocked picks
+- skipped picks
 
 ## Suggested Review Focus
 
