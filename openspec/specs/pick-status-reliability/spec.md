@@ -18,26 +18,32 @@ The frontend `pollPickStatus()` function SHALL maintain at most one active `setI
 
 ### Requirement: Backend status reset between picks
 
-The backend SHALL reset `_pick_status` to `"idle"` at the start of each `POST /api/cotton/pick` request, before spawning the timer chain.
+The backend SHALL reset the per-arm `ArmPickState.status` to `"idle"` at the start of each `POST /api/cotton/pick` request for the relevant arm, before spawning the pick thread.
 
 #### Scenario: Status is idle before new pick starts
 
-- **WHEN** a previous pick has completed (`_pick_status == "done"`) and a new pick is initiated
-- **THEN** `_pick_status` is set to `"idle"` before any timers fire
-- **AND** a poll during the reset window returns `{"status": "idle"}`, not `"done"`
+- **WHEN** a previous pick on arm1 has completed (`arm1.status == "done"`) and a new pick on arm1 is initiated
+- **THEN** `arm1.status` is set to `"idle"` before the pick thread fires
+- **AND** a poll during the reset window returns arm1 status as `"idle"`, not `"done"`
 
 ### Requirement: Thread-safe pick status access
 
-The backend SHALL protect `_pick_in_progress` and `_pick_status` with a `threading.Lock`. Both the status endpoint and the timer callbacks MUST acquire the lock before reading or writing these variables.
+The backend SHALL protect each `ArmPickState`'s `in_progress` and `status` with the arm's own `threading.Lock`. Both the status endpoint and the pick thread callbacks MUST acquire the arm's lock before reading or writing that arm's state. Different arms' locks are independent.
 
-#### Scenario: Concurrent status read during timer update
+#### Scenario: Concurrent status read during pick update
 
-- **WHEN** a timer callback is updating `_pick_status` from `"moving_j4"` to `"moving_j3"`
+- **WHEN** a pick thread is updating arm1's status from `"j4_lateral"` to `"j3_tilt"`
 - **AND** the status endpoint is called simultaneously
-- **THEN** the endpoint returns a consistent snapshot (either the old or new state, never a mix)
+- **THEN** the endpoint returns a consistent snapshot for arm1 (either the old or new state, never a mix)
 
-#### Scenario: Lock does not cause deadlock with timer chain
+#### Scenario: Lock does not cause deadlock with pick thread
 
-- **WHEN** a pick animation is in progress with 6 chained timers
-- **THEN** each timer acquires and releases the lock without blocking subsequent timers
-- **AND** the pick completes within the expected 5.5s window (±0.5s tolerance)
+- **WHEN** a pick animation is in progress on arm1 with multiple steps
+- **THEN** each step acquires and releases arm1's lock without blocking subsequent steps
+- **AND** the pick completes within the expected 5.5s window (+/-0.5s tolerance)
+
+#### Scenario: Arm locks are independent
+
+- **WHEN** arm1's lock is held by a pick thread
+- **AND** the status endpoint queries arm2's state
+- **THEN** arm2's state is returned immediately without waiting for arm1's lock

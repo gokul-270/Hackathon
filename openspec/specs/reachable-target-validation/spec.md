@@ -4,6 +4,8 @@
 
 The `POST /api/cotton/spawn` endpoint SHALL compute `polar_decompose()` on the camera coordinates at spawn time. If `reachable` is `False`, the endpoint MUST return HTTP 400 with a JSON body containing `"error"` and `"reason"` fields. The cotton MUST NOT be spawned in Gazebo.
 
+The JS frontend `camToJoint` function SHALL apply the same reachability check as the Python backend: if `r < 1e-6` or `r > 0.1` (too close for meaningful arm motion), the function SHALL return `null` and display an error message. The JS camera-to-arm transform SHALL use the forward URDF transform (matching `fk_chain.py:camera_to_arm()`), not the inverse.
+
 #### Scenario: Target above arm (J3 out of range)
 
 - **WHEN** the user submits camera coordinates that produce `phi > 0` (positive, meaning above the arm plane)
@@ -27,6 +29,23 @@ The `POST /api/cotton/spawn` endpoint SHALL compute `polar_decompose()` on the c
 - **WHEN** the user submits camera coordinates that produce `reachable=True`
 - **THEN** the endpoint returns `200` with the cotton name and computed joint values
 - **AND** the cotton model is spawned in Gazebo
+
+#### Scenario: JS camToJoint uses forward transform
+
+- **WHEN** the JS `initCameraToArmTransform()` function initializes the transform matrix
+- **THEN** it uses the forward URDF transform `arm_xyz = R @ cam_xyz + t` (not the inverse `R^T @ cam_xyz + (-R^T @ t)`)
+- **AND** the resulting arm-frame coordinates match `fk_chain.py:camera_to_arm()` for the same input
+
+#### Scenario: JS camToJoint rejects unreachable coordinates
+
+- **WHEN** JS `camToJoint` is called with camera coordinates that produce `r < 1e-6`
+- **THEN** the function returns `null`
+- **AND** the UI displays an error message indicating the target is unreachable
+
+#### Scenario: JS r threshold matches Python
+
+- **WHEN** JS `camToJoint` computes polar decomposition
+- **THEN** it uses `r < 1e-6` as the degenerate-radius threshold (matching Python, not `1e-9`)
 
 ### Requirement: Frontend displays unreachable error
 
