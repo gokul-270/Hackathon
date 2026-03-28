@@ -12,10 +12,10 @@ The testing UI SHALL provide a Cotton Position Sequence panel containing a table
 - **THEN** that row is deleted from the table
 
 ### Requirement: TF static transform subscription
-The UI SHALL subscribe to `/tf_static` via roslib on page load and extract the 4×4 homogeneous transform matrix from `camera_link` to `yanthra_link`. The matrix SHALL be updated whenever `/tf_static` publishes new data.
+The UI SHALL subscribe to `/tf_static` via roslib on page load and extract the 4×4 homogeneous transform matrix from `camera_link` to `arm_yanthra_link`. The matrix SHALL be updated whenever `/tf_static` publishes new data.
 
 #### Scenario: TF transform available
-- **WHEN** `/tf_static` publishes a transform from `camera_link` to `yanthra_link`
+- **WHEN** `/tf_static` publishes a transform from `camera_link` to `arm_yanthra_link`
 - **THEN** the UI stores the 4×4 matrix and marks TF as ready
 
 #### Scenario: TF transform not yet available
@@ -24,7 +24,7 @@ The UI SHALL subscribe to `/tf_static` via roslib on page load and extract the 4
 
 ### Requirement: Cam-to-joint conversion
 The UI SHALL convert each (cam_x, cam_y, cam_z) entry to (J3, J4, J5) joint values using the following simulation-correct math:
-1. Apply the `camera_link → yanthra_link` TF matrix to obtain arm-frame coordinates (ax, ay, az).
+1. Apply the `camera_link → arm_yanthra_link` TF matrix to obtain arm-frame coordinates (ax, ay, az).
 2. `r = sqrt(ax² + az²)`
 3. `J3 = asin(az / r)` (radians — Gazebo revolute joint)
 4. `J4 = ay` (metres, direct passthrough)

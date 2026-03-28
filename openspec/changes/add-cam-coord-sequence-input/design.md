@@ -3,7 +3,7 @@
 The testing UI (`testing_ui.html` / `testing_ui.js` / `testing_backend.py`) runs on port 8081 and is used to exercise the arm simulation in Gazebo. It already has a Custom Joint Sequence player that sends raw J3/J4/J5 values. Testers need to enter pick positions in the natural camera frame, not in raw joint space. The arm-sim bridge (`arm_sim_bridge.py`, port 8889) already has the cam→joint conversion and Gazebo marker logic, but that server is a ROS2 node and mixing two backends in one test session is fragile. The correct approach is to replicate the conversion math in the testing UI stack.
 
 Key constraints (locked from codebase exploration):
-- TF frame: `camera_link → yanthra_link` (NOT `arm_yanthra_link`)
+- TF frame: `camera_link → arm_yanthra_link`
 - J3 unit: **radians** (Gazebo revolute joint, no ÷2π)
 - J5 offset: **0.320 m** (matches `arm_sim_bridge.py` pick path and C++ default)
 - Phi compensation: **disabled** (simulation.yaml)
