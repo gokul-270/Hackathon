@@ -174,3 +174,131 @@ class TestCamMarkersClearEmpty:
              mock.patch("testing_backend.subprocess.run") as mock_run:
             client.post("/api/cam_markers/clear")
         mock_run.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Cotton spawn endpoint tests
+# ---------------------------------------------------------------------------
+class TestCottonSpawn:
+    def test_spawn_returns_200_with_world_coords(self, client):
+        """POST /api/cotton/spawn with valid cam coords returns 200 + world position."""
+        with mock.patch("testing_backend.subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.1, "cam_y": -0.02, "cam_z": 0.05, "arm": "arm1", "j4_pos": 0.0},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "world_x" in body
+        assert "world_y" in body
+        assert "world_z" in body
+
+    def test_spawn_calls_gz_create(self, client):
+        """POST /api/cotton/spawn calls gz service create."""
+        with mock.patch("testing_backend.subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.1, "cam_y": -0.02, "cam_z": 0.05, "arm": "arm1", "j4_pos": 0.0},
+            )
+        assert mock_run.called
+        call_args = " ".join(mock_run.call_args_list[-1][0][0])
+        assert "create" in call_args
+
+
+# ---------------------------------------------------------------------------
+# Cotton remove endpoint tests
+# ---------------------------------------------------------------------------
+class TestCottonRemove:
+    def test_remove_returns_200(self, client):
+        """POST /api/cotton/remove returns 200."""
+        with mock.patch("testing_backend._detect_gz_world_name", return_value="empty"), \
+             mock.patch("testing_backend.subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
+            resp = client.post("/api/cotton/remove")
+        assert resp.status_code == 200
+
+    def test_remove_clears_cotton_state(self, client):
+        """After remove, _cotton_spawned is False."""
+        import testing_backend
+        testing_backend._cotton_spawned = True
+        with mock.patch("testing_backend._detect_gz_world_name", return_value="empty"), \
+             mock.patch("testing_backend.subprocess.run") as mock_run:
+            mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
+            client.post("/api/cotton/remove")
+        assert testing_backend._cotton_spawned is False
+
+
+# ---------------------------------------------------------------------------
+# Cotton compute endpoint tests
+# ---------------------------------------------------------------------------
+class TestCottonCompute:
+    def test_compute_returns_polar_values(self, client):
+        """POST /api/cotton/compute returns r, theta, phi, j3, j4, j5, reachable."""
+        resp = client.post(
+            "/api/cotton/compute",
+            json={"cam_x": 0.328, "cam_y": -0.011, "cam_z": -0.003, "arm": "arm1", "j4_pos": 0.0},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        for key in ("r", "theta", "phi", "j3", "j4", "j5", "reachable"):
+            assert key in body, f"Missing key: {key}"
+
+    def test_compute_unreachable_returns_reachable_false(self, client):
+        """Extreme camera coords produce reachable=false."""
+        resp = client.post(
+            "/api/cotton/compute",
+            json={"cam_x": 10.0, "cam_y": 10.0, "cam_z": 10.0, "arm": "arm1", "j4_pos": 0.0},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["reachable"] is False
+
+
+# ---------------------------------------------------------------------------
+# Cotton pick endpoint tests
+# ---------------------------------------------------------------------------
+class TestCottonPick:
+    def test_pick_returns_200_with_sequence_info(self, client):
+        """POST /api/cotton/pick returns 200 with computed joint values and status."""
+        import testing_backend
+        testing_backend._last_cotton_cam = (0.328, -0.011, -0.003)
+        testing_backend._last_cotton_arm = "arm1"
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._pick_in_progress = False
+        with mock.patch("testing_backend._execute_pick_sequence"):
+            resp = client.post(
+                "/api/cotton/pick",
+                json={"arm": "arm1", "enable_phi_compensation": False},
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "j3" in body
+        assert "j4" in body
+        assert "j5" in body
+        assert body["status"] == "picking"
+        testing_backend._pick_in_progress = False
+
+    def test_pick_rejects_when_no_cotton_spawned(self, client):
+        """POST /api/cotton/pick returns 400 when no cotton has been spawned."""
+        import testing_backend
+        testing_backend._last_cotton_cam = None
+        testing_backend._pick_in_progress = False
+        resp = client.post(
+            "/api/cotton/pick",
+            json={"arm": "arm1"},
+        )
+        assert resp.status_code == 400
+
+    def test_pick_rejects_concurrent_pick(self, client):
+        """POST /api/cotton/pick returns 409 when pick is already in progress."""
+        import testing_backend
+        testing_backend._last_cotton_cam = (0.1, 0.0, 0.0)
+        testing_backend._pick_in_progress = True
+        with mock.patch("testing_backend._execute_pick_sequence"):
+            resp = client.post(
+                "/api/cotton/pick",
+                json={"arm": "arm1"},
+            )
+        assert resp.status_code == 409
+        testing_backend._pick_in_progress = False
