@@ -1,0 +1,179 @@
+# Three-Motor MG6010 Configuration
+# For joints 3, 4, 5 (base, upper arm, end effector)
+
+motor_control:
+  ros__parameters:
+    # Role: arm or vehicle (required — auto-detect from joint names is deprecated)
+    role: "arm"
+
+    # CAN Interface
+    interface_name: "can0"
+    baud_rate: 500000
+
+    # Degraded-mode role checks are vehicle-specific. For the arm, do not require
+    # "drive" / "steering" motor counts.
+    degraded_mode.enabled: true
+    degraded_mode.min_drive_motors: 0
+    degraded_mode.min_steering_motors: 0
+
+    # Multi-Motor Configuration (CAN IDs 1, 2, 3 for joints 3, 4, 5)
+    motor_ids:
+      - 1
+      - 2
+      - 3
+    joint_names:
+      - "joint5"
+      - "joint3"
+      - "joint4"
+
+    # Joint types: "prismatic" (meters) or "revolute" (rotations internally, radians on /joint_states)
+    # Used to convert revolute joint positions from rotations → radians when publishing
+    # to /joint_states, so robot_state_publisher / rviz2 interpret them correctly.
+    joint_types:
+      - "prismatic"   # joint5: extension (meters)
+      - "revolute"    # joint3: vertical tilt (rotations → radians on publish)
+      - "prismatic"   # joint4: left/right (meters)
+
+    # Test mode (use "multi_motor" for ROS 2 interface)
+    test_mode: "multi_motor"
+
+    # Control Loop Frequency (Hz) - OPTIMIZED for responsive feedback
+    # Higher rate enables better sequential motion detection and faster response
+    control_frequency: 10.0  # 10 Hz - Reduced from 100 Hz to prevent CAN bus saturation
+
+    # Motor Parameters (per-joint configuration)
+    # Transmission factors (ODrive-style): DIVISOR for motor movement
+    #   - joint3: 1.0 (1 rotation input = 1 motor rotation)
+    #   - joint4/5: 12.74 (1 meter = 12.74 rotations, 78.5mm/rotation)
+    transmission_factors:
+      - 12.74      # joint5: 1m input = 12.74 rotations (78.5mm/rotation)
+      - 1.0        # joint3: 1 rotation input = 1 rotation output
+      - 12.74      # joint4: 1m input = 12.74 rotations (78.5mm/rotation)
+
+    # Internal gear ratios (MG6010-i6 motors: 6:1 internal gearbox)
+    internal_gear_ratios:
+      - 6.0        # joint5 (MG6010-i6)
+      - 6.0        # joint3 (MG6010-i6)
+      - 6.0        # joint4 (MG6010-i6)
+
+    # Motor directions (1 = forward, -1 = reverse)
+    directions:
+      - -1       # joint5
+      - -1       # joint3
+      - -1       # joint4
+
+    # Homing Positions (in ROTATIONS for joint3, METERS for joint4/joint5)
+    # These are the OPERATIONAL starting positions for picking cycles
+    # Joint units match ODrive convention:
+    #   - joint3 (revolute): rotations
+    #   - joint4, joint5 (prismatic): meters
+    # Controller converts to motor radians internally
+    homing_positions:
+      - 0.0       # joint5: 0.0 meters (operational home)
+      - 0.0       # joint3: 0.0 rotations (operational home)
+      - 0.0       # joint4: 0.0 meters (operational home)
+
+    # Packing Positions (shutdown positions for safe motor disable)
+    # These are where the arm goes on shutdown, physically ready for transport.
+    # Moving to these positions before motor_off prevents sudden arm drop.
+    # Based on observed positions when arm is relaxed/unpowered:
+    #   - joint5: ~0.0 meters (fully retracted)
+    #   - joint3: ~0.0 rotations (horizontal)
+    #   - joint4: ~0.0 meters (fully retracted)
+    packing_positions:
+      - 0.0       # joint5: 0.0 meters (fully retracted - safe)
+      - -0.25     # joint3: -0.25 rotations (full vertical down for transport)
+      - 0.0       # joint4: 0.0 meters (fully retracted - safe)
+
+    # Shutdown packing control
+    # true  → park all joints, then move J3 to packing position (transport-ready)
+    # false → park all joints only, J3 stays at homing position (no packing move)
+    shutdown:
+      enable_packing: true
+
+    # Safety Limits (CRITICAL - prevent mechanical collision)
+    # Units: ROTATIONS for joint3, METERS for joint4/joint5
+    # NOTE: Limits are checked on INPUT values (before direction inversion)
+    min_positions:
+      - 0.0      # joint5: minimum extension (meters)
+      - -0.166     # joint3: minimum rotation (negative values with direction=-1 become positive at motor)
+      - -0.175   # joint4: minimum extension (meters)
+
+    max_positions:
+      - 0.35     # joint5: maximum extension (meters)
+      - 0.0      # joint3: maximum rotation (at horizontal, with direction=-1)
+      - 0.175    # joint4: maximum extension (meters)
+
+    # Velocity Limits (rotations/sec for joint3, m/s for joint4/5)
+    max_velocities:
+      - 0.1      # joint5: 0.1 m/s
+      - 0.5      # joint3: 0.5 rotations/s
+      - 0.1      # joint4: 0.1 m/s
+
+    # ========================================================================
+    # FEEDBACK AND SAFETY PARAMETERS (for sequential motion)
+    # ========================================================================
+
+    # Feedback publish rate (Hz) - should match or exceed control_frequency
+    feedback_publish_rate: 10.0  # Publish /joint_states at 10 Hz
+
+    # Position tolerance for "in-position" detection (meters for prismatic, rotations for revolute)
+    # Used by yanthra_move to determine when joint has reached target
+    position_tolerance:
+      - 0.005    # joint5: 5mm tolerance
+      - 0.05     # joint3: ~18° tolerance (0.05 rotations)
+      - 0.005    # joint4: 5mm tolerance
+
+    # Timeout for position commands (seconds)
+    # If joint doesn't reach target within timeout, trigger error
+    position_timeout: 30.0
+
+    # Safety thresholds
+    max_motor_temperature_c: 70.0   # Celsius (not too conservative)
+    max_motor_current_a: 15.0       # Amperes (reasonable for MG6010)
+    max_position_error: 0.05        # Maximum deviation before error (meters/rotations)
+
+    # Enable in-position status publishing
+    publish_in_position_status: true
+
+    # Sequential motion support (optional - for low-level hardware protection)
+    # If enabled, controller queues commands and executes sequentially
+    sequential_mode: false  # Disabled by default; enforcement at yanthra_move level
+
+    # Collision interlock: prevent J4 commands when J3 is in parking zone
+    # J3 parking zone = [j3_parking_position - tolerance, j3_parking_position + tolerance]
+    # When interlock fires, J4 position commands are rejected with structured log
+    # DISABLED: J3 has no dedicated parking position in current operation.
+    # J3 homing (0.0 rot) is at the max end of its range (-0.2 to 0.0),
+    # so the 5-degree tolerance zone covers normal operation and silently
+    # rejects J4 commands. Re-enable only if a real parking concept is added.
+    enable_j3_j4_collision_interlock: false
+    j3_parking_position: 0.0    # J3 parking position (rotations)
+    j3_parking_tolerance: 5.0   # Tolerance band (degrees) around parking position
+
+    # Automatic motor error recovery (NEW FEATURE)
+    # When motor reports error flags (temperature, voltage, overcurrent, stall),
+    # controller will automatically attempt to recover by:
+    # 1. Clearing motor errors
+    # 2. Rebooting motor (OFF->ON)
+    # 3. Verifying recovery
+    auto_recover_errors: true                # Enable automatic error recovery
+
+    # Thermal derating (task 3.1) — proactive current reduction to prevent firmware thermal lockout
+    # When motor temperature rises above onset, current commands are linearly scaled down.
+    # At the limit temperature, current is reduced to min_derating_pct (0 = full shutoff).
+    # Recovery re-enables below (onset - hysteresis) to prevent oscillation.
+    thermal_derating:
+      derating_onset_temp: 65.0    # °C — derating begins (MG6010 default)
+      thermal_limit_temp: 85.0     # °C — zero current (MG6010 firmware trips here)
+      min_derating_pct: 0.0        # Minimum current fraction at limit (0 = full shutoff)
+      thermal_hysteresis: 5.0      # °C below onset for recovery re-enable
+
+    # Stall detection (task 4.6) — detects mechanically blocked motors
+    # Triggers when current > threshold AND position delta < position_threshold for > time_threshold.
+    # Stall response: command zero current, set stall protection state.
+    # Stall clears automatically on next position command.
+    stall_detection:
+      stall_current_threshold: 0.8       # Fraction of rated current (0.8 = 80%)
+      stall_position_threshold_deg: 0.5  # Min position change to NOT be a stall (degrees)
+      stall_time_threshold_ms: 500       # Duration of high-current+no-move before stall triggers

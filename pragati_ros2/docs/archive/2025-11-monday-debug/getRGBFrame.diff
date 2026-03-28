@@ -1,0 +1,12 @@
+--- /home/uday/Downloads/pragati_ros2/docs/monday_demo_debug/getRGBFrame_current.cpp	2025-11-13 23:49:48.790446118 +0530
++++ /home/uday/Downloads/pragati_ros2/docs/monday_demo_debug/getRGBFrame_backup.cpp	2025-11-13 23:49:49.134294252 +0530
+@@ -60,6 +60,9 @@
+             return cv::Mat();
+         }
+         
++        // Apply 90° clockwise rotation to match camera physical orientation
++        cv::rotate(frame, frame, cv::ROTATE_90_CLOCKWISE);
++        
+         return frame.clone();  // Return a copy to ensure thread safety
+         
+     } catch (const std::exception& e) {

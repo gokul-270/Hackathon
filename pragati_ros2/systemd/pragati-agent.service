@@ -1,0 +1,25 @@
+[Unit]
+Description=Pragati RPi Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/pragati_ros2/web_dashboard
+# Source ROS2 setup.bash so 'ros2' CLI commands (used by motor/rosbag agent endpoints
+# via subprocess.run) can find their Python libs and middleware.
+ExecStart=/bin/bash -c '\
+  if [ -f /opt/ros/jazzy/setup.bash ]; then source /opt/ros/jazzy/setup.bash; fi && \
+  exec /usr/bin/python3 -m rpi_agent.agent --port 8091'
+Restart=always
+RestartSec=5
+Environment=PRAGATI_AGENT_API_KEY=
+# ROS2 domain/DDS config — must match arm_launch/vehicle_launch services so the
+# agent's subprocess ros2 CLI calls can discover the same nodes/topics.
+# Written by sync.sh --provision. The '-' prefix makes the file optional.
+EnvironmentFile=-/etc/default/pragati-arm
+EnvironmentFile=-/etc/default/pragati-vehicle
+
+[Install]
+WantedBy=multi-user.target

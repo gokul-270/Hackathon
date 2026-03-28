@@ -1,0 +1,63 @@
+yanthra_move:
+  ros__parameters:
+    simulation_mode: true
+    CAPTURE_MODE: 3.0
+    YanthraDisparityShift: 15.0
+    UsePostProcessingFilter: true
+    UseThresholdFilter: false
+    UseSpatialFilter: true
+    SpatialFilterHoleFillingMode: 1.0
+    TemporalFilterPersistenceControl: 7.0
+    UseTemporalFilter: false
+    PRAGATI_BYPASS_INTERNAL_PROCESSING: false
+    hardware_timeout: 1200000.0
+    arm_calibration: false
+    YoloThreshold: 0.55
+    continous_operation: false  # DISABLED to prevent infinite loop during testing
+    YanthraLabCalibrationTesting: false
+    EndEffectorDropConveyor: true
+    global_vaccum_motor: true
+    trigger_camera: false  # DISABLED for testing without camera
+    end_effector_enable: true
+    save_logs: false
+    reverse_endeffector: true
+    jerk_enabled_theta: false
+    jerk_enabled_phi: false
+    parking_on: true
+    l2_homing_sleep_time: 6.0
+    l2_step_sleep_time: 5.0
+    l2_idle_sleep_time: 2.0
+    min_sleep_time_formotor_motion: 0.5
+    joint_velocity: 1.0
+    joint_poses: [[0.0000, -0.8, 0.0, 0.380]]
+    delays:
+      picking: 0.200
+      pre_start_len: 0.025
+      end_effector_runtime: 1000.0
+      back_valve_close_delay: 500.0
+      EERunTimeDuringL5ForwardMovement: 1.0
+      EERunTimeDuringL5BackwardMovement: 0.5
+    joint2_init:
+      height_scan_enable: false
+      min: 0.01
+      max: 0.85
+      step: 0.125
+    joint3_init:
+      park_position: 0.00
+      homing_position: 0.0000
+      multiple_zero_poses: true
+      zero_poses: [0.0]
+    joint4_init:
+      park_position: 0.00
+      homing_position: 0.00001
+      multiple_zero_poses: false
+      theta_jerk_value: 0.0
+    joint5_init:
+      park_position: 0.330
+      homing_position: 0.330
+      end_effector_len: 0.010
+      joint5_vel_limit: 2.0
+      min_length: 0.325
+      max_length: 0.765
+      gear_ratio: 20.943933333
+      phi_jerk_value: 0.0

@@ -1,0 +1,48 @@
+[Unit]
+Description=CAN Bus Auto-Recovery Watchdog for %i
+Documentation=file:///home/uday/Downloads/pragati_ros2/docs/guides/CAN_AUTO_RECOVERY.md
+After=systemd-modules-load.service network-online.target
+Wants=network-online.target
+ConditionPathExists=/usr/local/sbin/can_watchdog.sh
+
+[Service]
+Type=simple
+# Run as root (user-independent - works on any system)
+# No User= directive means it runs as root
+
+# Wide PATH to handle different distro layouts (/sbin vs /usr/sbin)
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Load configuration from system-wide files
+EnvironmentFile=-/etc/default/can-watchdog
+EnvironmentFile=-/etc/default/can-watchdog-%i
+
+# Pre-start: Load SocketCAN kernel modules (safe if already loaded)
+ExecStartPre=-/sbin/modprobe can
+ExecStartPre=-/sbin/modprobe can_raw
+ExecStartPre=-/sbin/modprobe can_dev
+ExecStartPre=-/sbin/modprobe mcp251x
+
+# Main watchdog process
+ExecStart=/usr/local/sbin/can_watchdog.sh -i %i -l /tmp/can_watchdog_%i.log
+
+# Restart policy
+Restart=always
+RestartSec=2
+
+# Security: Minimal capabilities (only network admin for CAN)
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+NoNewPrivileges=true
+
+# Resource limits (minimal - watchdog is lightweight)
+MemoryMax=50M
+CPUQuota=5%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=can-watchdog-%i
+
+[Install]
+WantedBy=multi-user.target

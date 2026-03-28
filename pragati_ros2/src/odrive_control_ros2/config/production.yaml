@@ -1,0 +1,116 @@
+# ODrive CANSimple ROS2 Configuration
+# Vehicle drive wheels configuration for ODrive Pro firmware 0.6.x
+
+odrive_service_node:
+  ros__parameters:
+    # ==========================================================================
+    # CAN Interface
+    # ==========================================================================
+    interface_name: "can0"
+    
+    # ==========================================================================
+    # Vehicle Drive Wheels Configuration
+    # ==========================================================================
+    # Three-wheel drive system: Front, Left (rear), Right (rear)
+    # Joint names aligned with vehicle_control node expectations
+    joint_names: ["drive_front", "drive_left_back", "drive_right_back"]
+    node_ids: [0, 2, 4]  # CAN node IDs
+    
+    # ==========================================================================
+    # Mechanical Configuration
+    # ==========================================================================
+    # Motor direction: 1.0 or -1.0 per motor [drive_front, drive_left_back, drive_right_back]
+    directions: [1.0, -1.0, -1.0]
+    
+    # Transmission factors: motor turns → meters of wheel travel
+    # Calculation:
+    #   - Wheel diameter: 24 inches = 0.6096 meters
+    #   - Wheel circumference: π × 0.6096 = 1.9147 meters
+    #   - Gear ratio: 5.0 (5:1)
+    #   - Distance per motor turn: 1.9147 / 5.0 = 0.3829 meters/turn
+    transmission_factors: [0.3829, 0.3829, 0.3829]
+    
+    # ==========================================================================
+    # Position Control Parameters
+    # ==========================================================================
+    # NOTE: Trajectory limits (vel_limit, accel_limits) and PID gains should be
+    # configured via USB (odrivetool) and saved to ODrive's non-volatile memory.
+    # The ROS2 node will not override these settings via CAN.
+    
+    # Position tolerance for monitoring (meters)
+    # Used by status service to report if position is within tolerance
+    position_tolerance: [0.02, 0.02, 0.02]  # 2cm tolerance
+    
+    # ==========================================================================
+    # Motion Completion Detection Mode
+    # ==========================================================================
+    # "auto" (Recommended) - Try traj_done flag first, automatically fallback 
+    #                        to position tolerance if ODrive not configured
+    # "traj_done"          - Use trajectory_done flag (byte 6 of heartbeat)
+    #                        Requires ODrive configured via USB for position control
+    # "position"           - Use position tolerance checking only
+    #                        Works with any ODrive configuration
+    completion_detection_mode: "auto"
+    
+    # ==========================================================================
+    # Motion Timeout Configuration
+    # ==========================================================================
+    # Expected velocity: Used to calculate motion timeout based on distance
+    # Set this to match your ODrive's velocity limit configuration
+    # Formula: timeout = max(5.0, distance / expected_velocity + safety_margin)
+    expected_velocity: 0.2  # meters per second (conservative for agricultural vehicle)
+    
+    # Safety margin: Extra time added to calculated timeout
+    timeout_safety_margin: 5.0  # seconds
+    
+    # ==========================================================================
+    # Position Command Mode
+    # ==========================================================================
+    # true (Recommended):  INCREMENTAL mode - commands are relative to current position
+    #                      Example: current=1.0m, command=0.5 → target=1.5m
+    # false:               ABSOLUTE mode - commands are absolute positions
+    #                      Example: current=1.0m, command=0.5 → target=0.5m
+    incremental_position: false
+    
+    # ==========================================================================
+    # ROS2 Publishing Rates
+    # ==========================================================================
+    # Joint states publishing rate (Hz)
+    joint_states_rate: 10.0
+    
+    # Encoder estimate request rate via RTR (Hz)
+    # Note: If ODrive is configured for cyclic feedback, this can be disabled
+    encoder_request_rate: 10.0
+
+    # ==========================================================================
+    # Smooth Motion / Idle Timeout
+    # ==========================================================================
+    # How long (seconds) to keep motors in CLOSED_LOOP after motion completes.
+    # When a command arrives within this window, motors re-arm instantly (~0 ms
+    # latency) and all 3 CAN frames are batched together → no desync.
+    # When idle_timeout fires, motors drop to IDLE — the next command must
+    # re-arm all 3 ODrives (200-500 ms each, independent timing → desync risk).
+    # Rule of thumb: set to > (arm pick cycle time) so motors stay warm between picks.
+    # Field value: arm pick takes ~3-5 s → 8 s keeps motors armed across a full pick.
+    idle_timeout: 8.0  # seconds (was 0.5 — caused desync by idling between every pick)
+
+    # ==========================================================================
+    # Motor Command Synchronisation (Bug 1 fix)
+    # ==========================================================================
+    # sync_mode controls how per-motor ROS2 topic callbacks are synchronised into
+    # a single tight CAN burst to eliminate inter-wheel desync.
+    #
+    # "aggregation" (default):
+    #   Buffer each motor's target as callbacks arrive. Once all 3 arrive (or
+    #   aggregation_window_ms elapses), dispatch a single CAN burst.
+    #   Gap between wheels: 0.1-0.2 ms (CAN frame speed) vs 1-10 ms (ROS2 scheduler).
+    #
+    # "combined_topic" (future — do NOT enable until implemented):
+    #   vehicle_control publishes all 3 targets in one Float64MultiArray message.
+    #   Atomic by construction — no timer needed.
+    sync_mode: "aggregation"
+
+    # Aggregation window: maximum time to wait for all 3 motor callbacks (milliseconds).
+    # At 0.2 m/s, 5 ms = 1 mm positional difference at start — imperceptible.
+    # Increase to 10 ms if ROS2 callback scheduling jitter is observed to be higher.
+    aggregation_window_ms: 5.0

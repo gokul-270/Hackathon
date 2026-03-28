@@ -1,0 +1,51 @@
+[Unit]
+Description=ROS2 ARM Control (Yanthra Move) Launch Service
+After=network-online.target pigpiod.service
+Wants=network-online.target pigpiod.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/pragati_ros2
+
+# Wait for CAN and system to be ready
+ExecStartPre=/bin/sleep 1
+ExecStartPre=/bin/sh -c 'timeout=30; elapsed=0; while [ ! -e /dev/spidev0.1 ]; do sleep 1; elapsed=$((elapsed+1)); if [ $elapsed -ge $timeout ]; then echo "WARN: SPI device /dev/spidev0.1 not found after ${timeout}s — proceeding without CAN" | systemd-cat -t %N -p warning; break; fi; done'
+
+ExecStart=/bin/bash /home/ubuntu/pragati_ros2/scripts/launch/arm_launcher.sh
+Restart=on-failure
+RestartSec=5
+
+# Fast shutdown: motor parking takes ~12s, give 15s then SIGKILL.
+# Default is 90s which causes multi-minute shutdown delays.
+TimeoutStopSec=15
+
+# Last-resort GPIO cleanup after SIGKILL — force all motor/pneumatic pins LOW.
+# Covers: compressor (BCM18), vacuum (BCM24), EE on (BCM21), EE drop (BCM12),
+#         EE direction (BCM13), EE drop direction (BCM20).
+ExecStopPost=/bin/sh -c 'pigs w 18 0; pigs w 24 0; pigs w 21 0; pigs w 12 0; pigs w 13 0; pigs w 20 0 || true'
+
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+# IMPORTANT: systemd does not source interactive shell profiles (e.g. ~/.bashrc).
+# These are fallback defaults -- overridden by /etc/default/pragati-arm if present.
+Environment="HOME=/home/ubuntu"
+Environment="ROS_DOMAIN_ID=0"
+Environment="ROS_LOCALHOST_ONLY=0"
+Environment="ARM_ID=arm1"
+Environment="MQTT_ADDRESS=10.42.0.10"
+
+# Per-arm identity overrides (written by: sync.sh --provision --arm-id <ID>).
+# Contains ARM_ID, MQTT_ADDRESS, ROS_DOMAIN_ID, ROS_LOCALHOST_ONLY.
+# The '-' prefix means the file is optional -- service starts with defaults above if missing.
+# In systemd, EnvironmentFile values override same-named Environment= values
+# when EnvironmentFile appears after Environment=.
+EnvironmentFile=-/etc/default/pragati-arm
+
+[Install]
+WantedBy=multi-user.target

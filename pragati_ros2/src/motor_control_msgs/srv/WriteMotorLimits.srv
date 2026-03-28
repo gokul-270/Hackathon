@@ -1,0 +1,13 @@
+# Write Motor Limits Service
+# Request to write torque and acceleration limits to a motor controller
+
+# Request
+uint8 motor_id          # Motor CAN ID
+uint16 max_torque_ratio # Max torque current ratio (0-2000, maps to 0-100% of max current)
+float64 acceleration    # Acceleration in rad/s^2
+bool set_max_torque     # If true, write max_torque_ratio to motor
+bool set_acceleration   # If true, write acceleration to motor
+---
+# Response
+bool success            # True if motor limits were written successfully
+string error_message    # Error description (empty on success)

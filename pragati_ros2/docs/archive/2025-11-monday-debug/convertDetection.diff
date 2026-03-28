@@ -1,0 +1,52 @@
+--- /home/uday/Downloads/pragati_ros2/docs/monday_demo_debug/convertDetection_current.cpp	2025-11-13 23:50:01.167468565 +0530
++++ /home/uday/Downloads/pragati_ros2/docs/monday_demo_debug/convertDetection_backup.cpp	2025-11-13 23:50:01.570474396 +0530
+@@ -6,19 +6,39 @@
+     result.confidence = det.confidence;
+     
+     // Convert normalized bounding box coordinates [0, 1]
+-    result.x_min = det.xmin;
+-    result.y_min = det.ymin;
+-    result.x_max = det.xmax;
+-    result.y_max = det.ymax;
++    // Apply 90° clockwise rotation transformation
++    float old_xmin = det.xmin;
++    float old_ymin = det.ymin;
++    float old_xmax = det.xmax;
++    float old_ymax = det.ymax;
+     
+-    // Convert spatial coordinates from DepthAI format to millimeters
+-    // DepthAI provides coordinates in millimeters relative to camera center:
++    result.x_min = 1.0f - old_ymax;
++    result.y_min = old_xmin;
++    result.x_max = 1.0f - old_ymin;
++    result.y_max = old_xmax;
++    
++    // Convert spatial coordinates from DepthAI format with 90° CW rotation correction
++    // DepthAI calculates spatial coords using ORIGINAL camera intrinsics (1920x1080)
++    // before the image rotation happens, so we must:
++    // 1. Rotate the 3D coordinates (90° CW: new_x = old_y, new_y = -old_x)
++    // 2. Account for principal point shift during image rotation
++    //
++    // Original DepthAI coordinates (mm, before rotation):
+     // - X: positive right, negative left
+-    // - Y: positive up, negative down  
++    // - Y: positive down, negative up
+     // - Z: positive forward (distance from camera)
+-    result.spatial_x = det.spatialCoordinates.x;  // mm
+-    result.spatial_y = det.spatialCoordinates.y;  // mm
+-    result.spatial_z = det.spatialCoordinates.z;  // mm
++    
++    float raw_x = det.spatialCoordinates.x;  // mm
++    float raw_y = det.spatialCoordinates.y;  // mm
++    float raw_z = det.spatialCoordinates.z;  // mm
++    
++    // Apply 90° clockwise rotation with DepthAI coordinate system correction
++    // DepthAI Y-axis is positive DOWN, so we need: new_x = old_y, new_y = old_x (NO negative)
++    // This matches the cv::rotate(ROTATE_90_CLOCKWISE) applied to the RGB frame
++    result.spatial_x = raw_y;   // mm
++    result.spatial_y = -raw_x;  // mm (NEGATIVE - cottons are below arm, need negative Y)
++    result.spatial_z = raw_z;   // mm (depth unchanged)
++
+     
+     // Record detection timestamp
+     result.timestamp = std::chrono::steady_clock::now();

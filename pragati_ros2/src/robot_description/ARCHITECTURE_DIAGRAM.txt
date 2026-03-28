@@ -1,0 +1,243 @@
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  GAZEBO SIMULATION ARCHITECTURE                          ║
+║              MG6010 Robot - ROS2 Jazzy + Gazebo Harmonic                ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                          USER INTERFACE LAYER                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────┐    ┌─────────────┐    ┌──────────────┐               │
+│  │   Gazebo    │    │    RViz2    │    │  rqt_tools   │               │
+│  │     GUI     │    │   Viewer    │    │ (image_view) │               │
+│  └─────────────┘    └─────────────┘    └──────────────┘               │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         ROS2 TOPICS & SERVICES                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  /joint_states        /camera/image_raw      /imu                       │
+│  /tf, /tf_static      /camera/camera_info    /clock                     │
+│  /joint_trajectory_controller/...                                       │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    ▼              ▼              ▼
+        ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+        │   ROS-GZ     │  │ Controller   │  │    Robot     │
+        │   Bridge     │  │   Manager    │  │    State     │
+        │              │  │              │  │  Publisher   │
+        └──────────────┘  └──────────────┘  └──────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                       ros2_control LAYER                                 │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────┐        │
+│  │         Joint Trajectory Controller                         │        │
+│  │  • Position commands for 5 joints                           │        │
+│  │  • Trajectory interpolation                                 │        │
+│  │  • Goal tolerance checking                                  │        │
+│  └─────────────────────────────────────────────────────────────┘        │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────┐        │
+│  │         Joint State Broadcaster                             │        │
+│  │  • Publishes joint positions, velocities, efforts           │        │
+│  │  • 100Hz update rate                                        │        │
+│  └─────────────────────────────────────────────────────────────┘        │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                  gz_ros2_control PLUGIN LAYER                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────┐           │
+│  │      GazeboSimSystem (Hardware Interface)                │           │
+│  │  • Reads joint states from Gazebo                        │           │
+│  │  • Sends commands to Gazebo joints                       │           │
+│  │  • Handles position/velocity/effort interfaces           │           │
+│  └──────────────────────────────────────────────────────────┘           │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      GAZEBO HARMONIC LAYER                               │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────┐  │
+│  │   Physics Engine   │  │   Sensor Systems   │  │  Scene Renderer  │  │
+│  │  • 1ms time step   │  │  • Camera (30Hz)   │  │  • Ogre2 engine  │  │
+│  │  • Collision det.  │  │  • IMU (100Hz)     │  │  • Shadows       │  │
+│  │  • Contact solver  │  │  • Joint encoders  │  │  • Materials     │  │
+│  └────────────────────┘  └────────────────────┘  └──────────────────┘  │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                         ROBOT MODEL LAYER                                │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │                    MG6010 Robot URDF                             │   │
+│  │                                                                  │   │
+│  │  Links:                          Joints:                        │   │
+│  │  • base_link                     • joint 2 (prismatic Z)        │   │
+│  │  • link2, link3, link4, link5   • joint 3 (revolute)           │   │
+│  │  • link7 (end effector)          • joint 4 (prismatic Y)        │   │
+│  │  • camera_link                   • joint 5 (revolute)           │   │
+│  │  • yanthra_link                  • joint 7 (prismatic gripper) │   │
+│  │                                                                  │   │
+│  │  Sensors:                        Physics:                       │   │
+│  │  • RGB Camera (1280x720)         • Mass properties              │   │
+│  │  • IMU (base_link)               • Inertia tensors              │   │
+│  │                                   • Collision meshes            │   │
+│  │                                   • Friction coefficients       │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        ENVIRONMENT LAYER                                 │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────────────┐    │
+│  │  Ground Plane  │  │  Cotton Field  │  │  Lighting (Sun)        │    │
+│  │  (100m x 100m) │  │  (4 plants)    │  │  Directional shadows   │    │
+│  └────────────────┘  └────────────────┘  └────────────────────────┘    │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+═════════════════════════════════════════════════════════════════════════
+                          DATA FLOW DIAGRAM
+═════════════════════════════════════════════════════════════════════════
+
+  User Command
+      │
+      ▼
+  Joint Trajectory Action
+      │
+      ▼
+  Joint Trajectory Controller ─────► Position Commands
+      │                                     │
+      │                                     ▼
+      │                            gz_ros2_control Plugin
+      │                                     │
+      │                                     ▼
+      │                              Gazebo Physics
+      │                                     │
+      │                      ┌──────────────┼──────────────┐
+      │                      ▼              ▼              ▼
+      │                  Joint States   Camera Data    IMU Data
+      │                      │              │              │
+      ◄──────────────────────┘              │              │
+      │                                     │              │
+      ▼                                     ▼              ▼
+  /joint_states                    /camera/image_raw    /imu
+      │                                     │              │
+      ▼                                     ▼              ▼
+  User/Nodes                          rqt_image_view  Navigation
+
+
+═════════════════════════════════════════════════════════════════════════
+                        FILE ARCHITECTURE
+═════════════════════════════════════════════════════════════════════════
+
+robot_description/
+│
+├─ urdf/ ────────────────────── Robot Model Definitions
+│  ├─ MG6010_gazebo.xacro ──┐
+│  ├─ materials.xacro       ├── URDF Components
+│  ├─ gazebo_plugins.xacro  │
+│  └─ ros2_control.xacro ───┘
+│
+├─ config/ ──────────────────── Controller Parameters
+│  └─ controllers.yaml
+│
+├─ launch/ ──────────────────── Launch Scripts
+│  ├─ gazebo_sim.launch.py
+│  └─ display_gazebo.launch.py
+│
+├─ worlds/ ──────────────────── Simulation Environments
+│  └─ default.sdf
+│
+└─ meshes/ ──────────────────── 3D Models
+   └─ *.STL files
+
+
+═════════════════════════════════════════════════════════════════════════
+                    CONTROL FLOW (Joint Command)
+═════════════════════════════════════════════════════════════════════════
+
+1. User sends action goal:
+   ros2 action send_goal /joint_trajectory_controller/follow_joint_trajectory
+
+2. Joint Trajectory Controller receives goal:
+   • Validates trajectory
+   • Interpolates waypoints
+   • Generates position commands at 100Hz
+
+3. gz_ros2_control forwards commands to Gazebo:
+   • position → joint actuator commands
+
+4. Gazebo Physics Engine:
+   • Computes forces/torques
+   • Solves dynamics equations
+   • Updates joint positions
+   • Handles collisions
+
+5. Sensor data published:
+   • Joint states → /joint_states
+   • Camera image → /camera/image_raw
+   • IMU data → /imu
+
+6. User receives feedback:
+   • Joint state broadcaster updates
+   • Action feedback/result published
+
+
+═════════════════════════════════════════════════════════════════════════
+                        INTEGRATION POINTS
+═════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Your Existing Packages          Simulation Interface           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  motor_control_ros2        ────►  /joint_trajectory_controller  │
+│  (joint commands)                 /joint_states                 │
+│                                                                 │
+│  cotton_detection_ros2     ────►  /camera/image_raw             │
+│  (vision processing)              /camera/camera_info           │
+│                                                                 │
+│  vehicle_control           ────►  /tf, /tf_static               │
+│  (navigation)                     /imu                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+
+═════════════════════════════════════════════════════════════════════════
+                           SUMMARY
+═════════════════════════════════════════════════════════════════════════
+
+  ✅ ROS2 Jazzy + Gazebo Harmonic 8.10.0
+  ✅ 5-DOF joint control via ros2_control
+  ✅ RGB Camera + IMU sensors
+  ✅ Cotton field environment
+  ✅ Full physics simulation
+  ✅ Compatible with existing packages
+  ✅ Production-ready
+
+  Launch: ros2 launch robot_description gazebo_sim.launch.py
+```

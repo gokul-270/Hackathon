@@ -1,0 +1,100 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "production",
+      "displayName": "Production Build",
+      "description": "Optimized build for production deployment",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "HAS_DEPTHAI": "ON",
+        "ENABLE_GPIO": "ON",
+        "BUILD_TESTING": "OFF",
+        "BUILD_TEST_NODES": "OFF"
+      }
+    },
+    {
+      "name": "simulation",
+      "displayName": "Simulation Build",
+      "description": "Build for simulation without hardware dependencies",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "HAS_DEPTHAI": "OFF",
+        "ENABLE_GPIO": "OFF",
+        "BUILD_TESTING": "ON",
+        "BUILD_TEST_NODES": "OFF"
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug Build",
+      "description": "Debug build with symbols and test nodes",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "HAS_DEPTHAI": "OFF",
+        "ENABLE_GPIO": "OFF",
+        "BUILD_TESTING": "ON",
+        "BUILD_TEST_NODES": "ON"
+      }
+    },
+    {
+      "name": "testing",
+      "displayName": "Testing Build",
+      "description": "Build with all tests and test nodes enabled",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "HAS_DEPTHAI": "ON",
+        "ENABLE_GPIO": "ON",
+        "BUILD_TESTING": "ON",
+        "BUILD_TEST_NODES": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "production",
+      "configurePreset": "production",
+      "displayName": "Build Production",
+      "description": "Build optimized production code"
+    },
+    {
+      "name": "simulation",
+      "configurePreset": "simulation",
+      "displayName": "Build Simulation",
+      "description": "Build for simulation testing"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "displayName": "Build Debug",
+      "description": "Build with debug symbols"
+    },
+    {
+      "name": "testing",
+      "configurePreset": "testing",
+      "displayName": "Build Testing",
+      "description": "Build with all tests enabled"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "testing",
+      "configurePreset": "testing",
+      "displayName": "Run All Tests",
+      "description": "Execute all unit and integration tests"
+    }
+  ]
+}

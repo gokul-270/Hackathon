@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URDF Visual Editor</title>
+    <link rel="stylesheet" href="urdf_editor.css?v=20260317c">
+    <!-- Three.js import map for 3D viewer -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+
+<!-- ============================================================
+     TOP TOOLBAR
+     ============================================================ -->
+<div id="toolbar">
+    <div id="toolbar-left">
+        <span id="toolbar-title">URDF Editor</span>
+        <div class="toolbar-sep"></div>
+        <button class="toolbar-btn" id="btn-load" title="Load URDF file">
+            <span class="btn-icon">&#128194;</span> Load URDF
+        </button>
+        <button class="toolbar-btn" id="btn-save" title="Save URDF file">
+            <span class="btn-icon">&#128190;</span> Save URDF
+        </button>
+        <button class="toolbar-btn" id="btn-export" title="Export as XML">
+            <span class="btn-icon">&#8615;</span> Export XML
+        </button>
+    </div>
+
+    <div id="toolbar-center">
+        <span id="file-status">
+            <span class="filename">untitled.urdf</span>
+        </span>
+    </div>
+
+    <div id="toolbar-right">
+        <button class="toolbar-btn primary" id="btn-add-link" title="Add new link">
+            <span class="btn-icon">&#43;</span> Add Link
+        </button>
+        <button class="toolbar-btn primary" id="btn-add-joint" title="Add new joint">
+            <span class="btn-icon">&#43;</span> Add Joint
+        </button>
+        <div class="toolbar-sep"></div>
+        <button class="toolbar-btn" id="btn-import" title="Import/Merge another URDF">
+            <span class="btn-icon">&#8853;</span> Merge
+        </button>
+        <button class="toolbar-btn" id="btn-import-pkg" title="Import URDF Package (with meshes)">
+            <span class="btn-icon">&#128230;</span> Import Package
+        </button>
+        <button class="toolbar-btn" id="btn-env-objects" title="Add environment objects (cotton plants, terrain)" style="color:#7ecf7e;">
+            <span class="btn-icon">&#127793;</span> Env Objects
+        </button>
+        <button class="toolbar-btn" id="btn-validate" title="Validate URDF structure">
+            <span class="btn-icon">&#10004;</span> Validate
+        </button>
+        <button class="toolbar-btn spawn-btn" id="btn-spawn" title="Spawn model in Gazebo">
+            <span class="btn-icon">&#9654;</span> Spawn
+        </button>
+        <div class="toolbar-sep"></div>
+        <button class="toolbar-btn" id="btn-undo" title="Undo last action (Ctrl+Z)">
+            <span class="btn-icon">&#8617;</span> Undo
+        </button>
+        <button class="toolbar-btn" id="btn-redo" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled>
+            <span class="btn-icon">&#8618;</span> Redo
+        </button>
+        <span class="status-dot" id="toolbar-conn-dot" title="Connection status"></span>
+    </div>
+</div>
+
+<!-- ============================================================
+     MAIN 3-COLUMN LAYOUT
+     ============================================================ -->
+<div id="editor-layout">
+
+    <!-- ---- Left Panel: Model Tree ---- -->
+    <div id="tree-panel">
+        <div id="tree-panel-header">
+            <h3>Model Tree</h3>
+            <div id="tree-actions">
+                <button class="tree-action-btn" id="btn-expand-all" title="Expand all nodes">&#8862; Expand</button>
+                <button class="tree-action-btn" id="btn-collapse-all" title="Collapse all nodes">&#8863; Collapse</button>
+            </div>
+        </div>
+        <input type="text" id="tree-search" placeholder="Search links &amp; joints...">
+        <div id="tree-container">
+            <!-- Tree nodes populated by JS -->
+        </div>
+    </div>
+
+    <!-- ---- Center Panel: Visual Preview ---- -->
+    <div id="preview-panel">
+        <div id="preview-header">
+            <div id="preview-tabs">
+                <button class="preview-tab active" data-tab="node-editor" title="2D Node Editor">
+                    &#9633; Node Editor
+                </button>
+                <button class="preview-tab" data-tab="viewer-3d" title="3D Model Viewer">
+                    &#9635; 3D View
+                </button>
+            </div>
+            <div id="preview-controls">
+                <button class="preview-ctrl-btn" id="btn-fit" title="Fit to view">&#9678; Fit</button>
+                <button class="preview-ctrl-btn" id="btn-zoom-in" title="Zoom in">&#43;</button>
+                <button class="preview-ctrl-btn" id="btn-zoom-out" title="Zoom out">&#8722;</button>
+                <span id="preview-zoom-label">100%</span>
+            </div>
+        </div>
+        <!-- 2D Node Editor (SVG) -->
+        <div id="svg-container" class="preview-tab-content active">
+            <svg id="preview-svg" xmlns="http://www.w3.org/2000/svg">
+                <!-- SVG content drawn by JS -->
+            </svg>
+        </div>
+        <!-- 3D Viewer (Three.js) -->
+        <div id="viewer3d-container" class="preview-tab-content">
+            <canvas id="viewer3d-canvas"></canvas>
+            <!-- 3D Editor Toolbar Overlay -->
+            <div id="viewer3d-toolbar">
+                <button class="v3d-mode-btn active" data-mode="translate" title="Move (W)">&#8596; Move</button>
+                <button class="v3d-mode-btn" data-mode="rotate" title="Rotate (E)">&#8635; Rotate</button>
+                <button class="v3d-mode-btn" data-mode="scale" title="Scale (R)">&#8644; Scale</button>
+                <div class="v3d-sep"></div>
+                <label class="v3d-snap-toggle" title="Snap to grid">
+                    <input type="checkbox" id="chk-snap">
+                    <span class="v3d-snap-label">Snap</span>
+                </label>
+                <div class="v3d-sep"></div>
+                <button class="v3d-btn" id="btn-fit-3d" title="Fit camera to model">&#9678; Fit</button>
+                <button class="v3d-btn" id="btn-deselect-3d" title="Deselect all">&#10005; Deselect</button>
+                <div class="v3d-sep"></div>
+                <button class="v3d-btn" id="btn-undo-3d" title="Undo (Ctrl+Z)" disabled>&#8617; Undo</button>
+                <button class="v3d-btn" id="btn-redo-3d" title="Redo (Ctrl+Y)" disabled>&#8618; Redo</button>
+                <div class="v3d-sep"></div>
+                <button class="v3d-btn active" id="btn-children-follow" title="Children follow parent (click to lock children in place)">&#128279; Children Follow</button>
+            </div>
+        </div>
+        <!-- Connector detach tooltip (shown on connector click) -->
+        <div id="connector-tooltip" class="connector-tooltip">
+            <button class="connector-tooltip-btn" id="btn-detach-connector" title="Remove this joint connection">
+                &#10005; Remove Joint
+            </button>
+        </div>
+    </div>
+
+    <!-- ---- Right Panel: Properties Editor ---- -->
+    <div id="properties-panel">
+        <div id="properties-header">
+            <h3>Properties</h3>
+            <span id="selected-type-badge">None</span>
+        </div>
+        <div id="properties-content">
+            <div id="properties-empty">
+                <span class="empty-icon">&#9881;</span>
+                <span class="empty-text">Select a link or joint from the tree<br>to view and edit its properties.</span>
+            </div>
+            <!-- Property forms populated by JS -->
+        </div>
+        <div id="properties-actions">
+            <button class="prop-action-btn apply-btn" id="btn-apply-props" title="Apply changes">&#10003; Apply</button>
+            <button class="prop-action-btn delete-btn" id="btn-delete-selected" title="Delete selected item">&#128465; Delete</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================
+     ORPHAN LINK WARNING BANNER
+     ============================================================ -->
+<div id="orphan-warning-banner">
+    <!-- Dynamically populated by JS -->
+</div>
+
+<!-- ============================================================
+     BOTTOM STATUS BAR
+     ============================================================ -->
+<div id="status-bar">
+    <div id="status-bar-left">
+        <span class="status-item">
+            Links: <span class="status-count" id="status-links-count">0</span>
+        </span>
+        <span class="status-item">
+            Joints: <span class="status-count" id="status-joints-count">0</span>
+        </span>
+        <span class="status-item">
+            <span class="status-dot" id="status-connection-dot"></span>
+            <span id="status-conn-text">Connected</span>
+        </span>
+        <span class="status-item">
+            <span class="status-dot" id="status-gazebo-dot"></span>
+            <span id="status-gazebo-text">Gazebo</span>
+        </span>
+    </div>
+    <div id="status-bar-right">
+        <span id="status-saved-time">Not saved yet</span>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Add Link
+     ============================================================ -->
+<div class="modal-overlay" id="add-link-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Add New Link</h3>
+            <button class="modal-close-btn" data-modal="add-link-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Basic Info -->
+            <div class="modal-section">
+                <div class="modal-section-title">Basic Information</div>
+                <div class="prop-row">
+                    <label class="prop-label">Name</label>
+                    <input type="text" class="prop-input" id="add-link-name" placeholder="e.g. base_link">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Parent Link</label>
+                    <select class="prop-input" id="add-link-parent">
+                        <option value="">None (root link)</option>
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Geometry -->
+            <div class="modal-section">
+                <div class="modal-section-title">Geometry</div>
+                <div class="geometry-type-grid">
+                    <button class="geometry-type-btn selected" data-type="box">&#9634; Box</button>
+                    <button class="geometry-type-btn" data-type="cylinder">&#9898; Cylinder</button>
+                    <button class="geometry-type-btn" data-type="sphere">&#9679; Sphere</button>
+                    <button class="geometry-type-btn" data-type="mesh">&#9708; Mesh</button>
+                </div>
+                <!-- Shared dimension fields: length/width/height/radius (shown/hidden per type by JS) -->
+                <div class="geom-field-box geom-field-cylinder">
+                    <div class="prop-row">
+                        <label class="prop-label" id="label-geom-length">Length</label>
+                        <input type="number" class="prop-input" id="add-link-geometry-length" value="0.1" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="geom-field-box">
+                    <div class="prop-row">
+                        <label class="prop-label">Width</label>
+                        <input type="number" class="prop-input" id="add-link-geometry-width" value="0.1" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="geom-field-box">
+                    <div class="prop-row">
+                        <label class="prop-label">Height</label>
+                        <input type="number" class="prop-input" id="add-link-geometry-height" value="0.1" step="0.01" min="0">
+                    </div>
+                </div>
+                <div class="geom-field-cylinder geom-field-sphere">
+                    <div class="prop-row">
+                        <label class="prop-label">Radius</label>
+                        <input type="number" class="prop-input" id="add-link-geometry-radius" value="0.05" step="0.01" min="0">
+                    </div>
+                </div>
+                <!-- Mesh: file + scale -->
+                <div class="geom-field-mesh hidden">
+                    <div class="prop-row">
+                        <label class="prop-label">Mesh File</label>
+                        <select class="prop-input" id="add-link-mesh-file">
+                            <option value="">(none)</option>
+                        </select>
+                    </div>
+                    <div class="prop-row">
+                        <label class="prop-label">Custom Path</label>
+                        <input type="text" class="prop-input" id="add-link-mesh-custom" placeholder="package://path/to/mesh.stl">
+                    </div>
+                    <div class="prop-row-compact">
+                        <label class="prop-label">Scale</label>
+                        <span class="mini-label">X</span>
+                        <input type="number" class="prop-input" id="add-link-mesh-sx" value="1.0" step="0.01" min="0">
+                        <span class="mini-label">Y</span>
+                        <input type="number" class="prop-input" id="add-link-mesh-sy" value="1.0" step="0.01" min="0">
+                        <span class="mini-label">Z</span>
+                        <input type="number" class="prop-input" id="add-link-mesh-sz" value="1.0" step="0.01" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inertial -->
+            <div class="modal-section">
+                <div class="modal-section-title">Inertial</div>
+                <div class="prop-row">
+                    <label class="prop-label">Mass (kg)</label>
+                    <input type="number" class="prop-input" id="add-link-mass" value="1.0" step="0.1" min="0">
+                </div>
+            </div>
+
+            <!-- Visual -->
+            <div class="modal-section">
+                <div class="modal-section-title">Visual</div>
+                <div class="prop-color-row">
+                    <label class="prop-label">Color</label>
+                    <div class="prop-color-swatch" id="add-link-color-swatch" style="background: #5b9bd5;"
+                         onclick="document.getElementById('add-link-color-picker').click();"></div>
+                    <input type="color" class="prop-color-picker" id="add-link-color-picker" value="#5b9bd5"
+                           oninput="document.getElementById('add-link-color-swatch').style.background=this.value; document.getElementById('add-link-color-value').textContent=this.value;">
+                    <span class="prop-color-value" id="add-link-color-value">#5b9bd5</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="add-link-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-add-link">&#43; Add Link</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Add Joint
+     ============================================================ -->
+<div class="modal-overlay" id="add-joint-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Add New Joint</h3>
+            <button class="modal-close-btn" data-modal="add-joint-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Basic Info -->
+            <div class="modal-section">
+                <div class="modal-section-title">Basic Information</div>
+                <div class="prop-row">
+                    <label class="prop-label">Name</label>
+                    <input type="text" class="prop-input" id="add-joint-name" placeholder="e.g. shoulder_joint">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Type</label>
+                    <select class="prop-input" id="add-joint-type">
+                        <option value="fixed">
+                            Fixed
+                        </option>
+                        <option value="revolute">
+                            Revolute
+                        </option>
+                        <option value="prismatic">
+                            Prismatic
+                        </option>
+                        <option value="continuous">
+                            Continuous
+                        </option>
+                    </select>
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Parent Link</label>
+                    <select class="prop-input" id="add-joint-parent">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Child Link</label>
+                    <select class="prop-input" id="add-joint-child">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Origin -->
+            <div class="modal-section">
+                <div class="modal-section-title">Origin</div>
+                <div class="prop-row-compact">
+                    <label class="prop-label">Position</label>
+                    <span class="mini-label">X</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-x" value="0" step="0.01">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-y" value="0" step="0.01">
+                    <span class="mini-label">Z</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-z" value="0" step="0.01">
+                </div>
+                <div class="prop-row-compact">
+                    <label class="prop-label">Rotation</label>
+                    <span class="mini-label">R</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-r" value="0" step="0.01">
+                    <span class="mini-label">P</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-p" value="0" step="0.01">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="add-joint-origin-yaw" value="0" step="0.01">
+                </div>
+            </div>
+
+            <!-- Axis -->
+            <div class="modal-section">
+                <div class="modal-section-title">Axis</div>
+                <div class="prop-row-compact">
+                    <label class="prop-label">Direction</label>
+                    <span class="mini-label">X</span>
+                    <input type="number" class="prop-input" id="add-joint-axis-x" value="0" step="0.1">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="add-joint-axis-y" value="0" step="0.1">
+                    <span class="mini-label">Z</span>
+                    <input type="number" class="prop-input" id="add-joint-axis-z" value="1" step="0.1">
+                </div>
+            </div>
+
+            <!-- Limits -->
+            <div class="modal-section" id="joint-limits-section">
+                <div class="modal-section-title">Limits</div>
+                <div class="prop-row">
+                    <label class="prop-label">Lower</label>
+                    <input type="number" class="prop-input" id="add-joint-limit-lower" value="-3.14159" step="0.01">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Upper</label>
+                    <input type="number" class="prop-input" id="add-joint-limit-upper" value="3.14159" step="0.01">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Effort</label>
+                    <input type="number" class="prop-input" id="add-joint-limit-effort" value="100" step="1" min="0">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Velocity</label>
+                    <input type="number" class="prop-input" id="add-joint-limit-velocity" value="1.0" step="0.1" min="0">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="add-joint-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-add-joint">&#43; Add Joint</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Delete Confirmation
+     ============================================================ -->
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Confirm Delete</h3>
+            <button class="modal-close-btn" data-modal="delete-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <p class="confirm-message">
+                Are you sure you want to delete
+                <span class="confirm-item-name" id="delete-item-name">item_name</span>?
+            </p>
+            <p class="confirm-warning" id="delete-children-warning">
+                &#9888; This element has children that will also be removed.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="delete-modal">Cancel</button>
+            <button class="modal-btn danger-btn" id="btn-confirm-delete">&#128465; Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Import / Merge URDF
+     ============================================================ -->
+<div class="modal-overlay" id="import-modal">
+    <div class="modal-dialog" style="max-width:600px;">
+        <div class="modal-header">
+            <h3>Import / Merge</h3>
+            <button class="modal-close-btn" data-modal="import-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">
+                Merge another URDF into the current model, or upload an STL mesh file
+                to add as a new link. Imported elements get an optional prefix to avoid name collisions.
+            </p>
+            <div class="modal-section">
+                <div class="modal-section-title">Source</div>
+                <div class="prop-row">
+                    <label class="prop-label">Method</label>
+                    <select class="prop-input" id="import-method">
+                        <option value="file">Upload URDF File</option>
+                        <option value="paste">Paste URDF XML</option>
+                        <option value="stl">Upload STL Mesh</option>
+                    </select>
+                </div>
+                <div id="import-file-section" class="prop-row">
+                    <label class="prop-label">URDF File</label>
+                    <input type="file" class="prop-input" id="import-file-input" accept=".urdf,.xml,.xacro">
+                </div>
+                <div id="import-paste-section" class="prop-row hidden">
+                    <label class="prop-label">XML</label>
+                    <textarea class="prop-input" id="import-paste-input" rows="8"
+                              placeholder="Paste URDF XML here..." style="font-family:var(--font-mono);font-size:11px;resize:vertical;"></textarea>
+                </div>
+                <div id="import-stl-section" class="hidden">
+                    <div class="prop-row">
+                        <label class="prop-label">STL File</label>
+                        <input type="file" class="prop-input" id="import-stl-input" accept=".stl,.STL,.dae,.DAE,.obj,.OBJ">
+                    </div>
+                    <div class="prop-row">
+                        <label class="prop-label">Link Name</label>
+                        <input type="text" class="prop-input" id="import-stl-link-name" placeholder="e.g. new_gripper">
+                    </div>
+                    <div class="prop-row-compact">
+                        <label class="prop-label">Scale</label>
+                        <span class="mini-label">X</span>
+                        <input type="number" class="prop-input" id="import-stl-scale-x" value="1.0" step="0.01" min="0">
+                        <span class="mini-label">Y</span>
+                        <input type="number" class="prop-input" id="import-stl-scale-y" value="1.0" step="0.01" min="0">
+                        <span class="mini-label">Z</span>
+                        <input type="number" class="prop-input" id="import-stl-scale-z" value="1.0" step="0.01" min="0">
+                    </div>
+                    <div class="prop-row">
+                        <label class="prop-label">Mass (kg)</label>
+                        <input type="number" class="prop-input" id="import-stl-mass" value="1.0" step="0.1" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-section">
+                <div class="modal-section-title">Options</div>
+                <div class="prop-row" id="import-prefix-row">
+                    <label class="prop-label">Prefix</label>
+                    <input type="text" class="prop-input" id="import-prefix" placeholder="e.g. arm2_" value="">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Attach To</label>
+                    <select class="prop-input" id="import-attach-link">
+                        <option value="">(no attachment)</option>
+                    </select>
+                </div>
+                <div class="prop-row-compact" id="import-offset-row">
+                    <label class="prop-label">Offset XYZ</label>
+                    <span class="mini-label">X</span>
+                    <input type="number" class="prop-input" id="import-offset-x" value="0" step="0.01">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="import-offset-y" value="0" step="0.01">
+                    <span class="mini-label">Z</span>
+                    <input type="number" class="prop-input" id="import-offset-z" value="0" step="0.01">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="import-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-import">&#8853; Merge</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Import URDF Package (comprehensive analyzer + merger)
+     ============================================================ -->
+<div class="modal-overlay" id="import-pkg-modal">
+    <div class="modal-dialog" style="max-width:750px; max-height:90vh;">
+        <div class="modal-header">
+            <h3>&#128230; Import URDF Package</h3>
+            <button class="modal-close-btn" data-modal="import-pkg-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto; max-height:65vh;">
+            <!-- Step 1: Select URDF file -->
+            <div id="ipkg-step1">
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">
+                    Import a complete URDF package (URDF file + meshes folder). The system will
+                    analyze the structure, copy mesh files, resolve paths, handle duplicates,
+                    and merge everything into the current model.
+                </p>
+                <div class="modal-section">
+                    <div class="modal-section-title">URDF File Location</div>
+                    <div class="prop-row">
+                        <label class="prop-label">Path</label>
+                        <input type="text" class="prop-input" id="ipkg-path"
+                               placeholder="/absolute/path/to/model.urdf" style="font-family:var(--font-mono);font-size:11px;">
+                    </div>
+                    <div id="ipkg-browse" style="margin-top:6px;">
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;" id="ipkg-browse-path"></div>
+                        <div id="ipkg-browse-list" style="max-height:150px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;font-size:12px;"></div>
+                    </div>
+                </div>
+                <div style="text-align:right;margin-top:10px;">
+                    <button class="modal-btn confirm-btn" id="ipkg-analyze-btn">&#128269; Analyze URDF</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Analysis results + merge options -->
+            <div id="ipkg-step2" class="hidden">
+                <div class="modal-section">
+                    <div class="modal-section-title">Analysis Results</div>
+                    <div id="ipkg-summary" style="font-size:12px;margin-bottom:8px;"></div>
+                    <div id="ipkg-warnings" style="margin-bottom:8px;"></div>
+                    <div id="ipkg-tree-viz" style="font-family:var(--font-mono);font-size:11px;background:var(--bg-dark);padding:8px;border-radius:4px;max-height:200px;overflow:auto;margin-bottom:8px;white-space:pre;"></div>
+                    <div id="ipkg-mesh-table" style="font-size:11px;max-height:120px;overflow:auto;"></div>
+                </div>
+                <div class="modal-section">
+                    <div class="modal-section-title">Merge Options</div>
+                    <div class="prop-row">
+                        <label class="prop-label">Prefix</label>
+                        <input type="text" class="prop-input" id="ipkg-prefix" placeholder="e.g. arm_top_">
+                    </div>
+                    <div class="prop-row">
+                        <label class="prop-label">Attach To</label>
+                        <select class="prop-input" id="ipkg-attach-to">
+                            <option value="">(no attachment — floating)</option>
+                        </select>
+                    </div>
+                    <div class="prop-row-compact">
+                        <label class="prop-label">Offset XYZ</label>
+                        <span class="mini-label">X</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-x" value="0" step="0.01">
+                        <span class="mini-label">Y</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-y" value="0" step="0.01">
+                        <span class="mini-label">Z</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-z" value="0" step="0.01">
+                    </div>
+                    <div class="prop-row-compact">
+                        <label class="prop-label">Offset RPY</label>
+                        <span class="mini-label">R</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-r" value="0" step="0.01">
+                        <span class="mini-label">P</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-p" value="0" step="0.01">
+                        <span class="mini-label">Y</span>
+                        <input type="number" class="prop-input" id="ipkg-offset-yaw" value="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="import-pkg-modal">Cancel</button>
+            <button class="modal-btn hidden" id="ipkg-back-btn" style="display:none;">&#8592; Back</button>
+            <button class="modal-btn confirm-btn" id="ipkg-merge-btn" style="display:none;">&#8853; Merge Into Model</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Environment Objects
+     ============================================================ -->
+<div class="modal-overlay" id="env-objects-modal">
+    <div class="modal-dialog" style="max-width:700px; max-height:90vh;">
+        <div class="modal-header">
+            <h3>&#127793; Environment Objects</h3>
+            <button class="modal-close-btn" data-modal="env-objects-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body" style="overflow-y:auto; max-height:65vh;">
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
+                Add mesh folders (OBJ/STL/DAE) as static environment objects in Gazebo.
+                Objects are spawned with their own position and scale.
+            </p>
+
+            <!-- Browse section -->
+            <div class="modal-section">
+                <div class="modal-section-title">Browse Mesh Folders</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;" id="env-browse-path"></div>
+                <div id="env-browse-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;font-size:12px;"></div>
+            </div>
+
+            <!-- Selected mesh info -->
+            <div class="modal-section" id="env-selected-section">
+                <div class="modal-section-title">Selected Mesh</div>
+                <div id="env-no-selection" style="color:var(--text-muted);font-style:italic;font-size:12px;padding:8px;">
+                    &#9757; Click a green <span style="color:var(--success);">MESH</span> folder above to select it
+                </div>
+                <div id="env-selected-form" style="display:none;">
+                <div id="env-selected-info" style="font-size:12px;margin-bottom:8px;"></div>
+                <div class="prop-row">
+                    <label class="prop-label">Name</label>
+                    <input type="text" class="prop-input" id="env-obj-name" placeholder="cotton_plant_1" style="font-family:var(--font-mono);font-size:11px;">
+                </div>
+                <div class="prop-row-compact">
+                    <label class="prop-label">Position</label>
+                    <span class="mini-label">X</span>
+                    <input type="number" class="prop-input" id="env-pos-x" value="0" step="0.1">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="env-pos-y" value="0" step="0.1">
+                    <span class="mini-label">Z</span>
+                    <input type="number" class="prop-input" id="env-pos-z" value="0" step="0.1">
+                </div>
+                <div class="prop-row-compact">
+                    <label class="prop-label">Rotation</label>
+                    <span class="mini-label">R</span>
+                    <input type="number" class="prop-input" id="env-rot-r" value="0" step="0.1">
+                    <span class="mini-label">P</span>
+                    <input type="number" class="prop-input" id="env-rot-p" value="0" step="0.1">
+                    <span class="mini-label">Y</span>
+                    <input type="number" class="prop-input" id="env-rot-y" value="0" step="0.1">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Scale</label>
+                    <input type="number" class="prop-input" id="env-scale" value="1.0" step="0.1" min="0.01">
+                </div>
+                <div class="prop-row">
+                    <label class="prop-label">Attach To</label>
+                    <select class="prop-input" id="env-attach-to">
+                        <option value="">(floating — no parent)</option>
+                    </select>
+                </div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+                    <button class="modal-btn confirm-btn" id="env-add-urdf-btn" title="Add as URDF link (visible in 3D view and node editor)">&#43; Add to URDF</button>
+                    <button class="modal-btn" id="env-spawn-btn" title="Spawn directly in Gazebo (not in URDF)">&#9654; Spawn in Gazebo</button>
+                </div>
+                </div><!-- end env-selected-form -->
+            </div>
+
+            <!-- Spawned objects list -->
+            <div class="modal-section">
+                <div class="modal-section-title">Spawned Objects</div>
+                <div id="env-spawned-list" style="font-size:12px;max-height:150px;overflow-y:auto;">
+                    <div style="color:var(--text-muted);font-style:italic;">No environment objects spawned yet</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="env-objects-modal">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Validate Results
+     ============================================================ -->
+<div class="modal-overlay" id="validate-modal">
+    <div class="modal-dialog" style="max-width:550px;">
+        <div class="modal-header">
+            <h3>Validation Results</h3>
+            <button class="modal-close-btn" data-modal="validate-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <div id="validate-results">
+                <div style="text-align:center;color:var(--text-muted);padding:20px;">Running validation...</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="validate-modal">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Save Dialog
+     ============================================================ -->
+<div class="modal-overlay" id="save-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Save URDF</h3>
+            <button class="modal-close-btn" data-modal="save-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-section">
+                <div class="modal-section-title">Filename</div>
+                <input type="text" class="save-filename-input" id="save-filename" placeholder="my_robot.urdf" value="untitled.urdf">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="save-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-save">&#128190; Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Load Dialog
+     ============================================================ -->
+<div class="modal-overlay" id="load-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Load URDF</h3>
+            <button class="modal-close-btn" data-modal="load-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-section">
+                <div class="modal-section-title">Available Files</div>
+                <div class="file-list" id="load-file-list">
+                    <div class="file-list-empty">No URDF files found. Save a file first.</div>
+                    <!-- File items populated by JS -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="load-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-load">&#128194; Load</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     CONTEXT MENU (right-click on SVG nodes)
+     ============================================================ -->
+<div id="context-menu" class="context-menu">
+    <div class="context-menu-item" data-action="edit">&#9881; Edit Properties</div>
+    <div class="context-menu-item" data-action="add-child-link">&#43; Add Child Link</div>
+    <div class="context-menu-item" data-action="add-child-joint">&#43; Add Child Joint</div>
+    <div class="context-menu-sep"></div>
+    <div class="context-menu-item" data-action="select-children">&#9733; Select with Children</div>
+    <div class="context-menu-item" data-action="copy">&#128203; Copy<span class="ctx-shortcut">Ctrl+C</span></div>
+    <div class="context-menu-item" data-action="copy-children">&#128203; Copy with Children</div>
+    <div class="context-menu-item" data-action="paste">&#128203; Paste<span class="ctx-shortcut">Ctrl+V</span></div>
+    <div class="context-menu-item" data-action="duplicate">&#8916; Duplicate<span class="ctx-shortcut">Ctrl+D</span></div>
+    <div class="context-menu-sep"></div>
+    <div class="context-menu-item" data-action="detach">&#8645; Detach from Parent</div>
+    <div class="context-menu-item" data-action="attach">&#128279; Attach to Parent...</div>
+    <div class="context-menu-item" data-action="reparent">&#128279; Re-parent (Move)</div>
+    <div class="context-menu-sep"></div>
+    <div class="context-menu-item" data-action="select-all">&#9744; Select All<span class="ctx-shortcut">Ctrl+A</span></div>
+    <div class="context-menu-item danger" data-action="delete">&#128465; Delete<span class="ctx-shortcut">Del</span></div>
+</div>
+
+<!-- ============================================================
+     MODAL: Re-parent / Attach
+     ============================================================ -->
+<div class="modal-overlay" id="reparent-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Re-parent Link</h3>
+            <button class="modal-close-btn" data-modal="reparent-modal" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+                Move <span class="text-accent" id="reparent-source-name">link</span> to be a child of a different parent.
+            </p>
+            <div class="prop-row">
+                <label class="prop-label">New Parent</label>
+                <select class="prop-input" id="reparent-target"></select>
+            </div>
+            <div class="prop-row-compact">
+                <label class="prop-label">Offset XYZ</label>
+                <span class="mini-label">X</span>
+                <input type="number" class="prop-input" id="reparent-ox" value="0" step="0.01">
+                <span class="mini-label">Y</span>
+                <input type="number" class="prop-input" id="reparent-oy" value="0" step="0.01">
+                <span class="mini-label">Z</span>
+                <input type="number" class="prop-input" id="reparent-oz" value="0" step="0.01">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn" data-modal="reparent-modal">Cancel</button>
+            <button class="modal-btn confirm-btn" id="btn-confirm-reparent">&#128279; Re-parent</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL: Attach Orphan Link
+     ============================================================ -->
+<div class="modal-overlay" id="attach-orphan-modal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Attach Orphan Link</h3>
+            <button class="modal-close-btn" title="Close">&#10005;</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+                Attach orphan link <span class="text-accent" id="attach-orphan-name">link</span> to a parent in the main tree.
+            </p>
+            <div class="prop-row">
+                <label class="prop-label">Parent Link</label>
+                <select class="prop-input" id="attach-orphan-parent"></select>
+            </div>
+            <div class="prop-row-compact">
+                <label class="prop-label">Position XYZ</label>
+                <div class="compact-inputs">
+                    <label class="compact-label">x</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-ox" value="0">
+                    <label class="compact-label">y</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-oy" value="0">
+                    <label class="compact-label">z</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-oz" value="0">
+                </div>
+            </div>
+            <div class="prop-row-compact">
+                <label class="prop-label">Rotation RPY</label>
+                <div class="compact-inputs">
+                    <label class="compact-label">r</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-or" value="0">
+                    <label class="compact-label">p</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-op" value="0">
+                    <label class="compact-label">y</label>
+                    <input type="number" step="0.01" class="prop-input compact" id="attach-orphan-ow" value="0">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn">Cancel</button>
+            <button class="modal-btn confirm-btn">Attach</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     TOAST NOTIFICATIONS
+     ============================================================ -->
+<div id="toast-container">
+    <!-- Toasts inserted dynamically by JS -->
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script src="urdf_editor.js?v=20260317e"></script>
+<script type="module" src="viewer3d.js?v=20260317d"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Pre-commit hooks for Pragati ROS2
+# Install: pip install pre-commit
+# Setup: pre-commit install && pre-commit install --hook-type pre-push
+# Run manually: pre-commit run --all-files
+#
+# Strategy: single-script hooks to minimize overhead on slow filesystems.
+#   commit: fix whitespace (all text files) + auto-format Python (black + isort)
+#   push:   all validation (flake8, whitespace, YAML, etc. in one script)
+#
+# NOTE: clang-format and cmake-format/lint omitted — run manually if needed:
+#   clang-format -i src/**/*.cpp src/**/*.hpp
+#   cmake-format -i src/**/CMakeLists.txt
+
+repos:
+  - repo: local
+    hooks:
+      # === PRE-COMMIT: whitespace fixes (all files) + Python format ===
+      - id: format-and-fix-whitespace
+        name: Fix whitespace + format Python (black + isort)
+        entry: bash scripts/validation/pre_commit_format.sh
+        language: system
+        types: [text]
+        stages: [pre-commit]
+
+      # === PRE-PUSH: all validation in one script ===
+      - id: validate-push
+        name: Pre-push validation (lint, hygiene, root clutter)
+        entry: bash scripts/validation/pre_push_validate.sh
+        language: system
+        types: [file]
+        stages: [pre-push]
+
+# Skip generated and build files
+exclude: |
+  (?x)^(
+    .*\.pb\.py$|
+    .*_pb2\.py$|
+    build/|
+    install/|
+    log/|
+    .*\.bag$|
+    .*\.onnx$
+  )
+
+fail_fast: false
+minimum_pre_commit_version: '2.15.0'

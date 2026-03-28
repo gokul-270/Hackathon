@@ -1,0 +1,12 @@
+# Read Encoder Service
+# Request to read the current encoder value from a motor controller
+
+# Request
+uint8 motor_id              # Motor CAN ID
+---
+# Response
+bool success                # True if encoder was read successfully
+string error_message        # Error description (empty on success)
+uint16 raw_value            # Raw encoder value (0-65535)
+uint16 offset               # Encoder offset value
+uint16 original_value       # Original encoder value before offset

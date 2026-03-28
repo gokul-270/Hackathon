@@ -1,0 +1,19 @@
+[Unit]
+Description=Pragati Boot Timing Capture (oneshot, timer-activated)
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+
+ExecStart=/bin/bash /usr/local/sbin/boot_timing_capture.sh
+
+# Don't restart — this is a one-shot per boot.
+RemainAfterExit=no
+
+StandardOutput=journal
+StandardError=journal
+
+Environment="HOME=/home/ubuntu"
+
+# No [Install] — this service is activated only by boot_timing.timer.

@@ -1,0 +1,13 @@
+# Write Encoder Zero Service
+# Request to set the encoder zero position on a motor controller
+
+# Request
+uint8 SET_VALUE=0           # Mode: set encoder to a specific value
+uint8 SET_CURRENT_POS=1     # Mode: set current position as zero
+uint8 motor_id              # Motor CAN ID
+uint8 mode                  # Zero-set mode (SET_VALUE or SET_CURRENT_POS)
+uint16 encoder_value        # Encoder value for SET_VALUE mode (ignored for SET_CURRENT_POS)
+---
+# Response
+bool success                # True if encoder zero was set successfully
+string error_message        # Error description (empty on success)

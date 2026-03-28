@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!-- 
+  Collision geometries for MG6010 robot using primitive shapes.
+  Dartsim physics engine does not support mesh collisions, so we use
+  boxes, cylinders, and spheres to approximate the robot's collision shape.
+  
+  NOTE: Gazebo reference tags don't override URDF collision elements.
+  These are for Gazebo-specific collision properties only.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Collision properties for base_link -->
+  <gazebo reference="base_link">
+    <mu1>0.8</mu1>
+    <mu2>0.8</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.001</minDepth>
+    <maxVel>0.1</maxVel>
+  </gazebo>
+
+  <!-- Link2 collision - vertical prismatic link, use box -->
+  <gazebo reference="link2">
+    <collision name="link2_collision">
+      <geometry>
+        <box>
+          <size>0.08 0.8 0.08</size>
+        </box>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.6</mu>
+            <mu2>0.6</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- Link3 collision - rotating link -->
+  <gazebo reference="link3">
+    <collision name="link3_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.04</radius>
+          <length>0.15</length>
+        </cylinder>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.6</mu>
+            <mu2>0.6</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- Link4 collision - horizontal prismatic link -->
+  <gazebo reference="link4">
+    <collision name="link4_collision">
+      <geometry>
+        <box>
+          <size>0.1 0.2 0.15</size>
+        </box>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.6</mu>
+            <mu2>0.6</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- Link5 collision - gripper link -->
+  <gazebo reference="link5_origin">
+    <collision name="link5_origin_collision">
+      <geometry>
+        <box>
+          <size>0.04 0.04 0.04</size>
+        </box>
+      </geometry>
+    </collision>
+  </gazebo>
+
+  <gazebo reference="link5">
+    <collision name="link5_collision">
+      <geometry>
+        <box>
+          <size>0.06 0.15 0.06</size>
+        </box>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.8</mu>
+            <mu2>0.8</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- Link7 collision - end effector -->
+  <gazebo reference="link7">
+    <collision name="link7_collision">
+      <geometry>
+        <box>
+          <size>0.05 0.05 0.05</size>
+        </box>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>0.8</mu>
+            <mu2>0.8</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+  </gazebo>
+
+  <!-- Camera link collision - small box -->
+  <gazebo reference="camera_link">
+    <collision name="camera_link_collision">
+      <geometry>
+        <box>
+          <size>0.03 0.05 0.03</size>
+        </box>
+      </geometry>
+    </collision>
+  </gazebo>
+
+</robot>

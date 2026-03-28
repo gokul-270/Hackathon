@@ -1,0 +1,16 @@
+# Joint Homing Action
+# Performs homing sequence for specified joints with progress feedback.
+# Replaces the blocking perform_motor_homing() call and the unused JointHoming.srv.
+
+# Goal
+int32[] joint_ids             # Joint IDs to home (empty = all joints)
+---
+# Result
+bool success                  # True if all requested joints homed successfully
+string reason                 # Success/failure reason
+float64[] final_positions     # Final positions of homed joints (radians, same order as joint_ids)
+---
+# Feedback
+int32 current_joint_id        # Joint currently being homed
+float32 progress_percent      # Overall progress (0.0 to 100.0)
+string status_message         # Human-readable status (e.g., "Homing joint3: moving to zero")

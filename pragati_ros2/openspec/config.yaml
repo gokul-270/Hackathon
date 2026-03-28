@@ -1,0 +1,48 @@
+schema: spec-driven
+
+# Project context
+context: |
+  Project: Pragati Cotton Picking Robot
+  Tech stack: ROS2 Jazzy, C++, Python, Ubuntu 24.04
+  Hardware: Raspberry Pi 4B, OAK-D Lite cameras, MG6010/MG6012 motors, CAN bus
+  Domain: Agricultural robotics - autonomous cotton harvesting
+
+  Key documentation:
+  - docs/specifications/PRODUCT_REQUIREMENTS_DOCUMENT.md (PRD)
+  - docs/specifications/TECHNICAL_SPECIFICATION_DOCUMENT.md (TSD)
+  - docs/specifications/VALIDATION_MATRIX.md (requirement traceability)
+  - docs/specifications/GAP_TRACKING.md (38 tracked gaps)
+
+  Architecture: Distributed multi-arm system (1-6 arms), each with dedicated RPi 4B
+  Communication: ROS2 topics/services within arm, MQTT between arms
+  Build: colcon with ccache optimization
+
+  Current phase: Expo Demo (1 arm) validated
+  Next milestone: Field Trial (2 arms) - January 2026
+  Production target: 6 arms, 250 kg/day - November 2026
+
+# Per-artifact rules
+rules:
+  proposal:
+    - Reference existing PRD/TSD requirement IDs (FR-DET-001, PERF-ARM-001, etc.)
+    - Include impact on field trial timeline
+    - Always include "Out of scope" section
+  specs:
+    - Use Given/When/Then scenario format
+    - Reference ROS2 topics/services where applicable
+    - Include performance targets from PRD
+  tasks:
+    - Break into chunks completable in 1-2 hours
+    - Include hardware vs software distinction
+    - Mark dependencies between tasks
+
+# Git commit checkpoints - prevent loss of planning/implementation work
+commit_policy: |
+  MANDATORY commit checkpoints (do NOT skip):
+  1. After ALL artifacts are created and reviewed - one clean commit for the entire change
+  2. Before stopping/pausing an implementation session - one commit for all work done
+  3. After archiving a change - commit the archive and spec sync
+
+  Do NOT commit after each individual artifact or task - keep commit history clean.
+  Commit messages should use: "chore: create <name> change artifacts (...)" for planning,
+  and "feat/fix: implement <name> <description>" for implementation.

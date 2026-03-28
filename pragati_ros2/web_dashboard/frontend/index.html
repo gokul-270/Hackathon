@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Chart.js loaded locally for offline field deployment -->
+    <script src="vendor/chart.js/chart.umd.js"></script>
+    <script src="vendor/chart.js/chartjs-plugin-zoom.min.js"></script>
+    <!-- ES module import map for Preact + HTM + Chart.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "preact": "./vendor/preact/preact.mjs",
+            "preact/hooks": "./vendor/preact/hooks.mjs",
+            "preact/compat": "./vendor/preact/compat.mjs",
+            "htm": "./vendor/htm/htm.mjs",
+            "htm/preact": "./vendor/htm/htm-preact.mjs",
+            "chart.js/auto": "./vendor/chart.js/chart.esm-wrapper.mjs"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>🤖 Pragati Dashboard</h1>
+                <div class="connection-status">
+                    <span id="connection-indicator" class="indicator disconnected"></span>
+                    <span id="connection-text">Connecting...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="estop-container">
+                    <button class="estop-button estop-entity-btn" id="estop-entity-btn" title="E-Stop current entity (Ctrl+Shift+X)" disabled>⛔ E-STOP</button>
+                    <button class="estop-button estop-all-btn" id="estop-all-btn" title="E-Stop ALL entities (Ctrl+Shift+A)">⛔ E-STOP ALL</button>
+                    <span class="safety-indicator" id="safety-indicator" title="Safety status"></span>
+                </div>
+                <div class="system-time" id="system-time"></div>
+                <button class="btn btn-icon" id="refresh-btn" title="Refresh">🔄</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- E-Stop state banner (hidden by default, shown when entities are e-stopped) -->
+    <div id="estop-banner" class="estop-banner" style="display: none;">
+        <div class="estop-banner-content">
+            <span class="estop-banner-icon">⛔</span>
+            <span class="estop-banner-text">Emergency Stop Active</span>
+            <span id="estop-banner-entities" class="estop-banner-entities"></span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div id="grouped-sidebar"></div>
+        </aside>
+
+            <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Fleet Overview Section (home page) -->
+            <section id="fleet-overview-section" class="content-section">
+                <div id="fleet-overview-section-preact"></div>
+            </section>
+
+            <!-- Nodes Section -->
+            <section id="nodes-section" class="content-section" data-section="nodes">
+                <div id="nodes-section-preact"></div>
+            </section>
+
+            <!-- Topics Section -->
+            <section id="topics-section" class="content-section">
+                <div id="topics-section-preact"></div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="services-section" class="content-section">
+                <div id="services-section-preact"></div>
+            </section>
+
+            <!-- Parameters Section -->
+            <section id="parameters-section" class="content-section">
+                <div id="parameters-section-preact"></div>
+            </section>
+
+            <!-- Health Section -->
+            <section id="health-section" class="content-section">
+                <div id="health-section-preact"></div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts-section" class="content-section">
+                <div id="alerts-section-preact"></div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section id="statistics-section" class="content-section">
+                <div id="statistics-section-preact"></div>
+            </section>
+
+            <!-- Historical Data Section -->
+            <section id="history-section" class="content-section">
+                <div id="history-section-preact"></div>
+            </section>
+
+            <!-- Motor Config Section -->
+            <section id="motor-config-section" class="content-section">
+                <div id="motor-config-section-preact"></div>
+            </section>
+
+            <!-- Field Analysis Section -->
+            <section id="analysis-section" class="content-section">
+                <div id="analysis-section-preact"></div>
+            </section>
+
+            <!-- Bag Manager Section -->
+            <section id="bags-section" class="content-section">
+                <div id="bags-section-preact"></div>
+            </section>
+
+            <!-- Settings/Configuration Section -->
+            <section id="settings-section" class="content-section">
+                <div id="settings-section-preact"></div>
+            </section>
+
+            <!-- Launch Control Section -->
+            <section id="launch-control-section" class="content-section">
+                <div id="launch-control-section-preact"></div>
+            </section>
+
+            <!-- Systemd Services Section -->
+            <section id="systemd-services-section" class="content-section">
+                <div id="systemd-services-section-preact"></div>
+            </section>
+
+            <!-- Sync & Deploy Section -->
+            <section id="sync-deploy-section" class="content-section">
+                <div id="sync-deploy-section-preact"></div>
+            </section>
+
+            <!-- Operations Section -->
+            <section id="operations-section" class="content-section">
+                <div id="operations-section-preact"></div>
+            </section>
+
+            <!-- Monitoring Hub Section -->
+            <section id="monitoring-section" class="content-section">
+                <div id="monitoring-section-preact"></div>
+            </section>
+
+            <!-- Multi-Arm Section -->
+            <section id="multi-arm-section" class="content-section">
+                <div id="multi-arm-section-preact"></div>
+            </section>
+
+            <!-- Fleet Section -->
+            <section id="fleet-section" class="content-section">
+                <div id="fleet-section-preact"></div>
+            </section>
+
+            <!-- File Browser Section -->
+            <section id="file-browser-section" class="content-section">
+                <div id="file-browser-section-preact"></div>
+            </section>
+
+            <!-- Log Viewer Section -->
+            <section id="log-viewer-section" class="content-section">
+                <div id="log-viewer-section-preact"></div>
+            </section>
+
+            <!-- Entity Detail Section (drill-down from Fleet) -->
+            <section id="entity-detail-section" class="content-section">
+                <div id="entity-detail-section-preact"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Preact app shell (ES module) — all tabs are Preact components -->
+    <script type="module" src="/js/tabs/FleetTab.mjs"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

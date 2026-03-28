@@ -1,0 +1,30 @@
+# Optional Dependencies for Vehicle Control System
+# These provide additional functionality but are not required for core operation
+
+# Joystick Support
+pygame>=2.1.0
+
+# IMU Support (Inertial Measurement Unit)
+adafruit-circuitpython-mpu6050>=1.1.0
+
+# ADC Support (Analog-to-Digital Converter)  
+adafruit-circuitpython-mcp3xxx>=1.4.0
+
+# Data Visualization
+matplotlib>=3.5.0
+plotly>=5.10.0
+
+# Web Interface (Remote Control/Monitoring)
+flask>=2.2.0
+flask-socketio>=5.3.0
+
+# Advanced Data Processing
+pandas>=1.5.0
+scipy>=1.9.0
+
+# Machine Learning (for advanced control algorithms)
+scikit-learn>=1.2.0
+numpy>=1.21.0
+
+# Database Support (for data logging)
+sqlalchemy>=2.0.0

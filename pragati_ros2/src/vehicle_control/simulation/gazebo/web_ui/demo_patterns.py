@@ -1,0 +1,1 @@
+../../../../../scripts/demo_patterns.py

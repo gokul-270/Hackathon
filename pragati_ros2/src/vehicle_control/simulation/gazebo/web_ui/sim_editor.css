@@ -1,0 +1,520 @@
+/* ============================================
+   Pragati Robot — Simulation Editor Styles
+   ============================================ */
+
+/* ---- Page Layout ---- */
+.sim-editor-body {
+    background: #1a1a2e;
+}
+
+.editor-main {
+    display: flex;
+    gap: 0;
+    height: calc(100vh - 48px);
+    overflow: hidden;
+}
+
+/* ---- Header nav links ---- */
+.header-nav {
+    display: flex;
+    gap: 4px;
+    margin-left: 16px;
+}
+
+.nav-link {
+    color: #8899aa;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: #e0e0e0;
+    background: rgba(79, 195, 247, 0.1);
+}
+
+.nav-link.active {
+    color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.15);
+    border-bottom: 2px solid #4fc3f7;
+}
+
+/* ============================================
+   Field Visualization Panel
+   ============================================ */
+.field-viz-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #16213e;
+    border-right: 2px solid #0f3460;
+    min-width: 400px;
+}
+
+.field-viz-panel .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px 8px;
+    flex-shrink: 0;
+}
+
+.field-viz-panel h2 {
+    font-size: 15px;
+    color: #4fc3f7;
+    letter-spacing: 0.5px;
+}
+
+.viz-legend {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: #8899aa;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-swatch {
+    width: 16px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.legend-vehicle {
+    background: #ff5722;
+    box-shadow: 0 0 4px #ff5722;
+}
+
+.legend-plant-s {
+    background: #66bb6a;
+}
+
+.legend-plant-m {
+    background: #43a047;
+}
+
+.legend-plant-t {
+    background: #2e7d32;
+}
+
+.legend-terrain {
+    background: rgba(141, 110, 70, 0.35);
+    border: 1px solid rgba(141, 110, 70, 0.6);
+}
+
+.canvas-wrapper {
+    flex: 1;
+    position: relative;
+    margin: 0 12px;
+    overflow: hidden;
+}
+
+.canvas-wrapper canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 6px;
+    background: #0d1b2a;
+    cursor: crosshair;
+}
+
+.canvas-info {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 11px;
+    color: #667788;
+    background: rgba(13, 27, 42, 0.85);
+    padding: 2px 8px;
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+.axis-info {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px 10px;
+    font-size: 11px;
+    color: #556677;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Settings Panel
+   ============================================ */
+.settings-panel {
+    width: 420px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 16px 20px;
+    background: #1a1a2e;
+}
+
+.settings-panel h2 {
+    font-size: 15px;
+    color: #4fc3f7;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+}
+
+.settings-group {
+    background: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.settings-group h3 {
+    font-size: 13px;
+    color: #b0bec5;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+}
+
+/* ---- Current Config ---- */
+.config-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.config-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 13px;
+}
+
+.config-label {
+    color: #8899aa;
+}
+
+.config-value {
+    color: #e0e0e0;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+/* ---- Form Inputs ---- */
+.input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-field label {
+    font-size: 11px;
+    color: #8899aa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.form-field input[type="number"] {
+    background: #0f3460;
+    border: 1px solid #1a4080;
+    color: #e0e0e0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.form-field input[type="number"]:focus {
+    outline: none;
+    border-color: #4fc3f7;
+    box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.15);
+}
+
+.field-hint {
+    font-size: 11px;
+    color: #556677;
+}
+
+/* ---- Unit Toggle ---- */
+.unit-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.unit-toggle-label {
+    font-size: 11px;
+    color: #8899aa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.unit-toggle-btn {
+    background: #0f3460;
+    border: 1px solid #1a4080;
+    color: #4fc3f7;
+    padding: 4px 14px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    min-width: 36px;
+    text-align: center;
+}
+
+.unit-toggle-btn:hover {
+    border-color: #4fc3f7;
+    background: #162a50;
+}
+
+.unit-toggle-btn.active-ft {
+    background: #1a4a20;
+    border-color: #66bb6a;
+    color: #66bb6a;
+}
+
+.unit-toggle-btn.active-m {
+    background: #1a3060;
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+}
+
+/* ---- Presets ---- */
+.preset-row {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preset-label {
+    font-size: 12px;
+    color: #8899aa;
+    margin-right: 4px;
+}
+
+.preset-btn {
+    background: #0f3460;
+    border: 1px solid #1a4080;
+    color: #b0bec5;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-btn:hover {
+    background: #1a4080;
+    color: #e0e0e0;
+}
+
+.preset-btn.active {
+    background: rgba(79, 195, 247, 0.15);
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+}
+
+/* ---- Checkbox ---- */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #8899aa;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    accent-color: #4fc3f7;
+    width: 14px;
+    height: 14px;
+}
+
+/* ---- Plant Mix Sliders ---- */
+.plant-mix-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.plant-mix-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #b0bec5;
+    cursor: pointer;
+}
+
+.mix-slider {
+    flex: 1;
+    height: 4px;
+    accent-color: #43a047;
+    cursor: pointer;
+}
+
+.mix-pct {
+    width: 32px;
+    text-align: right;
+    font-family: monospace;
+    font-size: 11px;
+    color: #8899aa;
+}
+
+/* ---- Action Buttons ---- */
+.action-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preview-btn {
+    background: #0f3460;
+    color: #4fc3f7;
+    border: 1px solid #1a4080;
+}
+
+.preview-btn:hover {
+    background: #1a4080;
+    border-color: #4fc3f7;
+}
+
+.apply-btn {
+    background: #2e7d32;
+    color: #e8f5e9;
+}
+
+.apply-btn:hover {
+    background: #388e3c;
+    box-shadow: 0 0 12px rgba(76, 175, 80, 0.3);
+}
+
+.apply-btn:disabled {
+    background: #1b5e20;
+    color: #5a7a5c;
+    cursor: not-allowed;
+}
+
+.reset-btn {
+    background: transparent;
+    color: #8899aa;
+    border: 1px solid #334455;
+    flex: 0.6;
+}
+
+.reset-btn:hover {
+    color: #ff8a65;
+    border-color: #ff8a65;
+}
+
+/* ---- Status Bar ---- */
+.editor-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #0f3460;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: #8899aa;
+    min-height: 40px;
+    transition: all 0.3s;
+}
+
+.editor-status.success {
+    background: rgba(46, 125, 50, 0.2);
+    border: 1px solid #2e7d32;
+    color: #a5d6a7;
+}
+
+.editor-status.error {
+    background: rgba(198, 40, 40, 0.2);
+    border: 1px solid #c62828;
+    color: #ef9a9a;
+}
+
+.editor-status.working {
+    background: rgba(79, 195, 247, 0.1);
+    border: 1px solid #0288d1;
+    color: #81d4fa;
+}
+
+/* ---- Notes ---- */
+.editor-notes {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #556677;
+    line-height: 1.6;
+}
+
+.editor-notes p {
+    margin-bottom: 3px;
+}
+
+.editor-notes strong {
+    color: #8899aa;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 900px) {
+    .editor-main {
+        flex-direction: column;
+        height: auto;
+        overflow-y: auto;
+    }
+
+    .field-viz-panel {
+        min-height: 350px;
+        border-right: none;
+        border-bottom: 2px solid #0f3460;
+    }
+
+    .settings-panel {
+        width: 100%;
+    }
+}

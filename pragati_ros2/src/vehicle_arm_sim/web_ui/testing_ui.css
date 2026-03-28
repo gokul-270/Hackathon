@@ -1,0 +1,725 @@
+/* =============================================================================
+   Pragati Testing UI — Styles
+   ============================================================================= */
+
+/* ---- CSS Variables ---- */
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-panel: #1e2a45;
+    --bg-input: #0f1626;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0b0;
+    --text-muted: #606080;
+    --accent: #4fc3f7;
+    --accent-hover: #29b6f6;
+    --success: #66bb6a;
+    --warning: #ffa726;
+    --danger: #ef5350;
+    --border: #2a3a5c;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --radius: 8px;
+    --panel-gap: 10px;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* ---- Top Bar ---- */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.top-bar-left .logo { font-size: 20px; }
+.top-bar-left h1 {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.top-bar-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.conn-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot.red { background: var(--danger); }
+.dot.green { background: var(--success); }
+.dot.yellow { background: var(--warning); }
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.top-bar-right input {
+    width: 200px;
+    padding: 4px 8px;
+    font-size: 12px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* ---- Buttons ---- */
+.btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #000; }
+.btn-secondary { background: var(--border); color: var(--text-primary); }
+.btn-small { padding: 4px 10px; font-size: 11px; }
+
+/* ---- Main Layout ---- */
+.main-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    gap: var(--panel-gap);
+    padding: var(--panel-gap);
+    height: calc(100vh - 46px);
+    overflow: hidden;
+}
+
+.panel {
+    background: var(--bg-panel);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* ---- Sections ---- */
+.section {
+    margin-bottom: 12px;
+}
+.section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+/* ---- Spawn Controls ---- */
+.spawn-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.spawn-controls select {
+    width: 100%;
+    padding: 5px 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 11px;
+}
+.spawn-buttons {
+    display: flex;
+    gap: 6px;
+}
+.spawn-buttons .btn { flex: 1; }
+.status-msg {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    min-height: 16px;
+}
+.status-msg.ok { color: var(--success); }
+.status-msg.err { color: var(--danger); }
+
+/* ---- Joint Sliders ---- */
+.joint-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.joint-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 50px;
+    align-items: center;
+    gap: 6px;
+}
+.joint-row label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.joint-row label small {
+    color: var(--text-muted);
+    display: block;
+    font-size: 9px;
+}
+.joint-val {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-align: right;
+}
+
+/* Range slider styling */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--bg-input);
+    border-radius: 3px;
+    outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+}
+
+/* ---- Center Panel ---- */
+.center-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.joystick-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Joystick Zone */
+.joystick-zone {
+    width: 240px;
+    height: 240px;
+    background: var(--bg-input);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    position: relative;
+    margin: 8px auto;
+    touch-action: none;
+}
+.crosshair-h,
+.crosshair-v {
+    position: absolute;
+    background: var(--border);
+}
+.crosshair-h {
+    width: 100%;
+    height: 1px;
+    top: 50%;
+}
+.crosshair-v {
+    width: 1px;
+    height: 100%;
+    left: 50%;
+}
+
+/* Command display */
+.cmd-display {
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+.cmd-display strong {
+    color: var(--accent);
+    font-family: monospace;
+}
+
+/* Speed modes */
+.speed-modes {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+.speed-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.15s;
+}
+.speed-btn.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    font-weight: 600;
+}
+.speed-btn:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+/* E-STOP */
+.estop-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.estop-btn {
+    width: 160px;
+    height: 50px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    border: 3px solid var(--danger);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--danger);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.estop-btn:hover {
+    background: rgba(239, 83, 80, 0.15);
+}
+.estop-btn.active {
+    background: var(--danger);
+    color: #fff;
+    animation: pulse-estop 0.8s infinite alternate;
+}
+@keyframes pulse-estop {
+    from { box-shadow: 0 0 8px var(--danger); }
+    to { box-shadow: 0 0 24px var(--danger); }
+}
+.estop-hint {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Keyboard hint */
+.keyboard-hint {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* ---- Right Panel: Telemetry ---- */
+.telemetry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+}
+.telem-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 6px;
+    background: var(--bg-input);
+    border-radius: 4px;
+}
+.telem-item label {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+.telem-item span {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-primary);
+}
+
+/* ---- Log Area ---- */
+.log-area {
+    height: 150px;
+    overflow-y: auto;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+.log-area .log-error { color: var(--danger); }
+.log-area .log-success { color: var(--success); }
+.log-area .log-warn { color: var(--warning); }
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ===========================================================================
+   ARM COSINE TEST SECTION
+   =========================================================================== */
+.arm-test-section {
+    border-top: 2px solid var(--accent);
+    margin-top: 6px;
+}
+.test-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+.test-desc code {
+    background: var(--bg-input);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+    font-size: 11px;
+}
+.test-config {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.test-config label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.test-input {
+    width: 55px;
+    padding: 3px 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 11px;
+    text-align: center;
+}
+.test-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.test-arms {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+.test-arms label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+.test-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 12px;
+}
+.btn-danger:hover { background: #d32f2f; }
+.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Progress bar */
+.test-progress {
+    margin-bottom: 8px;
+}
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-input);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--success));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+#test-progress-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* Test table */
+.test-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 4px;
+}
+.test-table th {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    padding: 4px 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+.test-table td {
+    padding: 3px 6px;
+    text-align: center;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.4);
+    font-family: 'Courier New', monospace;
+}
+.test-table tr:hover {
+    background: rgba(79, 195, 247, 0.05);
+}
+.test-table tr.active-step {
+    background: rgba(79, 195, 247, 0.15);
+    outline: 1px solid var(--accent);
+}
+.step-status {
+    font-family: -apple-system, sans-serif;
+    min-width: 70px;
+}
+
+/* ===========================================================================
+   CUSTOM JOINT SEQUENCE SECTION
+   =========================================================================== */
+.custom-seq-section {
+    border-top: 2px solid var(--accent);
+    margin-top: 6px;
+    width: 100%;
+}
+
+/* Control row: arm selector + repeat control */
+.seq-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+.seq-control-row label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.seq-control-row select {
+    padding: 3px 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+}
+.seq-control-row select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.seq-loop-label {
+    cursor: pointer;
+}
+
+/* Repeat count input */
+.seq-repeat-input {
+    width: 55px;
+    text-align: center;
+}
+
+/* Generic seq number input */
+.seq-input {
+    padding: 3px 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 11px;
+}
+.seq-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.seq-input:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Sequence table */
+.seq-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+.seq-table th {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    padding: 4px 5px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+.seq-table td {
+    padding: 2px 4px;
+    text-align: center;
+    border-bottom: 1px solid rgba(42, 58, 92, 0.4);
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+/* Alternating row background */
+.seq-table tbody tr:nth-child(even) {
+    background: rgba(15, 22, 38, 0.4);
+}
+.seq-table tbody tr:hover {
+    background: rgba(79, 195, 247, 0.05);
+}
+/* Active (executing) step highlight */
+.seq-table tr.active-step {
+    background: rgba(79, 195, 247, 0.15);
+    outline: 1px solid var(--accent);
+}
+/* Out-of-range cell warning */
+.seq-table td.warn-cell input {
+    background: rgba(255, 167, 38, 0.2);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+/* Number inputs inside table cells */
+.seq-cell-input {
+    width: 70px;
+    padding: 2px 4px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-size: 11px;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    /* Remove Firefox spinners */
+    -moz-appearance: textfield;
+}
+.seq-cell-input::-webkit-inner-spin-button,
+.seq-cell-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.seq-cell-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Delete row button */
+.seq-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0 4px;
+    line-height: 1;
+}
+.seq-del-btn:hover { opacity: 0.8; }
+
+/* Row number cell */
+.seq-row-num {
+    color: var(--text-muted);
+    font-family: monospace;
+    min-width: 20px;
+}
+
+/* Step status cell */
+.seq-step-status {
+    font-family: -apple-system, sans-serif;
+    min-width: 60px;
+    font-size: 11px;
+}
+
+/* Table action buttons */
+.seq-table-actions {
+    margin-bottom: 6px;
+}
+
+/* Run control buttons */
+.seq-run-buttons {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+/* Progress bar (reuses .progress-bar / .progress-fill from cosine test) */
+.seq-progress {
+    margin-bottom: 4px;
+}
+#seq-progress-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        height: auto;
+        overflow-y: auto;
+    }
+    .joystick-zone { width: 200px; height: 200px; }
+}

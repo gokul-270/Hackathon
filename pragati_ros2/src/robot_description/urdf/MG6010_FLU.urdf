@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+MG6010 FLU (Front-Left-Up) URDF for Gazebo Harmonic Simulation
+Based on SolidWorks export v12 (2024-10-17) with Gazebo additions:
+  - Joint names without spaces (required by Gazebo + motion_controller)
+  - Non-zero effort/velocity limits (required for Gazebo physics)
+  - Lightweight virtual links (prevents phantom mass dragging arm)
+  - JointPositionController plugins with tuned PID
+  - Mesh paths use package://robot_description/
+
+Original SolidWorks URDF: sw_urdf_exporter 1.6.0-4-g7f85cfe
+-->
+<robot name="MG6010">
+
+  <!-- ==================== base_link ==================== -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.001334 3.1586E-15 0.18943" rpy="0 0 0" />
+      <mass value="29.128" />
+      <inertia ixx="2.1068" ixy="-3.3076E-15" ixz="-0.0069722"
+               iyy="2.1115" iyz="1.688E-14" izz="0.22457" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.65098 0.61961 0.58824 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ==================== link2 ==================== -->
+  <link name="link2">
+    <inertial>
+      <origin xyz="0.0023258 0.39197 0.0012124" rpy="0 0 0" />
+      <mass value="7.2824" />
+      <inertia ixx="0.56505" ixy="-0.0011051" ixz="0.00023875"
+               iyy="0.0071252" iyz="-0.00046822" izz="0.56327" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.445" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link2.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- joint2: prismatic Z (lifts the arm vertically) -->
+  <joint name="joint2" type="prismatic">
+    <origin xyz="0 0 0.45922" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="link2" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.1" upper="0.32" effort="100" velocity="0.5" />
+  </joint>
+
+  <!-- ==================== link4 ==================== -->
+  <link name="link4">
+    <inertial>
+      <origin xyz="-0.044144 0.0378 -0.072925" rpy="0 0 0" />
+      <mass value="0.86357" />
+      <inertia ixx="0.0063398" ixy="0.00091722" ixz="-0.0017328"
+               iyy="0.0061419" iyz="0.0015638" izz="0.0031822" />
+    </inertial>
+    <visual>
+      <origin xyz="0.008 -0.334 -0.459" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.292156862745098 0.119607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link4.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- joint4: prismatic Y (horizontal extension) -->
+  <joint name="joint4" type="prismatic">
+    <origin xyz="0 0.33411 0" rpy="0 0 0" />
+    <parent link="link2" />
+    <child link="link4" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.250" upper="0.350" effort="100" velocity="0.5" />
+  </joint>
+
+  <!-- ==================== link7 (camera bracket) ==================== -->
+  <link name="link7">
+    <inertial>
+      <origin xyz="-0.004 0.0041238 0" rpy="0 0 0" />
+      <mass value="0.05924" />
+      <inertia ixx="4.4262E-05" ixy="0" ixz="0"
+               iyy="4.0102E-05" iyz="0" izz="4.7957E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0.234 -0.395 -0.144" rpy="0 -0.7854 1.5708" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link7.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.89804 0.91765 0.92941 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link7.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint7" type="fixed">
+    <origin xyz="-0.062994 0.061 -0.19179" rpy="0 0.7854 0" />
+    <parent link="link4" />
+    <child link="link7" />
+  </joint>
+
+  <!-- ==================== camera_mount_link (virtual - lightweight) ==================== -->
+  <link name="camera_mount_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="camera_mount_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708" />
+    <parent link="link7" />
+    <child link="camera_mount_link" />
+  </joint>
+
+  <!-- ==================== camera_link ==================== -->
+  <link name="camera_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.044809" />
+      <inertia ixx="3.1898E-05" ixy="0" ixz="0"
+               iyy="4.0973E-06" iyz="0" izz="3.3708E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0.395 -0.145 -0.2335" rpy="0 0.7854 1.5708" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/camera_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/camera_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="camera_link_joint" type="fixed">
+    <origin xyz="0.016845 0.100461 -0.077129" rpy="1.5708 0.785398 0" />
+    <parent link="yanthra_link" />
+    <child link="camera_link" />
+  </joint>
+
+  <!-- ==================== link3 ==================== -->
+  <link name="link3">
+    <inertial>
+      <origin xyz="-0.033163 -0.04027 -0.0050659" rpy="0 0 0" />
+      <mass value="1.4316" />
+      <inertia ixx="0.0037572" ixy="-0.00082268" ixz="-0.0011479"
+               iyy="0.043868" iyz="-0.00017008" izz="0.044751" />
+    </inertial>
+    <visual>
+      <origin xyz="0.069 -0.378 -0.330" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.592156862745098 0.79607843137255 0.233333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link3.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- joint3: revolute (arm tilt - critical for holding arm up) -->
+  <joint name="joint3" type="revolute">
+    <origin xyz="-0.0675 0.042 -0.127" rpy="0 0.0063952 0" />
+    <parent link="link4" />
+    <child link="link3" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-0.9" upper="0.0" effort="100" velocity="1.0" />
+  </joint>
+
+  <!-- ==================== yanthra_link (virtual - lightweight!) ==================== -->
+  <link name="yanthra_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="yantra_joint" type="fixed">
+    <origin xyz="0 -0.082 0" rpy="0 0 0" />
+    <parent link="link3" />
+    <child link="yanthra_link" />
+  </joint>
+
+  <!-- ==================== link5_origin (virtual - lightweight!) ==================== -->
+  <link name="link5_origin">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="link5_origin_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="yanthra_link" />
+    <child link="link5_origin" />
+  </joint>
+
+  <!-- ==================== link5 ==================== -->
+  <link name="link5">
+    <inertial>
+      <origin xyz="-0.24702 0.0038414 0.0022102" rpy="0 0 0" />
+      <mass value="0.50477" />
+      <inertia ixx="0.00073373" ixy="0.00051748" ixz="-0.00013446"
+               iyy="0.014642" iyz="4.7355E-06" izz="0.014712" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.209 -0.300 -0.329" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link5.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.25 0.28 0.3 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link5.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- joint5: prismatic X (arm extension) -->
+  <joint name="joint5" type="prismatic">
+    <origin xyz="0.27774 0.00375 -0.001" rpy="0 0 0" />
+    <parent link="link5_origin" />
+    <child link="link5" />
+    <axis xyz="1 0 0" />
+    <limit lower="0" upper="0.450" effort="100" velocity="0.5" />
+  </joint>
+
+  <!-- ==================== ee_link (virtual - lightweight!) ==================== -->
+  <link name="ee_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.01" />
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ee_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="link5" />
+    <child link="ee_link" />
+  </joint>
+
+  <!-- ============================================================ -->
+  <!-- Gazebo Joint Position Controller Plugins                      -->
+  <!-- Using libgz-sim-*.so format (matches working MG6010 package) -->
+  <!-- PID tuned: higher D than working MG6010 to reduce oscillation -->
+  <!-- ============================================================ -->
+
+  <!-- Joint 2: prismatic Z (lifts ~13.6 kg against gravity) -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>joint2</joint_name>
+      <topic>joint2_cmd</topic>
+      <p_gain>150</p_gain>
+      <i_gain>0.5</i_gain>
+      <d_gain>40</d_gain>
+      <i_max>20</i_max>
+      <i_min>-20</i_min>
+      <cmd_max>100</cmd_max>
+      <cmd_min>-100</cmd_min>
+      <cmd_offset>0.1</cmd_offset>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint 3: revolute (critical - holds arm up against gravity) -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>joint3</joint_name>
+      <topic>joint3_cmd</topic>
+      <p_gain>200</p_gain>
+      <i_gain>1.0</i_gain>
+      <d_gain>50</d_gain>
+      <i_max>30</i_max>
+      <i_min>-30</i_min>
+      <cmd_max>100</cmd_max>
+      <cmd_min>-100</cmd_min>
+      <cmd_offset>0.0</cmd_offset>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint 4: prismatic Y (horizontal - lighter load) -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>joint4</joint_name>
+      <topic>joint4_cmd</topic>
+      <p_gain>100</p_gain>
+      <i_gain>0.5</i_gain>
+      <d_gain>20</d_gain>
+      <i_max>20</i_max>
+      <i_min>-20</i_min>
+      <cmd_max>100</cmd_max>
+      <cmd_min>-100</cmd_min>
+      <cmd_offset>0.0</cmd_offset>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint 5: prismatic X (horizontal extension - lightest load) -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-position-controller-system.so"
+            name="gz::sim::systems::JointPositionController">
+      <joint_name>joint5</joint_name>
+      <topic>joint5_cmd</topic>
+      <p_gain>100</p_gain>
+      <i_gain>0.5</i_gain>
+      <d_gain>15</d_gain>
+      <i_max>20</i_max>
+      <i_min>-20</i_min>
+      <cmd_max>100</cmd_max>
+      <cmd_min>-100</cmd_min>
+      <cmd_offset>0.0</cmd_offset>
+    </plugin>
+  </gazebo>
+
+  <!-- Joint State Publisher (publishes all joint positions to Gazebo) -->
+  <gazebo>
+    <plugin filename="libgz-sim-joint-state-publisher-system.so"
+            name="gz::sim::systems::JointStatePublisher">
+      <joint_name>joint2</joint_name>
+      <joint_name>joint3</joint_name>
+      <joint_name>joint4</joint_name>
+      <joint_name>joint5</joint_name>
+    </plugin>
+  </gazebo>
+
+  <!-- Gazebo material colors -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+  <gazebo reference="link2">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+  <gazebo reference="link3">
+    <material>Gazebo/Green</material>
+  </gazebo>
+  <gazebo reference="link4">
+    <material>Gazebo/Purple</material>
+  </gazebo>
+  <gazebo reference="link5">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+</robot>

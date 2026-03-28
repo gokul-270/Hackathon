@@ -1,0 +1,22 @@
+# Build artifacts
+build/
+install/
+log/
+
+# Runtime outputs (ArUco detection creates these)
+centroid.txt
+outputs/
+src/*.txt
+src/outputs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled Python
+__pycache__/
+*.pyc
+*.pyo

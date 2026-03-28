@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="vehicle">
+    <link name="Component2">
+        <inertial>
+            <origin xyz="-0.24465088161211476 0.010585973180471987 0.11091969064068309" rpy="0.0 -0.0 -4.494409300504508e-94" />
+            <mass value="2.732552746834566" />
+            <inertia ixx="0.019945673059615317" iyy="0.3093216702465301" izz="0.2907100794669303" ixy="-0.0006508067571328429" iyz="-0.002854246151097408" ixz="-0.0036114894797260747" />
+        </inertial>
+        <visual name="Component2_visual">
+            <origin xyz="0.400815 -0.0031948999999999988 0.17830079" rpy="1.8488927466117464e-31 -3.646298014371762e-62 1.5707963267948966" />
+            <geometry>
+                <mesh filename="meshes/Component2.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="Component2_collision">
+            <origin xyz="0.400815 -0.0031948999999999988 0.17830079" rpy="1.8488927466117464e-31 -3.646298014371762e-62 1.5707963267948966" />
+            <geometry>
+                <mesh filename="meshes/Component2.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="colle.box-holding-v1">
+        <inertial>
+            <origin xyz="0.21514017506062483 -0.015999999999999615 -0.013681869298376129" rpy="0.0 0.0 0.0" />
+            <mass value="0.34260552839661124" />
+            <inertia ixx="0.00043003932571770157" iyy="0.011122906290419732" izz="0.01075133830821507" ixy="5.613330715348987e-17" iyz="-1.0905687748614085e-16" ixz="-0.001077144265120561" />
+        </inertial>
+        <visual name="colle.box-holding-v1_visual">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/colle.box-holding-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="colle.box-holding-v1_collision">
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+            <geometry>
+                <mesh filename="meshes/colle.box-holding-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="colle.box-holding-v1">
+        <inertial>
+            <origin xyz="0.32628701238474833 -1.1652900866465644e-14 0.015681866892208914" rpy="0.0 -0.0 0.0" />
+            <mass value="0.34260552839661124" />
+            <inertia ixx="0.00043003932571770076" iyy="0.011122906290419676" izz="0.010751338308214758" ixy="-3.662363552223758e-17" iyz="9.057648485122138e-17" ixz="-0.0010771442651205756" />
+        </inertial>
+        <visual name="colle.box-holding-v1_visual">
+            <origin xyz="0.5414271874453744 0.01599999999998829 0.001999997593832927" rpy="3.14159265358979 1.3045120539345528e-15 3.141592653589793" />
+            <geometry>
+                <mesh filename="meshes/colle.box-holding-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="colle.box-holding-v1_collision">
+            <origin xyz="0.5414271874453744 0.01599999999998829 0.001999997593832927" rpy="3.14159265358979 1.3045120539345528e-15 3.141592653589793" />
+            <geometry>
+                <mesh filename="meshes/colle.box-holding-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <link name="collection-box-v1">
+        <inertial>
+            <origin xyz="-0.046580819250886946 -0.3000000000000152 0.041453016072315683" rpy="-7.006492321624085e-46 -0.0 0.0" />
+            <mass value="2.8087614000000527" />
+            <inertia ixx="0.13035730185851852" iyy="0.025524525896721398" izz="0.11899707598580728" ixy="-4.5945544145968535e-16" iyz="1.1696557964289162e-17" ixz="-0.001106377875146882" />
+        </inertial>
+        <visual name="collection-box-v1_visual">
+            <origin xyz="-0.13616983694617538 -1.3358203432289884e-14 0.15056128893417614" rpy="1.570796326794917 -1.4746101983838649 -1.8764486226169754e-14" />
+            <geometry>
+                <mesh filename="meshes/collection-box-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </visual>
+        <collision name="collection-box-v1_collision">
+            <origin xyz="-0.13616983694617538 -1.3358203432289884e-14 0.15056128893417614" rpy="1.570796326794917 -1.4746101983838649 -1.8764486226169754e-14" />
+            <geometry>
+                <mesh filename="meshes/collection-box-v1.stl" scale="0.001 0.001 0.001" />
+            </geometry>
+        </collision>
+    </link>
+    <joint name="colle.box-holding-v1_Rigid-1" type="fixed">
+        <origin xyz="0.5414271874453719 -0.015999999999988645 0.0019999975938320923" rpy="-1.4746101983838633 2.878308632890911e-15 -1.5707963267948968" />
+        <parent link="colle.box-holding-v1" />
+        <child link="Component2" />
+    </joint>
+    <joint name="Component2_Rigid-2" type="fixed">
+        <origin xyz="-0.535 5.551115123125783e-19 0.0" rpy="3.141592653589793 1.4746101983838624 -1.5707963267948966" />
+        <parent link="Component2" />
+        <child link="colle.box-holding-v1" />
+    </joint>
+    <joint name="colle.box-holding-v1_Rigid-3" type="fixed">
+        <origin xyz="0.5394271910422146 0.015999999999999945 0.07225528179247218" rpy="1.9021844316519041e-16 -0.0961861284110323 -1.9806605463895765e-15" />
+        <parent link="colle.box-holding-v1" />
+        <child link="collection-box-v1" />
+    </joint>
+</robot>

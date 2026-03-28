@@ -1,0 +1,14 @@
+# Motor calibration service definition
+# Request motor calibration for a specific joint/motor
+
+# Input
+int64 joint_id          # Joint ID (1-5) or motor ID
+bool full_calibration   # True for full calibration sequence, false for motor only
+float64 timeout         # Timeout in seconds (default: 30.0)
+
+---
+
+# Output  
+bool success            # True if calibration completed successfully
+string reason           # Success message or error description
+float64 calibration_time # Time taken for calibration in seconds

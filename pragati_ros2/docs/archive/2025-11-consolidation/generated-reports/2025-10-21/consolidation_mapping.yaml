@@ -1,0 +1,14 @@
+# Consolidation Mapping - Old Doc -> Canonical Target
+# Only includes active docs that should be consolidated
+# Archive-to-archive duplicates are left as-is
+
+mappings:
+  # Active project-management docs (these already redirect properly based on earlier read)
+  /home/uday/Downloads/pragati_ros2/docs/project-management/GAP_ANALYSIS_OCT2025.md: /home/uday/Downloads/pragati_ros2/docs/PRODUCTION_READINESS_GAP.md
+  /home/uday/Downloads/pragati_ros2/docs/project-management/REMAINING_TASKS.md: /home/uday/Downloads/pragati_ros2/docs/TODO_MASTER_CONSOLIDATED.md
+  
+  # Archive originals (2025-10-15) that duplicate active docs - keep as archives, update links only
+  # No consolidation needed - these are intentional archive snapshots
+
+# Note: Most duplicates found are already in archive folders and serve as historical snapshots
+# We preserve these for audit trail purposes

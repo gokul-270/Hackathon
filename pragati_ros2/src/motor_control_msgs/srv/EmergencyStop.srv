@@ -1,0 +1,12 @@
+# Emergency Stop Service
+# Single service to activate/deactivate emergency stop
+# When activated: immediately halts all motors and clears all command queues
+# When deactivated: clears emergency flag and allows new commands
+
+# Request
+bool activate  # true = activate emergency stop, false = resume/clear
+---
+# Response
+bool success
+string message
+int32 commands_cleared  # Number of queued commands that were cleared (only when activating)

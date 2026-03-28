@@ -1,0 +1,73 @@
+# Complete ODrive Service Node Parameters - ROS1 to ROS2 Migration
+# All parameters from ROS1 odrive_controllers.yaml mapped to ROS2 format
+# Source: /home/uday/Downloads/pragati/scripts/odrive_controllers.yaml
+# This YAML structure uses flat keys so ROS 2 launch loads them reliably
+
+odrive_service_node:
+  ros__parameters:
+    # Joint configuration - explicitly define joint list
+    joints: ["joint2", "joint3", "joint4", "joint5"]
+
+    # Joint2 (L2)
+    joint2.odrive_id: 1
+    joint2.can_id: 3
+    joint2.axis_id: 1
+    joint2.transmission_factor: 125.23664
+    joint2.direction: 1
+    joint2.p_gain: 35.0
+    joint2.v_gain: 0.000549
+    joint2.v_int_gain: 0.000549
+    joint2.max_cur: 20.0
+    joint2.max_vel: 133.0
+    joint2.min_vel: 27.0
+    joint2.max_t: 80.0
+    joint2.homing_pos: 0.03
+    joint2.limit_switch: 26
+
+    # Joint3 (Base)
+    joint3.odrive_id: 0
+    joint3.can_id: 1
+    joint3.axis_id: 0
+    joint3.transmission_factor: 0.870047022
+    joint3.direction: -1
+    joint3.p_gain: 35.0
+    joint3.v_gain: 0.000549
+    joint3.v_int_gain: 0.000549
+    joint3.max_cur: 40.0
+    joint3.max_vel: 50.0
+    joint3.min_vel: 27.0
+    joint3.max_t: 80.0
+    joint3.homing_pos: 1.4108
+    joint3.limit_switch: 5
+
+    # Joint4 (Upper Arm)
+    joint4.odrive_id: 1
+    joint4.can_id: 2
+    joint4.axis_id: 0
+    joint4.transmission_factor: 0.870047022
+    joint4.direction: -1
+    joint4.p_gain: 100.0
+    joint4.v_gain: 0.000928
+    joint4.v_int_gain: 0.000928
+    joint4.max_cur: 10.0
+    joint4.max_vel: 50.0
+    joint4.min_vel: 27.0
+    joint4.max_t: 80.0
+    joint4.homing_pos: 3.19159
+    joint4.limit_switch: 6
+
+    # Joint5 (End Effector Linear)
+    joint5.odrive_id: 0
+    joint5.can_id: 0
+    joint5.axis_id: 1
+    joint5.transmission_factor: 22.777777778
+    joint5.direction: -1
+    joint5.p_gain: 35.0
+    joint5.v_gain: 0.000549
+    joint5.v_int_gain: 0.000549
+    joint5.max_cur: 20.0
+    joint5.max_vel: 133.0
+    joint5.min_vel: 27.0
+    joint5.max_t: 80.0
+    joint5.homing_pos: 0.001
+    joint5.limit_switch: 16

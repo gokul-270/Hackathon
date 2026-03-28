@@ -1,0 +1,187 @@
+# Cotton Detection Node - Production Configuration
+#
+# Uses DepthAI OAK-D Lite camera with YOLOv8 blob model for detection.
+# Simplified for production - legacy HSV/YOLO modes removed.
+#
+# Author: Pragati Robotics
+# Updated: November 2025
+
+cotton_detection_node:
+  ros__parameters:
+    # =========================================================================
+    # General Detection Configuration
+    # =========================================================================
+    detection_confidence_threshold: 0.5   # Minimum confidence for valid detection
+    max_cotton_detections: 50             # Max detections per frame
+    detection_mode: "depthai_direct"      # Only supported mode (YOLOv8 via DepthAI)
+
+    # Debug output (disabled for production)
+    enable_debug_output: false
+    debug_image_topic: "/cotton_detection/debug_image/compressed"
+
+    # =========================================================================
+    # DepthAI Camera Configuration (OAK-D Lite)
+    # =========================================================================
+    depthai:
+      # Enable/disable DepthAI C++ integration
+      # When enabled and initialization successful, detection_mode will
+      # automatically switch to depthai_direct
+      enable: true  # ✅ Set to true to use DepthAI hardware acceleration with blob file
+
+      # Model Configuration
+      # Path to YOLO blob model (Myriad X format)
+      # Using YOLOv11 model with 2 classes (cotton + not_pickable)
+      # Empty string = auto-resolve to package share models/yolov112.blob at runtime
+      model_path: ""
+      num_classes: 2                   # Number of classes: 1=YOLOv8 (cotton only), 2=YOLOv11 (cotton + not_pickable)
+
+      # Class mapping (for models with swapped class labels)
+      # Set to true if your model has cotton=1, not_pickable=0 (swapped from expected)
+      swap_class_labels: false            # Swap cotton/not_pickable labels if model has them reversed
+
+      # Camera Settings
+      # NOTE: camera_width/height = Model input size (416x416 for YOLOv11)
+      #       Camera preview is always 1920x1080 (hardcoded in depthai_manager.cpp line 857)
+      #       ImageManip resizes 1920x1080 → 416x416 for the neural network
+      camera_width: 416                 # Model input width (NN expects 416x416 for YOLOv11)
+      camera_height: 416                # Model input height (NN expects 416x416 for YOLOv11)
+      camera_fps: 30                    # ✅ LOCKED to 30 FPS for production
+                                        # Thermal: If overheating, reduce to 15-20 FPS
+
+      # Detection Settings
+      confidence_threshold: 0.3         # Detection confidence (0.0-1.0) - lowered for testing
+
+      # Depth Settings
+      enable_depth: true                # Enable stereo depth estimation
+      depth_min_mm: 100.0               # Minimum depth in millimeters
+      depth_max_mm: 5000.0              # Maximum depth in millimeters
+
+      # Device Selection
+      device_id: ""                     # Empty = first available device
+                                        # Or specify device MxID (e.g., "14442C10D13EABCE00")
+
+      # Performance Tuning
+      warmup_seconds: 1                 # Pipeline warm-up time (optimized)
+      max_queue_drain: 3                # Max frames to drain for freshness (optimized)
+      flush_before_read: false          # false = Smart drain (70ms) ✅ RECOMMENDED
+                                        # true = Old flush+sleep (120ms) - slower
+      keep_aspect_ratio: true           # true = letterbox (default); false = stretch to fill NN input
+      detection_timeout_ms: 500         # Timeout waiting for fresh detection frame
+                                        # At 30 FPS, new frame every ~33ms
+                                        # 500ms allows ~15 frame opportunities
+
+      # Thermal Management (OAK-D chip temperature monitoring)
+      thermal:
+        enable: true                    # Enable thermal monitoring
+        check_interval_sec: 5.0         # How often to check temperature
+        warning_temp_c: 70.0            # Log warning above this temp
+        throttle_temp_c: 80.0           # Reduce FPS above this temp
+        critical_temp_c: 90.0           # Pause camera above this temp
+        throttle_fps: 15                # Reduced FPS when throttling
+
+      # Exposure Control
+      # mode: "auto" (camera adjusts to lighting) or "manual" (fixed settings)
+      exposure:
+        mode: "auto"                    # "auto" or "manual"
+        # Manual settings (only used when mode="manual")
+        time_us: 8000                   # Exposure time in microseconds
+                                        #   Bright sunlight: 1000-2000 µs
+                                        #   Overcast/shade:  5000-10000 µs
+                                        #   Indoor:          8000-15000 µs
+        iso: 400                        # ISO sensitivity (100-1600)
+                                        #   Bright sunlight: 100-300
+                                        #   Overcast/shade:  300-600
+                                        #   Indoor:          400-800
+
+      # Border Filter: Skip detections touching image edge
+      # Stereo depth is unreliable at image borders due to lack of matching pixels
+      border_filter:
+        enabled: true                   # Enable border filtering
+        margin: 0.05                    # 5% margin (detections within 5% of edge are skipped)
+
+      # Stereo Depth Pipeline Tuning
+      stereo_confidence_threshold: 255  # Stereo depth matching confidence (0-255, lower = stricter, reduces zero-coordinate failures)
+      bbox_scale_factor: 0.7            # Fraction of bounding box sampled for depth (0.3-0.8, larger = more robust but may sample background)
+      extended_disparity: true          # Extended disparity for close-range depth (arm working range 0.15-0.6m, disabling improves long-range but reduces close-range accuracy)
+
+      # Stereo Depth Advanced Tuning
+      spatial_calc_algorithm: "average" # Depth calculation within bbox: "average", "median" (robust to holes), "min", "max"
+      mono_resolution: "400p"           # Mono camera resolution: "400p", "480p", "720p", "800p" (higher = better stereo matching, more VPU load)
+      lr_check: true                    # Left-right consistency check (reject inconsistent disparity)
+      subpixel: false                   # Subpixel disparity refinement (adds latency, marginal improvement)
+      median_filter: "7x7"             # Stereo post-processing median filter: "off", "3x3", "5x5", "7x7"
+
+    # =========================================================================
+    # Performance Settings
+    # =========================================================================
+    performance:
+      max_processing_fps: 30.0          # Maximum processing rate
+      processing_timeout_ms: 1000       # Timeout for single detection
+      enable_monitoring: true           # Enable performance monitoring
+      detailed_logging: false           # Enable detailed performance logs
+      verbose_timing: false             # Show detailed timing breakdown
+      max_recent_measurements: 30       # History size for averaging
+
+    # =========================================================================
+    # Workspace Bounds (meters)
+    # =========================================================================
+    # FLU frame (Front-Left-Up) from camera:
+    #   x = Forward distance from camera (0 to max_x)
+    #   y = Left/Right from camera center (-max_y to +max_y)
+    #   z = Height / Up (min_z to max_z)
+    workspace:
+      max_x: 0.6                        # Forward reach limit (arm reach ~0.6m)
+      max_y: 1.5                        # Lateral reach limit
+      max_z: 3.0                        # Height limit
+      min_z: 0.0                        # Ground level
+
+    # =========================================================================
+    # Detection Cache Configuration
+    # =========================================================================
+    detection:
+      cache_validity_ms: 100              # Cache TTL in ms (prevents redundant processing for rapid calls)
+                                          # Feb field trial showed 19.6% stale rate at 100ms default
+
+    # =========================================================================
+    # Calibration Export
+    # =========================================================================
+    calibration:
+      output_dir: ""                    # Empty = $HOME/pragati_ros2/data/outputs/calibration
+      timeout_sec: 30.0
+      script_override: ""
+
+    # =========================================================================
+    # Simulation Mode (for testing without hardware)
+    # =========================================================================
+    simulation_mode: false              # Generate synthetic detections
+
+    # =========================================================================
+    # Image Saving Configuration
+    # =========================================================================
+    # Enable saving of input/output images during detection
+    # With async saving enabled, there is ZERO impact on detection performance
+    save_input_image: true              # Save raw camera input to img100.jpg
+    save_output_image: true             # Save annotated output to DetectionOutput.jpg
+    file_save_mode: "timestamp"          # "overwrite" or "timestamp" (timestamp saves all images)
+
+    # Async Image Saving (RECOMMENDED - zero impact on detection FPS)
+    save_async: true                    # Use background thread for saving (no blocking)
+    save_queue_depth: 3                 # Max images buffered (drop oldest if full)
+    save_jpeg_quality: 85               # JPEG quality 0-100 (85 = good quality, fast)
+
+    # Directories for saved images (automatically created if they don't exist)
+    # Leave empty to use portable HOME-based defaults: $HOME/pragati_ros2/data/inputs and outputs
+    # Override via launch arguments or command line for different setups:
+    #   ros2 run ... --ros-args -p input_dir:=/path/to/inputs -p output_dir:=/path/to/outputs
+    input_dir: ""
+    output_dir: ""
+
+    # =========================================================================
+    # Fallback Positions (when zero cotton detected)
+    # =========================================================================
+    # When enabled, publishes stored positions if no cotton is detected
+    publish_fallback_on_zero: false
+    fallback_positions:
+      x: [0.40, 0.35, 0.50, 0.45]
+      y: [-0.15, -0.10, -0.15, -0.10]
+      z: [0.10, 0.10, 0.10, 0.10]

@@ -1,0 +1,5 @@
+bool homing_required
+int32 joint_id
+---
+bool success
+string reason

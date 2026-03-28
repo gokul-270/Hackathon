@@ -1,0 +1,500 @@
+docs/FIX_IMPLEMENTATION_SUMMARY.md:85:- [x] Package builds without errors
+docs/FIX_IMPLEMENTATION_SUMMARY.md:86:- [x] Python imports work correctly
+docs/FIX_IMPLEMENTATION_SUMMARY.md:87:- [x] Launch file syntax valid
+docs/FIX_IMPLEMENTATION_SUMMARY.md:88:- [x] Service definitions correct
+docs/FIX_IMPLEMENTATION_SUMMARY.md:89:- [x] Message definitions correct
+docs/FIX_IMPLEMENTATION_SUMMARY.md:92:- [ ] CottonDetect.py subprocess spawns
+docs/FIX_IMPLEMENTATION_SUMMARY.md:93:- [ ] SIGUSR2 ready signal received
+docs/FIX_IMPLEMENTATION_SUMMARY.md:94:- [ ] SIGUSR1 triggers detection
+docs/FIX_IMPLEMENTATION_SUMMARY.md:95:- [ ] cotton_details.txt file created
+docs/FIX_IMPLEMENTATION_SUMMARY.md:96:- [ ] File parsing works correctly
+docs/FIX_IMPLEMENTATION_SUMMARY.md:97:- [ ] Detection3DArray published
+docs/FIX_IMPLEMENTATION_SUMMARY.md:98:- [ ] Debug image published
+docs/FIX_IMPLEMENTATION_SUMMARY.md:99:- [ ] Subprocess terminates cleanly
+docs/FIX_IMPLEMENTATION_SUMMARY.md:100:- [ ] Crash detection works
+docs/FIX_IMPLEMENTATION_SUMMARY.md:101:- [ ] Error handling works
+docs/FIX_IMPLEMENTATION_SUMMARY.md:213:- [x] Subprocess management implemented
+docs/FIX_IMPLEMENTATION_SUMMARY.md:214:- [x] Signal communication working
+docs/FIX_IMPLEMENTATION_SUMMARY.md:215:- [x] File paths compatible
+docs/FIX_IMPLEMENTATION_SUMMARY.md:216:- [x] File parsing robust
+docs/FIX_IMPLEMENTATION_SUMMARY.md:217:- [x] Error handling comprehensive
+docs/FIX_IMPLEMENTATION_SUMMARY.md:218:- [x] Process monitoring active
+docs/FIX_IMPLEMENTATION_SUMMARY.md:219:- [x] Parameters validated
+docs/FIX_IMPLEMENTATION_SUMMARY.md:220:- [x] Debug images published
+docs/FIX_IMPLEMENTATION_SUMMARY.md:221:- [x] Cleanup working
+docs/FIX_IMPLEMENTATION_SUMMARY.md:224:- [ ] Camera initializes successfully
+docs/FIX_IMPLEMENTATION_SUMMARY.md:225:- [ ] Detection triggers reliably
+docs/FIX_IMPLEMENTATION_SUMMARY.md:226:- [ ] Results are accurate
+docs/FIX_IMPLEMENTATION_SUMMARY.md:227:- [ ] Performance is acceptable
+docs/FIX_IMPLEMENTATION_SUMMARY.md:228:- [ ] System is stable
+docs/FIX_IMPLEMENTATION_SUMMARY.md:231:- [ ] Field tested with real cotton
+docs/FIX_IMPLEMENTATION_SUMMARY.md:232:- [ ] Integrated with robot arm
+docs/FIX_IMPLEMENTATION_SUMMARY.md:233:- [ ] Calibration workflow complete
+docs/FIX_IMPLEMENTATION_SUMMARY.md:234:- [ ] Documentation finalized
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:436:- [ ] Remove all `HAS_REALSENSE` references
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:437:- [ ] Add `HAS_DEPTHAI` build flag
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:438:- [ ] Copy ROS1 OakDTools to ROS2 workspace
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:439:- [ ] Copy `yolov8v2.blob` model file
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:440:- [ ] Update URDF camera specs (D415 → OAK-D Lite)
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:443:- [ ] Create `DepthAIPipelineManager` class
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:444:- [ ] Implement RAII lifecycle management
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:445:- [ ] Add USB2 mode configuration
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:446:- [ ] Integrate with ROS2 parameter system
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:447:- [ ] Add error handling with new taxonomy
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:450:- [ ] Keep existing `CottonDetectionNode` interface
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:451:- [ ] Add DepthAI detection path
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:452:- [ ] Maintain dual-service compatibility
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:453:- [ ] Preserve performance monitoring
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:454:- [ ] Test end-to-end service calls
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:459:- [ ] Verify OAK-D Lite detection
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:460:- [ ] Test USB2 mode stability
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:461:- [ ] Validate blob loading
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:462:- [ ] Confirm spatial detection accuracy
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:465:- [ ] Test with yanthra_move system
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:466:- [ ] Verify service call latency
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:467:- [ ] Check coordinate transformation
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:468:- [ ] Validate error recovery
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:471:- [ ] Measure cycle time (target: ≤2.8s)
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:472:- [ ] Compare vs ROS1 baseline
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:473:- [ ] Profile memory usage
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:474:- [ ] Test long-running stability
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:477:- [ ] Update camera integration guide
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:478:- [ ] Fix comparison documents
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:479:- [ ] Add DepthAI API reference
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:480:- [ ] Create troubleshooting guide
+docs/USB2_CONFIGURATION_GUIDE.md:186:- [ ] Device shows 480M speed (USB 2.0)
+docs/USB2_CONFIGURATION_GUIDE.md:187:- [ ] Not showing 5000M (USB 3.0)
+docs/USB2_CONFIGURATION_GUIDE.md:188:- [ ] Camera functional at 480M
+docs/USB2_CONFIGURATION_GUIDE.md:218:- [ ] USB speed reports HIGH (USB 2.0)
+docs/USB2_CONFIGURATION_GUIDE.md:219:- [ ] Camera initializes successfully
+docs/USB2_CONFIGURATION_GUIDE.md:220:- [ ] No bandwidth warnings in logs
+docs/USB2_CONFIGURATION_GUIDE.md:265:- [ ] No USB disconnections
+docs/USB2_CONFIGURATION_GUIDE.md:266:- [ ] No "bandwidth exceeded" errors
+docs/USB2_CONFIGURATION_GUIDE.md:267:- [ ] Consistent frame delivery
+docs/USB2_CONFIGURATION_GUIDE.md:268:- [ ] Success rate ≥95% for all cable lengths
+docs/USB2_CONFIGURATION_GUIDE.md:299:- [ ] Both modes functional
+docs/USB2_CONFIGURATION_GUIDE.md:300:- [ ] USB2 stability ≥99%
+docs/USB2_CONFIGURATION_GUIDE.md:301:- [ ] USB3 faster but less stable with long cables
+docs/USB2_CONFIGURATION_GUIDE.md:302:- [ ] Performance difference documented
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:299:- [x] All 38 scripts present
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:300:- [x] All 3 blobs present
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:301:- [x] CMakeLists.txt installation configured
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:302:- [x] Build completes successfully
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:303:- [x] Scripts installed to correct paths
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:304:- [x] Blobs installed to correct paths
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:305:- [x] Python dependencies documented
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:309:- [ ] CottonDetect.py runs successfully
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:310:- [ ] Blob loads correctly
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:311:- [ ] USB2 mode works
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:312:- [ ] cotton_details.txt generated
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:313:- [ ] Spatial coordinates valid
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:314:- [ ] Wrapper node calls script successfully
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:315:- [ ] Service responses correct
+docs/archive/2025-10-analysis/ROS1_SCRIPT_VERIFICATION_REPORT.md:316:- [ ] Detection accuracy matches ROS1
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:340:- [x] All ROS1 parameters identified and cataloged
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:341:- [x] ROS2 parameter declarations match YAML structure
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:342:- [x] Parameter types correctly preserved
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:343:- [x] Default values provide safe operation
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:344:- [ ] Compile-time flags aligned with runtime parameters
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:345:- [ ] Simulation mode unified and consistent
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:346:- [ ] Parameter ranges validated
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/config_management_comparison.md:347:- [ ] Environment variable dependencies resolved
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:202:- [x] **Logging Framework**: ROS-2 RCLCPP logging implemented
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:203:- [x] **Log Rotation**: Automated cleanup system active
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:204:- [x] **Performance Tracking**: Cycle time and success metrics captured
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:205:- [x] **Error Visibility**: Warning and error conditions logged
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:206:- [x] **Configuration Logging**: Runtime parameters documented
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:207:- [ ] **Centralized Monitoring**: Dashboard implementation needed
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:208:- [ ] **Alert System**: Automated notification system required
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:209:- [ ] **Metrics Export**: Structured data export for analysis
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:363:- [ ] Hardware emergency stop functional and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:364:- [ ] All SafetyMonitor methods implemented with real safety logic
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:365:- [ ] Configuration validation prevents startup with parameter conflicts
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:366:- [ ] Safety system integration test suite passes 100%
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:367:- [x] Core cotton picking functionality operational
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:368:- [x] Performance meets or exceeds targets
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:262:- [ ] Hardware E-stop functional and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:263:- [ ] All safety monitoring active (not placeholder)
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:264:- [ ] Motor error detection and response verified
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:265:- [ ] Communication timeouts properly configured
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:266:- [ ] Joint limits enforced and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:267:- [ ] Recovery procedures validated
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:268:- [ ] Safety alert system functional
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:269:- [ ] Emergency procedures documented and trained
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:273:- [ ] Safety system health check every cycle
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:274:- [ ] Error rate tracking and trending
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:275:- [ ] Recovery success rate monitoring
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:276:- [ ] Safety alert response time measurement
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/safety_validation.md:277:- [ ] Regular safety system validation
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:140:- [ ] **Evidence Validation**: All claims backed by concrete evidence
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:141:- [ ] **Consistency Check**: No contradictions with existing analysis  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:142:- [ ] **Source Citation**: Clear references to supporting documentation
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:143:- [ ] **Impact Assessment**: Business/operational impact clearly stated
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:144:- [ ] **Cross-Reference Plan**: Clear plan for linking scattered information
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:149:- [ ] **Link Integrity**: All cross-references resolve correctly
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:150:- [ ] **Content Consistency**: No contradictions between updated sections
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:151:- [ ] **Evidence Trail**: Clear path from analysis to supporting documentation
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:152:- [ ] **Navigation**: Stakeholders can find complete picture from any entry point
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/MAINTENANCE.md:153:- [ ] **Build Validation**: Documentation builds without errors
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:91:- [ ] Hardware emergency stop functional and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:92:- [ ] All SafetyMonitor methods implemented with real checks
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:93:- [ ] Safety system integration tests pass
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:94:- [ ] Production safety validation completed
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:178:- [ ] All compile-time vs runtime parameter conflicts resolved
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:179:- [ ] Configuration validation passes on startup
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:180:- [ ] Master configuration template documented and deployed
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:233:- [ ] Cycle time jitter reduced to <5ms
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:234:- [ ] Real-time thread priorities configured
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:235:- [ ] Memory allocation latency minimized
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:293:- [ ] All motor errors properly classified and handled
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:294:- [ ] Recovery strategies implemented for common error types
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:295:- [ ] Error escalation paths functional
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:353:- [ ] Real-time dashboard operational
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:354:- [ ] Alert rules configured for critical thresholds
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:355:- [ ] Historical metrics retention functional
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:388:- [ ] Automated test suite covers 80% of operational scenarios
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:389:- [ ] Regression testing integrated with CI/CD pipeline
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:390:- [ ] Hardware simulation environment operational
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:509:- [x] ✅ Core functionality operational (cotton picking cycles)
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:510:- [ ] ❌ Hardware emergency stop functional
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:511:- [ ] ❌ All safety monitoring implemented
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:512:- [ ] ❌ Configuration conflicts resolved
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:513:- [x] ✅ Logging and basic monitoring operational
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:516:- [ ] Real-time performance optimization
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:517:- [ ] Centralized monitoring dashboard
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:518:- [ ] Automated testing pipeline
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/recommendations.md:519:- [ ] Comprehensive error recovery
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:53:- [ ] **Hardware GPIO Emergency Stop Functional**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:64:- [ ] **Software Emergency Stop Integration**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:75:- [ ] **Keyboard Emergency Stop (Development/Debugging)**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:87:- [ ] **Joint Limit Monitoring**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:100:- [ ] **Velocity Limit Enforcement**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:113:- [ ] **Temperature Monitoring**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:119:- [ ] **Communication Timeout Detection**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:128:- [ ] **Compile-time vs Runtime Parameter Alignment**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:142:- [ ] **Master Configuration Template Deployed**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:152:- [ ] **Startup Configuration Validation**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:169:- [x] **Complete Picking Cycle**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:175:- [x] **System Integration**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:184:- [ ] **Thread Priority Configuration**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:196:- [ ] **CPU Affinity Configuration**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:202:- [x] **Cycle Time Performance**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:211:- [ ] **Motor Error Classification**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:222:- [ ] **Recovery Strategy Implementation**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:236:- [ ] **GPIO Device Availability**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:246:- [ ] **CAN Bus Communication**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:257:- [ ] **Camera System Integration**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:272:- [x] **Structured Logging Operational**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:277:- [x] **Automated Log Retention**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:284:- [x] **Cycle Time Measurement**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:288:- [ ] **Real-time Dashboard**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:293:- [ ] **Automated Alerting**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:301:- [ ] **Complete System Test with Hardware**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:318:- [ ] **Extended Operation Test**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:325:- [ ] **Communication Loss Recovery**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:330:- [ ] **Power Loss Recovery**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:361:- [ ] **Safety Systems Engineer**: All safety monitoring implemented and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:365:- [ ] **Hardware Engineer**: GPIO emergency stop and hardware interfaces validated  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:369:- [ ] **Configuration Engineer**: All parameter conflicts resolved and validated
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:375:- [ ] **Control Systems Engineer**: Error handling and motor control integration complete
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:379:- [ ] **QA Lead**: Hardware-in-the-loop testing completed successfully
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:385:- [ ] **Project Manager**: All blocking issues resolved and system ready for deployment
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:389:- [ ] **Safety Officer**: Safety systems validated and deployment approved
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:409:- [ ] Previous system version available and tested
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:410:- [ ] Rollback procedure documented and practiced
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:411:- [ ] Data backup and recovery procedures validated
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:417:- [ ] **Performance Metrics**: Cycle times within expected ranges
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:418:- [ ] **Safety Systems**: Emergency stop functional and responsive  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:419:- [ ] **Error Rates**: System error frequency <1% of operations
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:420:- [ ] **Resource Utilization**: CPU, memory, and storage within limits
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:421:- [ ] **Hardware Health**: Motor temperatures and communication stable
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:426:- [ ] 100 consecutive successful cotton picking cycles completed
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:427:- [ ] Emergency stop tested and functional during production operation
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:428:- [ ] Zero critical safety violations in first 24 hours
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:429:- [ ] System performance meets or exceeds validation benchmarks
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:430:- [ ] All monitoring and alerting systems operational
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:102:- [x] All critical nodes operational
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:103:- [x] TF2 migration complete
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:104:- [x] ROS2 time API used
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:105:- [x] Service interfaces migrated
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:106:- [x] Topic communication verified
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:107:- [x] Parameter loading functional
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:108:- [x] DDS networking configured
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:109:- [x] Launch files deterministic
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:110:- [ ] Hardware-in-loop validation (requires physical hardware)
+docs/archive/2025-10-analysis/VERIFICATION_TRACEABILITY_MATRIX.md:111:- [x] Simulation mode validated
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:552:- [ ] Fix launch file default paths
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:553:- [ ] Fix test script service name
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:554:- [ ] Fix test script topic type
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:555:- [ ] Fix benchmark syntax error
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:556:- [ ] Add input_dir launch arg
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:559:- [ ] Create requirements.txt
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:560:- [ ] Create OakDTools README
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:561:- [ ] Update ROS2_INTERFACE_SPECIFICATION.md
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:562:- [ ] Add TF broadcaster to wrapper
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:563:- [ ] Create integration test script
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:566:- [ ] Implement calibration service
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:567:- [ ] Create calibration launch file
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:568:- [ ] Document YOLO blobs
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:569:- [ ] Clean up legacy scripts
+docs/archive/2025-10-analysis/SECOND_DEEP_DIVE_REVIEW.md:570:- [ ] Update all documentation
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:295:- [x] Voltage fix applied and verified
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:296:- [x] Motor 1 fully tested (7/7 tests)
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:297:- [x] Motor 2 fully tested (7/7 tests)
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:298:- [x] Motor 3 fully tested (7/7 tests)
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:299:- [x] All three motors working together
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:300:- [x] Position control validated
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:301:- [x] Velocity control validated
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:302:- [x] CAN communication verified
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:303:- [x] Temperature monitoring working
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:304:- [x] Test scripts created and validated
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:305:- [x] Reliability testing completed (5 iterations)
+docs/archive/2025-10-test-results/MOTOR_TEST_RESULTS_2025-10-10.md:306:- [x] Multi-motor operation confirmed
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:255:- [x] Hardware connection verification
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:256:- [x] Camera initialization testing
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:257:- [x] Temperature monitoring
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:258:- [x] Cotton detection validation
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:259:- [x] Spatial coordinate accuracy test
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:260:- [x] Detection stability verification
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:263:- [ ] ROS2 integration testing
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:264:- [ ] Topic/service interface validation
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:265:- [ ] TF transform verification
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:266:- [ ] Integration with Yanthra movement system
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:267:- [ ] End-to-end pick-and-place test
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:268:- [ ] Field testing with actual cotton plants
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:271:- [ ] Fine-tune confidence threshold for field conditions
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:272:- [ ] Test with various cotton types (raw, mature, immature)
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:273:- [ ] Optimize for different lighting conditions
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:274:- [ ] Multi-camera setup (if needed)
+docs/archive/2025-10-test-results/HARDWARE_TEST_RESULTS.md:275:- [ ] Real-time visualization interface
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:190:- [ ] CAN interface initializes
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:191:- [ ] Motor ON command succeeds
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:192:- [ ] Temperature reading valid (20-50°C typical)
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:193:- [ ] Voltage reading valid (22-28V for 24V supply)
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:194:- [ ] Error flags = 0x0000
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:195:- [ ] No communication timeouts
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:198:- [ ] Motor moves to commanded positions
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:199:- [ ] Smooth motion (no jerking)
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:200:- [ ] Position feedback accurate
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:201:- [ ] Motor stops at target positions
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:202:- [ ] No overshoot or oscillation
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:205:- [ ] Motor rotates at commanded speed
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:206:- [ ] Speed changes smoothly
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:207:- [ ] Velocity feedback stable
+docs/archive/2025-10-audit/2025-10-14/QUICK_TEST_GUIDE.md:208:- [ ] Motor stops when commanded
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:238:- [ ] **Bitrate Configuration**
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:239:  - [ ] Motor controller initializes without CAN errors
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:240:  - [ ] No bitrate mismatch warnings in logs
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:241:  - [ ] CAN interface shows 250kbps in `ip -details link show can0`
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:243:- [ ] **Motor ON Command**
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:244:  - [ ] Motor ON command sent during initialization (check logs)
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:245:  - [ ] Motor status verified after ON command
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:246:  - [ ] Motor enters enabled state (enabled_ = true)
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:247:  - [ ] Error flags cleared if present
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:249:- [ ] **Launch and Config Files**
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:250:  - [ ] Launch file runs without errors
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:251:  - [ ] Config parameters loaded correctly
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:252:  - [ ] Test modes selectable via launch arguments
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:253:  - [ ] Safety limits enforced
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:255:- [ ] **Basic Communication**
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:256:  - [ ] Motor responds to status queries
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:257:  - [ ] Response time < 10ms (typically ~0.25ms)
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:258:  - [ ] Temperature and voltage readings valid
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:259:  - [ ] No communication timeouts
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:261:- [ ] **Control Verification**
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:262:  - [ ] Position commands executed successfully
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:263:  - [ ] Position feedback accurate
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:264:  - [ ] Velocity control smooth
+docs/archive/2025-10-audit/2025-10-14/CRITICAL_FIXES_COMPLETED.md:265:  - [ ] Motor stops on emergency stop command
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:289:- [x] Critical code issues identified
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:290:- [x] Critical code issues fixed
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:291:- [x] Build verified successful
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:292:- [x] System-wide bitrate consistency
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:293:- [x] ODrive legacy status verified
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:294:- [x] Comprehensive audit reports created
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:295:- [x] Testing guide provided
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:296:- [x] Remediation plan documented
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:299:- [ ] Motor communication tested with hardware
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:300:- [ ] Position control validated
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:301:- [ ] Velocity control validated
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:302:- [ ] Full system integration tested
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:305:- [ ] Header comments updated
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:306:- [ ] Main README updated
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:307:- [ ] TODOs consolidated
+docs/archive/2025-10-audit/2025-10-14/AUDIT_COMPLETION_SUMMARY.md:308:- [ ] Documentation polished
+docs/archive/2025-10-audit/2025-10-14/CAN_BITRATE_AUDIT_REPORT.md:335:- [ ] Motor communication works at 250kbps
+docs/archive/2025-10-audit/2025-10-14/CAN_BITRATE_AUDIT_REPORT.md:336:- [ ] No CAN errors or timeouts
+docs/archive/2025-10-audit/2025-10-14/CAN_BITRATE_AUDIT_REPORT.md:337:- [ ] Motor responds to commands < 10ms
+docs/archive/2025-10-audit/2025-10-14/CAN_BITRATE_AUDIT_REPORT.md:338:- [ ] Status reads return valid data
+docs/archive/2025-10-audit/2025-10-14/CAN_BITRATE_AUDIT_REPORT.md:339:- [ ] Position/velocity control accurate
+docs/archive/2025-10-audit/2025-10-14/AUDIT_SUMMARY.md:98:- [ ] (checkboxes): ~50 instances
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:468:- [ ] Header comments match code implementation
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:469:- [ ] Protocol comparison clarified
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:470:- [ ] Critical fixes status documented
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:471:- [ ] Main README updated
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:472:- [ ] Motor control status clear
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:473:- [ ] Implementation fixes tracked
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:476:- [ ] TODOs consolidated and prioritized
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:477:- [ ] Traceability table current
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:478:- [ ] Hardware requirements accurate
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:479:- [ ] Testing checklist available
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:480:- [ ] Package READMEs updated
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:481:- [ ] Motor docs consolidated
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:482:- [ ] Architecture diagram created
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:483:- [ ] Configs consistent
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:484:- [ ] Deployment guides current
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:485:- [ ] Quick references available
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:486:- [ ] Cotton detection docs accurate
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:487:- [ ] CHANGELOG updated
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:490:- [ ] Obsolete docs archived
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:491:- [ ] ODrive migration guide
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:492:- [ ] Spell check complete
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:493:- [ ] Links validated
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:494:- [ ] Markdown linted
+docs/archive/2025-10-audit/2025-10-14/FINAL_REMEDIATION_PLAN.md:495:- [ ] Additional guides created
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:42:- [ ] `odrive_control_ros2/src/safety_monitor.cpp`
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:43:- [ ] Look for TODO comments at lines 151-255
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:44:- [ ] Check if functions have real implementations
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:45:- [ ] Verify if SafetyMonitor is instantiated in main code
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:46:- [ ] Check MG Motor integration
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:121:- [ ] All files in `odrive_control_ros2/`
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:122:- [ ] Search for "ODrive" references
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:123:- [ ] Search for "MG Motor" references
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:124:- [ ] Check service node implementations
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:125:- [ ] Map call graphs
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:198:- [ ] Option A: Pure C++ (finish original intent)
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:199:- [ ] Option B: Pure Python (commit to wrapper approach)
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:200:- [ ] Option C: Hybrid (wrapper + C++ optimizations)
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:289:- [ ] Hardware test (full checklist)
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:290:- [ ] Service interface tests
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:291:- [ ] Integration tests
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:292:- [ ] Performance benchmarks
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:381:- [ ] Task 0.1: Safety monitor verified
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:382:- [ ] Task 0.2: ODrive/MG Motor mapped
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:383:- [ ] Task 1.1: Architecture decided
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:384:- [ ] Task 1.2: Consolidation plan created
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:385:- [ ] Task 2.1: ODrive code removed (safe)
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:386:- [ ] Task 2.2: Cotton detection consolidated
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:387:- [ ] All tests passing
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:388:- [ ] Documentation updated
+docs/archive/2025-10-audit/2025-10-07/TASK_EXECUTION_TRACKER.md:389:- [ ] 24+ hour stability test passed
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:27:- [x] 1.1 DepthAI manager class
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:28:- [x] 1.2 DepthAI node integration
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:29:- [x] 1.3 Basic camera initialization
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:30:- [x] 1.4 Detection pipeline setup
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:31:- [x] **1.6 Hardware testing** 🆕 TODAY
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:32:- [ ] 1.5 Spatial coordinate extraction (validated in testing, needs ROS2 integration)
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:35:- [x] 6.1 Compile and basic tests
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:36:- [x] **6.2 Hardware validation** 🆕 TODAY
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:37:- [ ] 6.3 Performance testing (partially done)
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:38:- [x] 6.4 Regression testing setup
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:41:- [x] 3.3 Simulation mode
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:42:- [x] 3.9 Parameter validation
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:43:- [x] 5.3 Migration guide documentation
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:44:- [x] 5.4 Deprecation warnings
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:45:- [x] 5.2 Documentation updates
+docs/archive/2025-10-sessions/SESSION_SUMMARY_OCT9.md:46:- [x] Offline image testing capability
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:314:- [x] Clean build successful
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:315:- [x] All tests passing (19/19)
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:316:- [x] Documentation complete
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:317:- [x] Migration guide reviewed
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:318:- [x] Backward compatibility verified
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:319:- [ ] Hardware testing on Raspberry Pi
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:320:- [ ] Field testing with actual cotton
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:323:- [ ] Deploy to staging environment
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:324:- [ ] Run integration tests
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:325:- [ ] Monitor for 24 hours
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:326:- [ ] Deploy to production
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:327:- [ ] Monitor deprecation warnings
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:330:- [ ] Collect performance metrics
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:331:- [ ] Compare against Python wrapper baseline
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:332:- [ ] Document any issues encountered
+docs/archive/2025-10-phases/PHASE_5_COMPLETE.md:333:- [ ] Update troubleshooting guide as needed
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:973:- [ ] **Build System**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:974:  - [ ] Node builds without `BUILD_TEST_NODES=ON`
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:975:  - [ ] `mg6010_multi_motor_controller` installed
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:976:  - [ ] No build warnings/errors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:978:- [ ] **Configuration**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:979:  - [ ] `mg6010_three_motors.yaml` created
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:980:  - [ ] All 3 motors configured (IDs 1, 2, 3)
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:981:  - [ ] Parameters match ROS 1 values
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:983:- [ ] **Node Functionality**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:984:  - [ ] Connects to CAN bus @ 250kbps
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:985:  - [ ] Initializes all 3 motors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:986:  - [ ] Publishes `/joint_states` @ 10 Hz
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:987:  - [ ] Provides `/joint_homing` service
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:988:  - [ ] Provides enable/disable services
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:989:  - [ ] Control loop runs @ 10 Hz
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:991:- [ ] **Hardware Testing**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:992:  - [ ] Standalone script works (baseline)
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:993:  - [ ] ROS 2 node communicates with all motors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:994:  - [ ] Position commands work for all motors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:995:  - [ ] Status queries work for all motors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:996:  - [ ] Motors respond within 10ms
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:998:- [ ] **Launch Integration**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:999:  - [ ] `pragati_complete.launch.py` launches successfully
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1000:  - [ ] No errors in launch log
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1001:  - [ ] All expected nodes running
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1002:  - [ ] `/joint_states` published
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1003:  - [ ] Services available
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1005:- [ ] **System Integration**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1006:  - [ ] `yanthra_move` can control motors
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1007:  - [ ] Multi-motor coordination works
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1008:  - [ ] Picking/placing operations functional
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1009:  - [ ] Performance matches ROS 1
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1011:- [ ] **Documentation**
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1012:  - [ ] Updated DOCUMENTATION_GAPS_ANALYSIS.md
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1013:  - [ ] Created MULTI_MOTOR_SETUP_GUIDE.md
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1014:  - [ ] Updated README.md with multi-motor info
+docs/archive/MG6010_THREE_MOTOR_DEEP_DIVE_REPORT.md:1015:  - [ ] Added troubleshooting section
+docs/PHASE0_COMPLETION_SUMMARY.md:196:- [ ] Test with real hardware (OAK-D Lite camera)
+docs/PHASE0_COMPLETION_SUMMARY.md:197:- [ ] Run 1-hour stability test
+docs/PHASE0_COMPLETION_SUMMARY.md:198:- [ ] Monitor log file size during extended run
+docs/PHASE0_COMPLETION_SUMMARY.md:201:- [ ] Install depthai-core C++ library
+docs/PHASE0_COMPLETION_SUMMARY.md:202:- [ ] Study DepthAI C++ examples
+docs/PHASE0_COMPLETION_SUMMARY.md:203:- [ ] Design DepthAIManager class interface
+docs/PHASE0_COMPLETION_SUMMARY.md:204:- [ ] Create skeleton header file
+docs/PHASE0_COMPLETION_SUMMARY.md:207:- [ ] Implement DepthAIManager class
+docs/PHASE0_COMPLETION_SUMMARY.md:208:- [ ] Integrate into CottonDetectionNode
+docs/PHASE0_COMPLETION_SUMMARY.md:209:- [ ] Test with hardware
+docs/PHASE0_COMPLETION_SUMMARY.md:210:- [ ] Performance benchmarking
+docs/PHASE2_IMPLEMENTATION_PLAN.md:387:- [ ] DepthAI pipeline runs in ROS2 node
+docs/PHASE2_IMPLEMENTATION_PLAN.md:388:- [ ] RGB images published at 30 Hz
+docs/PHASE2_IMPLEMENTATION_PLAN.md:389:- [ ] Depth maps published at 30 Hz
+docs/PHASE2_IMPLEMENTATION_PLAN.md:390:- [ ] Detection service works without files
+docs/PHASE2_IMPLEMENTATION_PLAN.md:391:- [ ] Camera_info published correctly
+docs/PHASE2_IMPLEMENTATION_PLAN.md:392:- [ ] Detection accuracy matches Phase 1
+docs/PHASE2_IMPLEMENTATION_PLAN.md:393:- [ ] Latency ≤ 10% over Phase 1
+docs/PHASE2_IMPLEMENTATION_PLAN.md:394:- [ ] No USB2 bandwidth issues
+docs/PHASE2_IMPLEMENTATION_PLAN.md:395:- [ ] All tests pass
+docs/PHASE2_IMPLEMENTATION_PLAN.md:398:- [ ] PointCloud2 publishing works
+docs/PHASE2_IMPLEMENTATION_PLAN.md:399:- [ ] Continuous detection mode functional
+docs/PHASE2_IMPLEMENTATION_PLAN.md:400:- [ ] URDF updated with OAK-D Lite specs
+docs/PHASE2_IMPLEMENTATION_PLAN.md:401:- [ ] Parameter reconfiguration tested
+docs/PHASE2_IMPLEMENTATION_PLAN.md:402:- [ ] Multi-hour stability validated
+docs/PHASE2_IMPLEMENTATION_PLAN.md:405:- [ ] Performance profiled and optimized
+docs/PHASE2_IMPLEMENTATION_PLAN.md:406:- [ ] Documentation fully updated
+docs/PHASE2_IMPLEMENTATION_PLAN.md:407:- [ ] User guides created
+docs/PHASE2_IMPLEMENTATION_PLAN.md:408:- [ ] Demos and tutorials ready
+docs/TESTING_AND_VALIDATION_PLAN.md:249:- [ ] Camera detected via USB
+docs/TESTING_AND_VALIDATION_PLAN.md:250:- [ ] DepthAI SDK recognizes device
+docs/TESTING_AND_VALIDATION_PLAN.md:251:- [ ] Device MXID retrieved successfully
+docs/TESTING_AND_VALIDATION_PLAN.md:275:- [ ] Calibration export succeeds
+docs/TESTING_AND_VALIDATION_PLAN.md:276:- [ ] All YAML files created
+docs/TESTING_AND_VALIDATION_PLAN.md:277:- [ ] Intrinsics and distortion parameters populated
+docs/TESTING_AND_VALIDATION_PLAN.md:278:- [ ] Baseline within expected range (7-8 cm)
+docs/TESTING_AND_VALIDATION_PLAN.md:306:- [ ] Script completes successfully
+docs/TESTING_AND_VALIDATION_PLAN.md:307:- [ ] Output files created
+docs/TESTING_AND_VALIDATION_PLAN.md:308:- [ ] Detection coordinates formatted correctly
+docs/TESTING_AND_VALIDATION_PLAN.md:309:- [ ] No DepthAI pipeline errors
+docs/TESTING_AND_VALIDATION_PLAN.md:333:- [ ] 10/10 iterations succeed
+docs/TESTING_AND_VALIDATION_PLAN.md:334:- [ ] No USB errors in dmesg
+docs/TESTING_AND_VALIDATION_PLAN.md:335:- [ ] Frame capture time consistent (±10%)
+docs/TESTING_AND_VALIDATION_PLAN.md:336:- [ ] No memory leaks
+docs/TESTING_AND_VALIDATION_PLAN.md:364:- [ ] Node launches successfully
+docs/TESTING_AND_VALIDATION_PLAN.md:365:- [ ] All parameters initialized
+docs/TESTING_AND_VALIDATION_PLAN.md:366:- [ ] Services advertised
+docs/TESTING_AND_VALIDATION_PLAN.md:367:- [ ] No Python exceptions
+docs/TESTING_AND_VALIDATION_PLAN.md:389:- [ ] Service responds within timeout
+docs/TESTING_AND_VALIDATION_PLAN.md:390:- [ ] Response success=true (if cotton present)
+docs/TESTING_AND_VALIDATION_PLAN.md:391:- [ ] Detection count matches cotton_details.txt

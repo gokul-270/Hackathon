@@ -1,0 +1,38 @@
+[Unit]
+Description=pigpiod daemon for GPIO operations
+Documentation=man:pigpiod(1)
+After=network.target
+
+[Service]
+Type=forking
+# Run as root (pigpiod requires root for GPIO access)
+# Clients (ROS2 nodes) can connect as regular users
+
+# PID file location (pigpiod creates this automatically)
+PIDFile=/run/pigpio.pid
+
+# Start pigpiod daemon
+# Removed -l flag - was causing IPv6-only binding, breaking IPv4 clients
+ExecStart=/usr/local/bin/pigpiod
+
+# Stop pigpiod cleanly (pigs stop sends shutdown command via socket)
+ExecStop=/usr/local/bin/pigs stop
+
+# Don't wait forever on shutdown (default is 90s)
+TimeoutStopSec=10
+
+# Restart policy for reliability
+Restart=on-failure
+RestartSec=5
+
+# Security: Minimal capabilities for GPIO operations
+CapabilityBoundingSet=CAP_SYS_RAWIO CAP_SYS_ADMIN
+NoNewPrivileges=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pigpiod
+
+[Install]
+WantedBy=multi-user.target

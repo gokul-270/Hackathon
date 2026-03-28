@@ -1,0 +1,137 @@
+# Vehicle Control Parameters - Cotton Picker Vehicle Control System
+# Based on original VehicleCanBusInterface.py parameters
+# Following the same pattern as odrive_controllers.yaml
+
+vehicle_control:
+  ros__parameters:
+    # Joint Configuration - Vehicle motors (steering + drive)
+    # Must match vehicle_motors.yaml joint_names
+    joint_names:
+      - 'steering_left'
+      - 'steering_right'
+      - 'steering_front'
+      - 'drive_front'
+      - 'drive_left_back'
+      - 'drive_right_back'
+
+    # Vehicle Physical Parameters
+    physical_params:
+      wheel_diameter: 0.6096           # 24 * 25.4 mm - 24 inch wheels in meters
+      wheel_distance_per_rotation: 1.91489  # 3.141519 * WheelDiameter in meters
+      drive_gear_ratio_left: 17.4615   # 3*5.8462 - GearRatioLeftBackDriveMotor
+      drive_gear_ratio_front: 17.4615  # 3*5.8462 - GearRatioFrontDriveMotor
+      drive_gear_ratio_right: 17.4615  # 3*5.8462 - GearRatioRightBackDriveMotor
+      steering_gear_ratio: 50.0        # GearRatioSteeringMotor = 50
+      steering_limits:
+        min: -90.0                     # degrees - ABSOLUTE max for direction switches
+        max: 90.0                      # degrees - ABSOLUTE max for direction switches
+      min_steer_limit: 3.0             # degrees - min_steer_limit (dead zone)
+      steering_angle_error_tolerance: 3.0  # degrees
+
+    # CAN Bus Configuration
+    can_bus:
+      interface: 'can0'
+      bitrate: 500000  # Tested at 500kbps on new carrier board (Dec 8)
+      enable_pin: 8                     # CanBusEnablePin = 8
+      adc_enable_pin: 7                 # ADCEnablePin = 7
+      # Motor CAN IDs
+      # Simplified test mapping: steering=1,2,3 and drive=4,5,6
+      motor_ids:
+        steering_motor_left: 3          # steering_left
+        steering_motor_right: 5         # steering_right
+        steering_motor_front: 1         # steering_front
+        front_drive_motor: 2            # drive_front
+        left_back_drive_motor: 4        # drive_left_back
+        right_back_drive_motor: 6       # drive_right_back
+      # Active Motor List (motors that are actually connected)
+      active_motor_list: [3, 5, 1, 2, 4, 6]
+
+    # GPIO Configuration
+    enable_gpio: true                  # CRITICAL: Disable GPIO during initial motor testing
+                                        # Set to true only after pin assignments are verified
+                                        # When false: GPIO manager is not initialized (safe)
+    gpio_pins:
+      direction_right_pin: 21           # DirectionSwitch - forward/reverse in Manual
+      system_reset_pin: 4               # StopButton - vehicle stop/brake
+      # NOTE: Pin discrepancies pending physical wiring verification:
+      #   auto_manual_switch_pin: 26 here vs AUTOMATIC_MODE=20 in constants.py
+      #   arm_start_pin: 16 here vs ARM_START=6 in constants.py
+      auto_manual_switch_pin: 26        # AutoManualSwitch - Auto/Manual mode
+      arm_start_pin: 16                 # ArmStart - Manual arm operation
+      start_switch_pin: 6               # GPIO6 - Start switch
+      shutdown_switch_pin: 5            # GPIO5 - Shutdown switch (hold 0.5s)
+
+    # Physical Switch Configuration
+    shutdown_hold_time_s: 0.5           # seconds - hold time required for shutdown switch
+    enable_auto_shutdown: true          # Execute system shutdown after switch hold
+
+    # Analog Joystick (MCP3008 over SPI)
+    # Default is disabled for safety.
+    enable_joystick: true
+    joystick:
+      # Safety gate:
+      # - false: publish /joy only (validate joystick/SPI without sending motor commands)
+      # - true:  joystick drives steering + drive (will publish motor commands)
+      apply_to_motors: true
+      joy_topic: '/joy'
+      poll_frequency: 20.0
+      calibrate_on_start: true
+      calibration_samples: 50
+      max_linear_mps: 0.5
+      turn_scale: 1.0
+      # IMPORTANT: can0 uses the kernel mcp251x driver on spi0.0.
+      # Use spidev for MCP3008 to avoid interfering with the CAN controller's SPI transfers.
+      spi_backend: spidev
+      spi_bus: 0
+      spi_channel: 1        # /dev/spidev0.1 (SPI0 CE1 / GPIO7)
+      spi_baud_hz: 1000000
+      spi_flags: 0
+      x_channel: 0
+      y_channel: 1
+      invert_x: false
+      invert_y: false
+
+    # Steering mode: "front_only" (default), "ackermann" (2-wheel), "three_wheel" (all 3)
+    steering_mode: 'three_wheel'
+
+    # Control Parameters
+    movement_tolerance: 0.4             # Position tolerance for movement completion
+    time_for_unit_distance: 0.0036      # 3600/(1000*1000) - 1KM/Hr in mm/sec
+    time_for_full_wheel_steering_rotation: 30.0  # seconds
+    cmd_vel_timeout: 1.0                # seconds - timeout for cmd_vel commands
+    steering_angular_scale: 45.0        # Joystick max steering angle (45° for normal driving)
+
+    # IMU Configuration
+    # NOTE: IMU is not used in current field builds.
+    # Keep it explicitly disabled to avoid blocking startup on missing hardware.
+    enable_imu: false
+    imu_mode: 'disabled'  # disabled|mock|serial (serial not implemented yet)
+    imu_serial_port: '/dev/ttyACM0'
+    imu_baud_rate: 9600
+    imu_timeout: 1.0
+    imu_sampling_time: 0.02             # seconds - minimum sampling time
+
+    # Debug and Logging
+    vehicle_control_debug: false
+    debug_info: false
+
+    # MQTT Broker Configuration
+    mqtt_broker_host: 'localhost'
+    mqtt_broker_port: 1883
+
+    # Control Loop Timing
+    # Frequencies reduced from original values to fix CPU burn (97.5% -> <15%).
+    # See fix-vehicle-cpu-thermal change for profiling evidence.
+    control_frequency: 5.0              # Hz (was 50.0 — only does cmd_vel timeout + staleness checks)
+    joint_state_frequency: 5.0          # Hz (was 10.0 — dashboard/logging doesn't need >5Hz)
+    gpio_frequency: 10.0                # Hz (unchanged — physical switch <100ms response required)
+    status_frequency: 2.0               # Hz (was 5.0 — human monitoring only)
+
+    # Position Feedback Validation
+    # When enabled, vehicle will wait for motors to reach commanded positions
+    # before proceeding. Useful for steering accuracy verification.
+    enable_position_feedback: false     # Set to true to enable position verification
+    position_feedback_timeout: 3.0      # seconds - max time to wait for position
+    position_tolerance:
+      steering: 0.05                    # radians (~3 degrees) - steering tolerance
+      drive: 1.0                       # radians - VERY loose tolerance for testing flow

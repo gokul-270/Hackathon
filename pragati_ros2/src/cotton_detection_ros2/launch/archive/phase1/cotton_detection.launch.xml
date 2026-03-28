@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Cotton Detection ROS2 Launch File -->
+  
+  <arg name="camera_topic" default="/camera/image_raw" description="Camera image topic" />
+  <arg name="enable_debug" default="false" description="Enable debug image output" />
+  <arg name="use_depthai" default="true" description="Use DepthAI OAK-D Lite camera" />
+  <arg name="confidence_threshold" default="0.7" description="Detection confidence threshold" />
+  <arg name="max_detections" default="50" description="Maximum number of detections" />
+  <arg name="enable_bridge" default="true" description="Enable legacy signal bridge" />
+  
+  <!-- Cotton Detection Node -->
+  <node pkg="cotton_detection_ros2" exec="cotton_detection_node" name="cotton_detection_node" output="screen">
+    <param name="camera_topic" value="$(var camera_topic)" />
+    <param name="debug_image_topic" value="/cotton_detection/debug_image/compressed" />
+    <param name="enable_debug_output" value="$(var enable_debug)" />
+    <param name="detection_confidence_threshold" value="$(var confidence_threshold)" />
+    <param name="max_cotton_detections" value="$(var max_detections)" />
+    <param name="use_depthai" value="$(var use_depthai)" />
+    
+    <!-- Remap topics if needed -->
+    <remap from="~/image_raw" to="$(var camera_topic)" />
+    <remap from="~/image_raw/compressed" to="$(var camera_topic)/compressed" />
+  </node>
+  
+  <!-- Legacy Signal Bridge (optional) -->
+  <node pkg="cotton_detection_ros2" exec="cotton_detection_bridge.py" name="cotton_detection_bridge" 
+        output="screen" if="$(var enable_bridge)">
+    <param name="signal_file_path" value="/tmp/cotton_detection_signal.json" />
+    <param name="result_file_path" value="/tmp/cotton_detection_results.txt" />
+    <param name="bridge_enabled" value="true" />
+  </node>
+  
+  <!-- RViz2 for visualization (optional) -->
+  <node pkg="rviz2" exec="rviz2" name="cotton_detection_rviz" 
+        args="-d $(find-pkg-share cotton_detection_ros2)/config/cotton_detection.rviz"
+        if="$(var enable_debug)" />
+
+</launch>

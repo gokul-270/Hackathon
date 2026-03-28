@@ -1,0 +1,166 @@
+################################################################################
+# Pragati Cotton Picker - Root Python Dependencies
+# Purpose: Centralized Python package management with version tracking
+#
+# Created: 2025-02-03
+# Last Updated: 2025-02-03
+#
+# This file serves as the SINGLE SOURCE OF TRUTH for all Python dependencies
+# across development machines and Raspberry Pi devices.
+#
+# Version Strategy:
+# - STRICT pins (==X.Y.Z.W): API-sensitive packages that must match exactly
+# - RELAXED pins (>=X.Y,<Z): Allow patch updates, block breaking changes
+#
+# Usage:
+#   pip3 install -r requirements.txt
+#
+# Validation:
+#   ./scripts/validate_python_deps.sh
+#   ./scripts/validate_requirements_vs_rpi.sh
+################################################################################
+
+# ==============================================================================
+# CRITICAL PACKAGES - Strict Version Pinning
+# ==============================================================================
+
+# OakD Camera SDK - MUST match RPi exactly due to API sensitivity
+depthai==2.30.0.0
+
+# ==============================================================================
+# VISION & IMAGE PROCESSING - Relaxed Pinning
+# ==============================================================================
+
+# OpenCV - Core computer vision library
+opencv-python>=4.11.0,<5.0
+# RPi has: 4.11.0.86 - allows patch updates within 4.11.x
+
+# NumPy - Numerical computing foundation
+numpy>=1.26.0,<2.0
+# RPi has: 1.26.4 - allows 1.26.x updates, blocks numpy 2.x
+
+# Pillow - Image manipulation
+pillow>=10.2.0,<11.0
+# RPi has: 10.2.0 - allows 10.x updates
+
+# SciPy - Scientific computing (if needed)
+scipy>=1.10.0,<2.0
+# Allows 1.x updates, blocks 2.x
+
+# ==============================================================================
+# DATA & CONFIGURATION
+# ==============================================================================
+
+# YAML parsing for ROS2 configs
+PyYAML>=6.0,<7.0
+# RPi has: 6.0.1 - allows 6.x updates
+
+# ==============================================================================
+# CONTROL & PID TUNING
+# ==============================================================================
+
+# PID controller for motor tuning dashboard (pure Python, ARM64 compatible)
+simple-pid>=2.0.0
+
+# ==============================================================================
+# MQTT COMMUNICATION
+# ==============================================================================
+
+# Paho MQTT - Inter-arm communication via MQTT broker
+paho-mqtt>=2.0.0,<3.0
+
+# ==============================================================================
+# WEB DASHBOARD (FastAPI backend)
+# ==============================================================================
+
+# FastAPI - ASGI web framework for dashboard backend
+fastapi>=0.110.0,<1.0
+
+# Uvicorn - ASGI server to run FastAPI
+uvicorn>=0.29.0,<1.0
+
+# ==============================================================================
+# HTTP CLIENT
+# ==============================================================================
+
+# httpx - Async HTTP client for fleet health polling
+httpx>=0.27.0,<1.0
+
+# ==============================================================================
+# SYSTEM MONITORING & DISCOVERY
+# ==============================================================================
+
+# psutil - System metrics (CPU, memory, temperature, disk)
+# Used by dashboard health monitoring and RPi agent
+psutil>=5.9.0,<6.0
+
+# zeroconf - mDNS discovery for RPi agents on local network
+# Pure Python, no native dependencies
+zeroconf>=0.131.0,<1.0
+
+# ==============================================================================
+# SERIAL COMMUNICATION
+# ==============================================================================
+
+# PySerial - UART/Serial communication for hardware
+pyserial>=3.5,<4.0
+
+# ==============================================================================
+# ROS2 PYTHON PACKAGES
+# ==============================================================================
+# Note: Most ROS2 packages are installed via apt, not pip
+# Only list pip-installable ROS2 utilities here
+
+# ==============================================================================
+# DEVELOPMENT & TESTING (Optional)
+# ==============================================================================
+
+# pre-commit - git hook framework (required for commit + push hooks)
+pre-commit>=3.0.0,<4.0
+
+# Uncomment for development environments:
+# pytest>=7.4.0,<8.0
+# pytest-cov>=4.1.0,<5.0
+# black>=23.0.0,<24.0
+# flake8>=6.1.0,<7.0
+# mypy>=1.5.0,<2.0
+
+################################################################################
+# VERSION ALIGNMENT TRACKING
+################################################################################
+# This table tracks version alignment across devices. Update after running
+# rpi_config_snapshot.sh on each device.
+#
+# Legend:
+#   ✅ OK - Version matches requirements
+#   ⚠️  WARN - Version outside recommended range but may work
+#   ❌ FAIL - Version mismatch, needs update
+#
+# Last Updated: 2025-02-03 14:16:44
+# Snapshot Source: log/rpi_snapshot_20260203_141644.txt
+#
+# Package       | requirements.txt  | RPi-ARM1      | Dev-WSL   | Status
+# --------------|-------------------|---------------|-----------|--------
+# depthai       | ==2.30.0.0        | 2.30.0.0      | TBD       | ✅ OK
+# opencv-python | >=4.11.0,<5.0     | 4.11.0.86     | TBD       | ✅ OK
+# numpy         | >=1.26.0,<2.0     | 1.26.4        | TBD       | ✅ OK
+# pillow        | >=10.2.0,<11.0    | 10.2.0        | TBD       | ✅ OK
+# scipy         | >=1.10.0,<2.0     | Not installed | TBD       | ⚠️  OPTIONAL
+# PyYAML        | >=6.0,<7.0        | 6.0.1         | TBD       | ✅ OK
+# pyserial      | >=3.5,<4.0        | Not found     | TBD       | ⚠️  TBD
+#
+# RPi Devices:
+#   RPi-ARM1: ubuntu-desktop @ 192.168.137.238 (Production device)
+#   RPi-Old1: (Add when available)
+#
+# Dev Machines:
+#   Dev-WSL: WSL2 Ubuntu 24.04 @ 192.168.1.68
+#
+# Audit Notes:
+# - Many packages in RPi snapshot may not be required (to be cleaned up later)
+# - Focus on core dependencies first, optimize later
+# - Run ./scripts/validate_requirements_vs_rpi.sh after updates
+#
+################################################################################
+# END OF FILE
+################################################################################

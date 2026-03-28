@@ -1,0 +1,11 @@
+# Read Motor Angles Service
+# Request to read multi-turn and single-turn angles from a motor controller
+
+# Request
+uint8 motor_id              # Motor CAN ID
+---
+# Response
+bool success                # True if angles were read successfully
+string error_message        # Error description (empty on success)
+float64 multi_turn_angle    # Multi-turn angle in radians (CAN uses 0.01 deg/LSB, converted to rad)
+float64 single_turn_angle   # Single-turn angle in radians (0 to 2*pi)

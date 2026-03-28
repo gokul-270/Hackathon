@@ -1,0 +1,135 @@
+# Vehicle Motor Configuration
+# PRODUCTION SETUP:
+#   - Steering motors: MG6010-i6 (internal 1:6, external 1:50, total 1:300)
+#   - Drive motors: Now managed by ODrive (see odrive_control_ros2/config/vehicle_drive.yaml)
+# Run on Vehicle Controller RPi
+
+# Note: Full node path is '/vehicle/vehicle_motor_control' when launched via vehicle_complete.launch.py
+# (namespace='vehicle', name='vehicle_motor_control')
+vehicle:
+  vehicle_motor_control:
+    ros__parameters:
+      # Role: arm or vehicle (required — auto-detect from joint names is deprecated)
+      role: "vehicle"
+
+      # CAN Interface
+      interface_name: "can0"
+      baud_rate: 500000  # Tested at 500kbps on new carrier board (Dec 8)
+
+      # Vehicle Motor Configuration -- steering only
+      # Drive motors (drive_front, drive_left_back, drive_right_back) moved to ODrive
+      motor_ids:
+        - 3   # steering_left
+        - 5   # steering_right
+        - 1   # steering_front
+
+      joint_names:
+        - "steering_left"
+        - "steering_right"
+        - "steering_front"
+
+      # Test mode for ROS 2 interface
+      test_mode: "multi_motor"
+
+      # Control Loop Frequency (Hz)
+      control_frequency: 50.0  # Vehicle needs faster response
+
+      # ==========================================================================
+      # TRANSMISSION FACTORS (EXTERNAL GEARBOX ONLY)
+      # ==========================================================================
+      # MG motor protocol expects rotor angle (LK tool sends in degrees, our code in centidegrees)
+      # Code multiplies by internal_gear_ratios automatically
+      # transmission_factors = EXTERNAL gearbox ratios only
+      #
+      # Steering Motors (MG6010-i6): External 1:50
+      transmission_factors:
+        - 50.0      # steering_left (external gearbox: 50:1)
+        - 50.0      # steering_right
+        - 50.0      # steering_front
+
+      # Internal gear ratios (handled by motor controller code)
+      # MG6010-i6: 6:1 internal gearbox
+      internal_gear_ratios:
+        - 6.0       # steering_left (MG6010-i6)
+        - 6.0       # steering_right
+        - 6.0       # steering_front
+
+      # Motor directions (1 = forward, -1 = reverse)
+      directions:
+        - 1         # steering_left
+        - 1         # steering_right
+        - 1         # steering_front
+
+      # Input unit type: 0 = radians, 1 = rotations
+      # Vehicle_control converts radians to rotations before sending, so all motors expect rotations
+      input_in_rotations:
+        - 1.0       # steering_left: rotations
+        - 1.0       # steering_right: rotations
+        - 1.0       # steering_front: rotations
+
+      # Homing Positions (steering at 0 degrees)
+      homing_positions:
+        - 0.0       # steering_left: centered
+        - 0.0       # steering_right: centered
+        - 0.0       # steering_front: centered
+
+      # ==========================================================================
+      # SAFETY LIMITS
+      # ==========================================================================
+
+      # Position limits
+      # Steering: -91 to +91 degrees
+      min_positions:
+        - -1.588    # steering_left: -91 degrees
+        - -1.588    # steering_right
+        - -1.588    # steering_front
+
+      max_positions:
+        - 1.588     # steering_left: +91 degrees
+        - 1.588     # steering_right
+        - 1.588     # steering_front
+
+      # Velocity Limits (rad/s for steering)
+      max_velocities:
+        - 1.0       # steering: 1 rad/s (~57 deg/s)
+        - 1.0       # steering
+        - 1.0       # steering
+
+      # Position tolerance for "in-position" detection
+      position_tolerance:
+        - 0.05      # steering: ~3 degrees
+        - 0.05      # steering
+        - 0.05      # steering
+
+      # Safety thresholds
+      max_motor_temperature_c: 70.0
+      max_motor_current_a: 15.0
+      max_position_error: 0.1
+      position_timeout: 10.0
+
+      # Feedback
+      feedback_publish_rate: 50.0
+      publish_in_position_status: true
+      sequential_mode: false
+
+      # ==========================================================================
+      # DEGRADED MODE / FAULT TOLERANCE
+      # ==========================================================================
+      # Allows vehicle to continue operating with partial motor failures
+
+      degraded_mode:
+        enabled: true              # Enable degraded mode operation
+        min_drive_motors: 0        # Minimum drive motors required (of 3)
+        min_steering_motors: 2     # Minimum steering motors required (of 3)
+        max_init_failures: 3       # Max motors that can fail at init and still start
+
+      # Motor health monitoring
+      health_monitoring:
+        enabled: true                        # Master ON/OFF - false disables ALL monitoring
+        auto_disable_on_failure: true        # Auto-disable motors after failures
+        log_only_mode: false                 # If true: NEVER disable, only log (field bypass)
+        consecutive_failure_threshold: 3     # Failures before action
+        health_check_interval_s: 5.0         # How often to check health
+        # Field bypass: Set enabled=false or log_only_mode=true via:
+        #   ros2 param set /vehicle/vehicle_motor_control health_monitoring.enabled false
+        #   ros2 param set /vehicle/vehicle_motor_control health_monitoring.log_only_mode true

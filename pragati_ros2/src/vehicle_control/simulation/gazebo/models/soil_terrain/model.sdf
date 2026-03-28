@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="soil_terrain">
+    <static>true</static>
+    <link name="terrain_link">
+      <!-- Soil terrain OBJ mesh with texture -->
+      <!-- Original mesh: ~2m x 2m (XZ), Y-up, 0.19m thick -->
+      <!-- Rotate +90° X to convert Y-up to Z-up -->
+      <!-- XZ scale 5 = ~10m x 10m coverage -->
+      <!-- Y scale 0.5 = reduces thickness to ~0.09m -->
+      <!-- 10% above ground, 90% buried below -->
+
+      <!-- Collision: flat box so wheels ride on top -->
+      <collision name="soil_collision">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>12 12 0.09</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- Visual: textured soil mesh -->
+      <visual name="soil_visual">
+        <pose>0 0 0 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>../../meshes/soil_terrain.obj</uri>
+            <scale>6 0.5 6</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

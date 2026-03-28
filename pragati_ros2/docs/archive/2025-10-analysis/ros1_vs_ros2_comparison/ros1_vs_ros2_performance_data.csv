@@ -1,0 +1,33 @@
+System,Metric,Value,Unit,Notes
+ROS2,Average_Cycle_Time,2820.5,ms,Calculated from 50 sample cycles
+ROS2,Min_Cycle_Time,2710.52,ms,Best performance observed
+ROS2,Max_Cycle_Time,3289.03,ms,Slowest cycle observed
+ROS2,Cycle_Time_Variance,12456.7,ms²,Performance consistency measure
+ROS2,Success_Rate,100,percent,All logged cycles successful
+ROS2,Approach_Phase_Time,500,ms,Estimated from log patterns
+ROS2,Capture_Phase_Time,1000,ms,Estimated from log patterns
+ROS2,Retreat_Phase_Time,500,ms,Estimated from log patterns
+ROS2,Parking_Phase_Time,500,ms,Estimated from log patterns
+ROS2,Joint_Init_Time,2,s,Per joint initialization
+ROS2,Total_Startup_Time,10,s,System startup to operational
+ROS2,Log_Sessions_Analyzed,59,count,Production log files
+ROS1,Joint_Init_Time,6,s,Per joint initialization from logs
+ROS1,Total_Startup_Time,34,s,From testoutputs.txt analysis
+ROS1,Hardware_Test_Sequence,10,s,GPIO and motor testing
+ROS1,Estimated_Cycle_Time,2800,ms,Similar to ROS2 based on architecture
+Architecture,ROS1_Main_File_Size,1200,lines,yanthra_move.cpp monolithic
+Architecture,ROS2_Modular_Components,7,count,Separate modules in ROS2
+Architecture,ROS1_Threading_Model,pthread,type,Manual thread management
+Architecture,ROS2_Threading_Model,executor,type,ROS2 executor-based
+Configuration,ROS1_YAML_Files,multiple,count,Scattered configuration
+Configuration,ROS2_YAML_Files,3,count,Consolidated configuration
+Safety,ROS1_Emergency_Stop,gpio_based,type,Direct GPIO monitoring
+Safety,ROS2_Emergency_Stop,keyboard_disabled,type,STDIN not available in headless
+Detection,ROS1_Method,external_process,type,Python subprocess
+Detection,ROS2_Method,service_based,type,ROS2 service architecture
+Detection,ROS1_Communication,file_io,type,File-based data exchange  
+Detection,ROS2_Communication,service_call,type,Service request/response
+Detection,ROS2_Detection_Modes,5,count,HSV/YOLO/Hybrid variants
+Logging,ROS1_Logging,basic,type,Standard ROS logging
+Logging,ROS2_Logging,structured,type,Phase-based structured logging
+Logging,ROS2_Log_Files_Count,59,count,Production log accumulation

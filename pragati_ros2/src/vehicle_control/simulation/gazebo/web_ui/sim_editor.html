@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati Robot — Edit Simulation</title>
+    <link rel="stylesheet" href="style.css?v=2026022001">
+    <link rel="stylesheet" href="sim_editor.css?v=2026022001">
+</head>
+<body class="sim-editor-body">
+
+    <!-- Connection Bar (shared header) -->
+    <header id="connection-bar">
+        <h1 id="app-title">Pragati Robot</h1>
+        <nav class="header-nav">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="sim_editor.html" class="nav-link active">Edit Simulation</a>
+        </nav>
+        <div class="connection-config">
+            <span id="backend-dot" class="dot disconnected" title="Backend"></span>
+            <span id="backend-text">Backend</span>
+            <span style="margin-left: 12px;"></span>
+            <span id="ros-dot" class="dot disconnected" title="ROS Bridge"></span>
+            <span id="ros-text">ROS</span>
+        </div>
+    </header>
+
+    <main class="editor-main">
+
+        <!-- ============================================ -->
+        <!-- LEFT: Field Visualization (Canvas)           -->
+        <!-- ============================================ -->
+        <section class="field-viz-panel">
+            <div class="panel-header">
+                <h2>Field Layout</h2>
+                <div class="viz-legend">
+                    <span class="legend-item"><span class="legend-dot legend-vehicle"></span> Vehicle</span>
+                    <span class="legend-item"><span class="legend-dot legend-plant-s"></span> Small</span>
+                    <span class="legend-item"><span class="legend-dot legend-plant-m"></span> Medium</span>
+                    <span class="legend-item"><span class="legend-dot legend-plant-t"></span> Tall</span>
+                    <span class="legend-item"><span class="legend-swatch legend-terrain"></span> Terrain</span>
+                </div>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="field-canvas"></canvas>
+                <div class="canvas-info">
+                    <span id="canvas-hover-info">Hover over the field for coordinates</span>
+                </div>
+            </div>
+            <!-- Axis labels -->
+            <div class="axis-info">
+                <span>Grid: 1 division = <span id="grid-scale-label">0.5</span> m</span>
+                <span>X → forward | Y → left</span>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- RIGHT: Settings Panel                        -->
+        <!-- ============================================ -->
+        <section class="settings-panel">
+            <h2>Simulation Settings</h2>
+
+            <!-- Current Config (read from SDF) -->
+            <div class="settings-group" id="current-config">
+                <h3>Current Configuration</h3>
+                <div class="config-summary">
+                    <div class="config-row">
+                        <span class="config-label">Grid Size:</span>
+                        <span id="cur-grid-size" class="config-value">5 rows × 7 columns</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Row Spacing (Y):</span>
+                        <span id="cur-row-spacing" class="config-value">3.00 ft</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Col Spacing (X):</span>
+                        <span id="cur-col-spacing" class="config-value">2.50 ft</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Total Plants:</span>
+                        <span id="cur-total-plants" class="config-value">35</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Field Size:</span>
+                        <span id="cur-field-size" class="config-value">4.20 × 3.60 m</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Terrain:</span>
+                        <span id="cur-terrain-size" class="config-value">~10 × 10 m</span>
+                    </div>
+                    <div class="config-row">
+                        <span class="config-label">Vehicle Pose:</span>
+                        <span id="cur-vehicle-pose" class="config-value">0, 0 (origin)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Editor -->
+            <div class="settings-group">
+                <h3>Cotton Plant Grid</h3>
+                <div class="input-grid">
+                    <div class="form-field">
+                        <label for="input-rows">Rows</label>
+                        <input type="number" id="input-rows" min="1" max="20" value="5" step="1">
+                    </div>
+                    <div class="form-field">
+                        <label for="input-cols">Columns</label>
+                        <input type="number" id="input-cols" min="1" max="20" value="7" step="1">
+                    </div>
+                    <div class="form-field">
+                        <label for="input-row-spacing" id="label-row-spacing">Row Spacing (ft)</label>
+                        <input type="number" id="input-row-spacing" min="1.0" max="16.0" value="3.0" step="0.5">
+                    </div>
+                    <div class="form-field">
+                        <label for="input-col-spacing" id="label-col-spacing">Col Spacing (ft)</label>
+                        <input type="number" id="input-col-spacing" min="1.0" max="16.0" value="2.3" step="0.5">
+                    </div>
+                </div>
+                <div class="unit-toggle-row">
+                    <span class="unit-toggle-label">Unit:</span>
+                    <button id="unit-toggle-btn" class="unit-toggle-btn active-ft" title="Toggle between feet and meters">ft</button>
+                </div>
+
+                <!-- Quick presets -->
+                <div class="preset-row">
+                    <span class="preset-label">Presets:</span>
+                    <button class="preset-btn" data-rows="3" data-cols="5" data-rs="0.9" data-cs="0.7">3×5</button>
+                    <button class="preset-btn active" data-rows="5" data-cols="7" data-rs="0.9" data-cs="0.7">5×7</button>
+                    <button class="preset-btn" data-rows="7" data-cols="10" data-rs="0.9" data-cs="0.7">7×10</button>
+                    <button class="preset-btn" data-rows="5" data-cols="7" data-rs="1.2" data-cs="1.0">5×7 Wide</button>
+                </div>
+            </div>
+
+            <!-- Terrain Settings -->
+            <div class="settings-group">
+                <h3>Terrain Surface</h3>
+                <div class="input-grid">
+                    <div class="form-field">
+                        <label for="input-terrain-scale">Size Multiplier</label>
+                        <input type="number" id="input-terrain-scale" min="1" max="20" value="5" step="1">
+                        <span class="field-hint">×2m base → <span id="terrain-size-hint">10</span>m</span>
+                    </div>
+                    <div class="form-field">
+                        <label for="input-terrain-z">Height (Z offset)</label>
+                        <input type="number" id="input-terrain-z" min="-0.5" max="0.5" value="0.1" step="0.01">
+                    </div>
+                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="input-auto-terrain" checked>
+                    Auto-fit terrain to field size (with 3m margin)
+                </label>
+            </div>
+
+            <!-- Plant Type Distribution -->
+            <div class="settings-group">
+                <h3>Plant Type Mix</h3>
+                <div class="plant-mix-row">
+                    <label class="plant-mix-item">
+                        <span class="legend-dot legend-plant-s"></span>
+                        Small
+                        <input type="range" id="mix-small" min="0" max="100" value="33" class="mix-slider">
+                        <span id="mix-small-pct" class="mix-pct">33%</span>
+                    </label>
+                    <label class="plant-mix-item">
+                        <span class="legend-dot legend-plant-m"></span>
+                        Medium
+                        <input type="range" id="mix-medium" min="0" max="100" value="34" class="mix-slider">
+                        <span id="mix-medium-pct" class="mix-pct">34%</span>
+                    </label>
+                    <label class="plant-mix-item">
+                        <span class="legend-dot legend-plant-t"></span>
+                        Tall
+                        <input type="range" id="mix-tall" min="0" max="100" value="33" class="mix-slider">
+                        <span id="mix-tall-pct" class="mix-pct">33%</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-bar">
+                <button id="preview-btn" class="action-btn preview-btn">Preview</button>
+                <button id="apply-btn" class="action-btn apply-btn">Apply to Gazebo</button>
+                <button id="reset-btn" class="action-btn reset-btn">Reset to Default</button>
+            </div>
+
+            <!-- Status -->
+            <div id="editor-status" class="editor-status">
+                <span id="editor-status-icon"></span>
+                <span id="editor-status-text">Ready — adjust settings and click Preview or Apply</span>
+            </div>
+
+            <!-- Notes -->
+            <div class="editor-notes">
+                <p><strong>Preview</strong> updates the field visualization only.</p>
+                <p><strong>Apply to Gazebo</strong> updates the running Gazebo simulation live — removes old plants and spawns new ones without restart.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+    <script src="sim_editor.js?v=2026022002"></script>
+</body>
+</html>

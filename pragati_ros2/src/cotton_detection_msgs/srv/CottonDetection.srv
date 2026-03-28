@@ -1,0 +1,7 @@
+# Request: int32 command (0=stop, 1=detect, 2=calibrate)
+int32 detect_command
+---
+# Response: array of cotton positions (x,y,z coordinates as int32)
+int32[] data
+bool success
+string message

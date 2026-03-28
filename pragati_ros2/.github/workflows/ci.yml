@@ -1,0 +1,203 @@
+name: Pragati ROS2 CI
+
+on:
+  push:
+    branches:
+      - master
+      - pragati_ros2
+      - 'feature/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - master
+      - pragati_ros2
+
+jobs:
+  build-and-test:
+    name: Build & Test (ROS2 Jazzy)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup ROS2 Jazzy
+        uses: ros-tooling/setup-ros@v0.7
+        with:
+          required-ros-distributions: jazzy
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip \
+            python3-colcon-common-extensions \
+            python3-rosdep \
+            lcov \
+            clang-format
+
+      - name: Install Python dependencies
+        run: |
+          pip3 install --upgrade pip
+          pip3 install gcovr pytest black flake8 isort
+
+      - name: Initialize rosdep
+        run: |
+          sudo rosdep init || true
+          rosdep update
+
+      - name: Install ROS dependencies
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          rosdep install --from-paths src --ignore-src -r -y
+
+      - name: Build workspace
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          colcon build \
+            --cmake-args \
+              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_CXX_FLAGS="--coverage" \
+              -DCMAKE_C_FLAGS="--coverage" \
+              -DBUILD_TESTING=ON \
+            --event-handlers console_cohesion+
+
+      - name: Run tests
+        run: |
+          source /opt/ros/jazzy/setup.bash
+          source install/setup.bash
+          colcon test \
+            --event-handlers console_cohesion+ \
+            --return-code-on-test-failure
+
+      - name: Display test results
+        if: always()
+        run: |
+          colcon test-result --verbose
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          pip3 install gcovr
+          gcovr -r . \
+            --filter 'src/' \
+            --exclude '.*test.*' \
+            --exclude '.*_msgs/.*' \
+            --xml coverage.xml \
+            --html-details coverage.html \
+            --txt
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            coverage.html
+            coverage.*.html
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            build/*/test_results/**/*.xml
+
+      - name: Generate API Documentation
+        if: always()
+        run: |
+          sudo apt-get install -y doxygen graphviz
+          doxygen Doxyfile
+        continue-on-error: true
+
+      - name: Upload API Documentation
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-documentation
+          path: docs/api/html
+
+  lint-cpp:
+    name: Lint C++
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+
+      - name: Check C++ formatting
+        run: |
+          find src -name '*.cpp' -o -name '*.hpp' | xargs clang-format --dry-run -Werror
+
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install linters
+        run: |
+          pip install black flake8 isort
+
+      - name: Check Python formatting (black)
+        run: |
+          black --check src/ scripts/ || true
+
+      - name: Check Python imports (isort)
+        run: |
+          isort --check-only src/ scripts/ || true
+
+      - name: Lint Python (flake8)
+        run: |
+          flake8 src/ scripts/ --max-line-length=100 --extend-ignore=E203,W503 || true
+
+  pre-commit:
+    name: Pre-commit Hooks
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files || true
+
+  build-status:
+    name: Build Status Summary
+    runs-on: ubuntu-24.04
+    needs: [build-and-test, lint-cpp, lint-python]
+    if: always()
+
+    steps:
+      - name: Check build status
+        run: |
+          echo "Build and test: ${{ needs.build-and-test.result }}"
+          echo "C++ lint: ${{ needs.lint-cpp.result }}"
+          echo "Python lint: ${{ needs.lint-python.result }}"
+
+          if [[ "${{ needs.build-and-test.result }}" != "success" ]]; then
+            echo "::error::Build or tests failed"
+            exit 1
+          fi

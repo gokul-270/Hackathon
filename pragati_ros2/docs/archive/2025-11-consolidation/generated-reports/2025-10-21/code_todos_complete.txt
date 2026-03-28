@@ -1,0 +1,70 @@
+src/motor_control_ros2/src/generic_motor_controller.cpp:1118:  // TODO: Implement actual temperature reading when MG6010 protocol documentation
+src/motor_control_ros2/src/safety_monitor.cpp:564:        // TODO(hardware): Implement actual CAN ESTOP command:
+src/motor_control_ros2/src/safety_monitor.cpp:573:    // TODO(hardware): Implement GPIO shutdown:
+src/motor_control_ros2/src/safety_monitor.cpp:583:    // TODO(hardware): Implement error LED:
+src/motor_control_ros2/src/generic_hw_interface.cpp:346:        // TODO(hardware): Add velocity and effort reading when controller API available
+src/motor_control_ros2/src/generic_hw_interface.cpp:355:    // TODO(hardware): Implement MG6010/MG4040 CAN reading when hardware available
+src/motor_control_ros2/src/generic_hw_interface.cpp:399:      // TODO(hardware): Add velocity and effort/torque control mode switching
+src/motor_control_ros2/src/generic_hw_interface.cpp:420:  // TODO(hardware): Implement MG6010/MG4040 CAN writing when hardware available
+src/motor_control_ros2/src/generic_hw_interface.cpp:534:  // TODO(hardware): Implement MG6010/MG4040 CAN initialization when hardware available
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:401:  // TODO: Port cotton_detection service to ROS2 or wrap as needed
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:683:                    joint_move_4.move_joint(joint4_homing_position, WAIT);  // TODO(developer) move it to joint4_homing_position
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:721:      joint_move_5.move_joint(joint5_homing_position, WAIT);   // Move joint5 fully back TODO change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:806:                                                // TODO(developer) check whether the motor is still on or not
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:839:          joint_move_5.move_joint(joint5_homing_position, WAIT);   // Move joint5 fully back TODO change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:909:          joint_move_5.move_joint(joint5_homing_position, WAIT);   // Move joint5 fully back TODO change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:916:                                                // TODO(developer) check whether the motor is still on or not
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:935:                                                // TODO(developer) check whether the motor is still on or not
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:991:    joint_move_5.move_joint(joint5_homing_position, WAIT);  // TODO(developer) This homing Position is different from Initialisation homing position but both can be same
+src/yanthra_move/src/yanthra_move_aruco_detect.cpp:993:    joint_move_4.move_joint(joint4_homing_position, WAIT);  // TODO(developer) move it to joint4_homing_position
+src/yanthra_move/src/yanthra_move_system.cpp:60:    // TODO(hardware): Implement keyboard monitoring for manual control
+src/yanthra_move/src/yanthra_move_system.cpp:95:    // TODO(hardware): Implement keyboard monitoring cleanup
+src/yanthra_move/src/yanthra_move_system.cpp:111:    // TODO(hardware): Implement vacuum pump GPIO control
+src/yanthra_move/src/yanthra_move_system.cpp:138:    // TODO(hardware): Implement camera LED GPIO control
+src/yanthra_move/src/yanthra_move_system.cpp:153:    // TODO(hardware): Implement status LED GPIO control
+src/yanthra_move/src/yanthra_move_system.cpp:170:    // TODO(enhancement): Implement timestamped log file creation
+src/yanthra_move/src/yanthra_move_system.cpp:2042:    // TODO: Implement proper arm status functionality
+src/yanthra_move/src/yanthra_move_calibrate.cpp:395:    // ros::spinOnce(); // TODO: Replace with ROS2 executor pattern
+src/yanthra_move/src/yanthra_move_calibrate.cpp:403:                        // rclcpp::shutdown(); // TODO: Implement proper ROS2 shutdown
+src/yanthra_move/src/yanthra_move_calibrate.cpp:584:      // ros::spinOnce(); // TODO: Replace with ROS2 executor pattern
+src/yanthra_move/src/yanthra_move_calibrate.cpp:592:                        // rclcpp::shutdown(); // TODO: Implement proper ROS2 shutdown
+src/yanthra_move/src/yanthra_move_calibrate.cpp:678:                joint_move_5.move_joint(joint5_homing_position, WAIT);   // Move joint5 fully back TODO change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_calibrate.cpp:679:                joint_move_3.move_joint(joint3_homing_position, WAIT);  // TODO(developer) change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_calibrate.cpp:743:                        // TODO(developer) check whether the motor is still on or not
+src/yanthra_move/src/yanthra_move_calibrate.cpp:747:                        joint_move_5.move_joint(joint5_homing_position, WAIT);   // Move joint5 fully back TODO change 0.001 to joint_zero_poses[joint3_cnt]
+src/yanthra_move/src/yanthra_move_calibrate.cpp:794:                        joint_move_5.move_joint(r-0.025, WAIT);     // TODO(developer) Jerky Motion  // Author Mani
+src/yanthra_move/src/yanthra_move_calibrate.cpp:802:                    // ros::spinOnce(); // TODO: Replace with ROS2 executor pattern
+src/yanthra_move/src/yanthra_move_calibrate.cpp:821:            joint_move_5.move_joint(joint5_homing_position, WAIT);  // TODO(developer) This homing Position is different from Initialisation homing position but both can be same
+src/yanthra_move/src/yanthra_move_calibrate.cpp:823:            joint_move_4.move_joint(joint4_homing_position, WAIT);  // TODO(developer) move it to joint4_homing_position
+src/cotton_detection_ros2/src/depthai_manager.cpp:166:    // TODO(hardware): Check device connection status using DepthAI device API
+src/cotton_detection_ros2/src/depthai_manager.cpp:329:    // TODO(hardware): Update FPS at runtime without reinitialization
+src/cotton_detection_ros2/src/depthai_manager.cpp:399:    // TODO(hardware): Get actual device temperature from DepthAI API
+src/cotton_detection_ros2/src/depthai_manager.cpp:473:    // TODO(hardware): Get camera calibration from DepthAI device EEPROM
+src/cotton_detection_ros2/scripts/cotton_detect_ros2_wrapper.py:266:        # TODO: These values should come from URDF or calibration
+src/cotton_detection_ros2/scripts/cotton_detect_ros2_wrapper.py:272:        t_base_to_camera.transform.translation.x = 0.0  # TODO: Get from calibration
+src/cotton_detection_ros2/scripts/OakDTools/ArucoDetectYanthra.py:144:                y_muliplication_factor = -1  # Hack for Coordinate System Unsync between OAK and Yanthra TODO
+src/cotton_detection_ros2/scripts/OakDTools/aicol.py:144:                y_muliplication_factor = -1  # Hack for Coordinate System Unsync between OAK and Yanthra TODO
+src/cotton_detection_ros2/scripts/OakDTools/CottonDetect_WorkingCode_6Apr2023.py:290:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/col.py:144:                y_muliplication_factor = -1  # Hack for Coordinate System Unsync between OAK and Yanthra TODO
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect-WithOutputFiles30APR2022.py:266:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_Jan212023.py:290:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetectPragati2.py:290:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_6Apr2023.py:376:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_Jan272023.py:292:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py:91:#TODO check whether file is open else exit
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py:92:#TODO Change file absolute path to a PARAMETER
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py:169:        # TODO check whether file is written
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect-WithOutputFiles24APR.py:165:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py:19:#TODO check whether file is open else exit
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py:20:#TODO Change file absolute path to a PARAMETER
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py:179:    time.sleep(5) #//TODO:Changing to 0.5 sec to test marc quickly
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py:268:    y_muliplication_factor= -1 #Hack for Coordinate Systm Unsync between OAK and YanthraTODO
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py:299:        # TODO check whether file is written
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py:107:#TODO check whether file is open else exit
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py:108:#TODO Change file absolute path to a PARAMETER
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py:196:        # TODO check whether file is written
+src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetectTemp.py:290:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/aruco_1+.py:143:                y_muliplication_factor = -1  # Hack for Coordinate System Unsync between OAK and Yanthra TODO
+src/cotton_detection_ros2/scripts/OakDTools/CottonDetect.py:352:    ## TODO pass down parent PID or find a reliable
+src/cotton_detection_ros2/scripts/OakDTools/CottonDetect.py:412:#TODO:We have to indicate it to yanthra
+src/cotton_detection_ros2/scripts/OakDTools/CottonDetect-WithOutputFiles.py:165:    ## TODO pass down parent PID or find a reliable

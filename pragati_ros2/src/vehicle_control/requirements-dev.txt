@@ -1,0 +1,39 @@
+# Development Dependencies for Vehicle Control System
+# These are additional tools needed for development, testing, and code quality
+
+# Testing Framework
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Code Quality & Formatting
+black>=22.0.0
+flake8>=5.0.0
+isort>=5.12.0
+mypy>=1.0.0
+
+# Documentation
+sphinx>=5.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Development Tools
+pre-commit>=3.0.0
+tox>=4.0.0
+
+# Debugging & Profiling
+pdb++>=0.10.3
+memory-profiler>=0.61.0
+line-profiler>=4.0.0
+
+# Optional Development Tools
+jupyter>=1.0.0  # For data analysis notebooks
+ipython>=8.0.0  # Enhanced Python shell
+
+# Enhanced dependencies for testing and hardware simulation
+psutil>=5.9.0  # System resource monitoring
+pyserial>=3.5  # Serial communication for hardware detection
+pyusb>=1.2.1  # USB device detection
+python-can>=4.0.0  # CAN bus simulation (optional)
+aiofiles>=23.0.0  # Async file operations
+aiohttp>=3.8.0  # Async HTTP client for testing

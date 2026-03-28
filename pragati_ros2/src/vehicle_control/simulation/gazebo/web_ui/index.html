@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Pragati Robot Control</title>
+    <link rel="stylesheet" href="style.css?v=2026022402">
+    <!-- roslibjs — WebSocket client for rosbridge -->
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+    <!-- nipplejs — virtual joystick -->
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+</head>
+<body>
+    <!-- Connection Bar -->
+    <header id="connection-bar">
+        <h1 id="app-title">Pragati Robot</h1>
+        <nav class="header-nav">
+            <a href="index.html" class="nav-link active">Dashboard</a>
+            <a href="sim_editor.html" class="nav-link">Edit Simulation</a>
+        </nav>
+        <div class="connection-config">
+            <label for="rosbridge-url">Bridge URL:</label>
+            <input type="text" id="rosbridge-url" placeholder="ws://localhost:9090">
+            <button id="connect-btn">Connect</button>
+            <span id="status-dot" class="dot disconnected"></span>
+            <span id="status-text">Disconnected</span>
+            <!-- Backend connection status -->
+            <span id="backend-dot" class="dot disconnected" title="Backend"></span>
+            <span id="backend-text">Backend</span>
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Panel: Joystick + Controls -->
+        <section id="control-panel">
+            <h2>Control</h2>
+
+            <!-- E-Stop Button -->
+            <button id="estop-btn" class="estop-inactive">E-STOP</button>
+
+            <!-- Speed Mode Selector -->
+            <div id="speed-selector">
+                <span class="label">Speed:</span>
+                <button class="speed-btn active" data-mode="slow">Slow</button>
+                <button class="speed-btn" data-mode="medium">Medium</button>
+                <button class="speed-btn" data-mode="fast">Fast</button>
+            </div>
+
+            <!-- Joystick Zone -->
+            <div id="joystick-zone"></div>
+
+            <!-- Commanded Velocity -->
+            <div id="commanded-vel">
+                <h3>Commanded</h3>
+                <div class="vel-row">
+                    <span class="vel-label">Linear X:</span>
+                    <span id="cmd-linear-x" class="vel-value">0.00</span>
+                    <span class="vel-unit">m/s</span>
+                </div>
+                <div class="vel-row">
+                    <span class="vel-label">Angular Z:</span>
+                    <span id="cmd-angular-z" class="vel-value">0.00</span>
+                    <span class="vel-unit">rad/s</span>
+                </div>
+            </div>
+
+            <!-- Teleport Controls -->
+            <div class="control-group">
+                <h3>Teleport</h3>
+                <div class="teleport-presets">
+                    <button class="teleport-btn" data-target="start">Start</button>
+                    <button class="teleport-btn" data-target="end">End</button>
+                    <button class="teleport-btn" data-target="spawn">Reset Pose</button>
+                </div>
+                <div class="teleport-custom">
+                    <button id="teleport-custom-toggle" class="toggle-btn">Custom...</button>
+                    <div id="teleport-custom-inputs" class="custom-inputs hidden">
+                        <div class="input-row">
+                            <label>X:</label>
+                            <input type="number" id="teleport-x" step="0.1" value="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Y:</label>
+                            <input type="number" id="teleport-y" step="0.1" value="0">
+                        </div>
+                        <div class="input-row">
+                            <label>Yaw (deg):</label>
+                            <input type="number" id="teleport-yaw" step="1" value="0">
+                        </div>
+                        <div class="input-row">
+                            <button id="teleport-go-btn" class="go-btn">Go</button>
+                            <span id="teleport-error" class="error-text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div id="teleport-status" class="status-text"></div>
+            </div>
+
+            <!-- Precision Movement Controls -->
+            <div class="control-group">
+                <h3>Precision Move</h3>
+                <div class="precision-grid">
+                    <div class="precision-row">
+                        <button class="precision-btn" data-action="turn_left_90">&#x21B6; 90&deg;</button>
+                        <button class="precision-btn" data-action="forward_1m">&#x2191; 1m</button>
+                        <button class="precision-btn" data-action="turn_right_90">&#x21B7; 90&deg;</button>
+                    </div>
+                    <div class="precision-row">
+                        <button class="precision-btn wide" data-action="forward_5m">&#x2191; 5m</button>
+                    </div>
+                    <div class="precision-row">
+                        <button class="precision-btn wide" data-action="forward_10m">&#x2191; 10m</button>
+                    </div>
+                </div>
+                <div id="precision-progress">
+                    <div id="precision-progress-bar">
+                        <div id="precision-progress-fill"></div>
+                    </div>
+                    <span id="precision-progress-text"></span>
+                </div>
+                <button id="precision-cancel-btn" class="cancel-btn hidden">Cancel</button>
+            </div>
+        </section>
+
+        <!-- Center Panel: Patterns + Drawing + Recording -->
+        <section id="pattern-panel">
+            <h2 id="pattern-panel-toggle" class="collapsible-header">Patterns <span class="collapse-icon">&#x25BC;</span></h2>
+
+            <div id="pattern-panel-content" class="collapsible-content">
+            <div id="pattern-categories">
+                <!-- PRAGATI / Letter Patterns -->
+                <div class="pattern-group">
+                    <h3>Letters</h3>
+                    <div id="letter-patterns" class="pattern-buttons">
+                        <!-- Populated by JS from backend -->
+                        <span class="loading-text">Connecting...</span>
+                    </div>
+                </div>
+                <!-- Geometric Patterns -->
+                <div class="pattern-group">
+                    <h3>Geometric</h3>
+                    <div id="geometric-patterns" class="pattern-buttons">
+                        <span class="loading-text">Connecting...</span>
+                    </div>
+                </div>
+                <!-- Field Patterns -->
+                <div class="pattern-group">
+                    <h3>Field</h3>
+                    <div id="field-patterns" class="pattern-buttons">
+                        <span class="loading-text">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Controls -->
+            <div id="exec-controls">
+                <button id="exec-start-btn" class="exec-btn" disabled>Start</button>
+                <button id="exec-stop-btn" class="exec-btn" disabled>Stop</button>
+                <button id="exec-pause-btn" class="exec-btn" disabled>Pause</button>
+            </div>
+
+            <!-- Speed Scale Slider -->
+            <div id="speed-scale-control">
+                <span class="label">Pattern Speed:</span>
+                <input type="range" id="speed-scale-slider" min="0.25" max="2.0" step="0.05" value="1.0">
+                <span id="speed-scale-value">1.0x</span>
+            </div>
+
+            <!-- Execution Status -->
+            <div id="exec-status">
+                <div id="exec-status-text">Idle</div>
+                <div id="exec-progress-bar">
+                    <div id="exec-progress-fill"></div>
+                </div>
+                <div id="exec-details">
+                    <span id="exec-pattern-name"></span>
+                    <span id="exec-elapsed"></span>
+                    <span id="exec-segments"></span>
+                </div>
+            </div>
+
+            <!-- Recording Controls -->
+            <div id="recording-controls">
+                <button id="record-btn" class="rec-idle">Record</button>
+                <label id="auto-record-label">
+                    <input type="checkbox" id="auto-record-checkbox"> Auto-record
+                </label>
+                <span id="rec-indicator" class="rec-hidden"></span>
+                <span id="rec-status-text"></span>
+            </div>
+
+            <!-- Drawing Canvas -->
+            <div id="drawing-section">
+                <h3>Draw Path</h3>
+                <canvas id="draw-canvas" width="280" height="140"></canvas>
+                <div id="draw-controls">
+                    <button id="draw-execute-btn" disabled>Execute</button>
+                    <button id="draw-clear-btn">Clear</button>
+                </div>
+            </div>
+            </div><!-- /collapsible-content -->
+        </section>
+
+        <!-- Right Panel: Telemetry + Sensors -->
+        <section id="telemetry-panel">
+            <h2>Telemetry</h2>
+
+            <!-- Steering Angles -->
+            <div class="telem-group">
+                <h3>Steering Angles (deg)</h3>
+                <div class="telem-row">
+                    <span class="telem-label">Front:</span>
+                    <span id="steer-front" class="telem-value">--</span>
+                </div>
+                <div class="telem-row">
+                    <span class="telem-label">Left:</span>
+                    <span id="steer-left" class="telem-value">--</span>
+                </div>
+                <div class="telem-row">
+                    <span class="telem-label">Right:</span>
+                    <span id="steer-right" class="telem-value">--</span>
+                </div>
+            </div>
+
+            <!-- Wheel Velocities -->
+            <div class="telem-group">
+                <h3>Wheel Velocities (rad/s)</h3>
+                <div class="telem-row">
+                    <span class="telem-label">Front:</span>
+                    <span id="vel-front" class="telem-value">--</span>
+                </div>
+                <div class="telem-row">
+                    <span class="telem-label">Left:</span>
+                    <span id="vel-left" class="telem-value">--</span>
+                </div>
+                <div class="telem-row">
+                    <span class="telem-label">Right:</span>
+                    <span id="vel-right" class="telem-value">--</span>
+                </div>
+            </div>
+
+            <!-- Joint States (Actual) -->
+            <div class="telem-group">
+                <h3>Joint States (Actual)</h3>
+                <div id="joint-states-container">
+                    <span class="telem-value">Waiting for data...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Sensors -->
+        <section id="sensor-panel">
+            <h2>Sensors</h2>
+
+            <div class="sensor-content">
+                <!-- Advanced Controller (EKF Sensor Fusion) — FIRST for visibility -->
+                <div class="sensor-group" id="ekf-panel">
+                    <h4>&#9881; Advanced Controller
+                        <label class="sensor-toggle">
+                            <input type="checkbox" id="ekf-fusion-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </h4>
+
+                    <!-- Status Badge -->
+                    <div class="ekf-status-bar">
+                        <span class="ekf-mode-badge" id="ekf-mode-badge">INITIALIZING</span>
+                        <span class="ekf-sources" id="ekf-sources">Starting...</span>
+                    </div>
+
+                    <!-- Fused Position -->
+                    <div class="ekf-section">
+                        <span class="ekf-section-title">Fused Position</span>
+                        <div class="sensor-row"><span class="sensor-label">X:</span><span id="ekf-fused-x" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Y:</span><span id="ekf-fused-y" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Heading:</span><span id="ekf-fused-heading" class="sensor-value">--</span><span class="sensor-unit">deg</span></div>
+                    </div>
+
+                    <!-- Drift Correction (fused - raw odom) -->
+                    <div class="ekf-section">
+                        <span class="ekf-section-title">Odom Drift Correction</span>
+                        <div class="sensor-row"><span class="sensor-label">&Delta;X:</span><span id="ekf-drift-x" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">&Delta;Y:</span><span id="ekf-drift-y" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">&Delta;&theta;:</span><span id="ekf-drift-theta" class="sensor-value">--</span><span class="sensor-unit">deg</span></div>
+                    </div>
+
+                    <!-- GPS in Local Frame -->
+                    <div class="ekf-section">
+                        <span class="ekf-section-title">GPS &rarr; Local</span>
+                        <div class="sensor-row"><span class="sensor-label">X:</span><span id="ekf-gps-x" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Y:</span><span id="ekf-gps-y" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    </div>
+
+                    <!-- Uncertainty -->
+                    <div class="ekf-section">
+                        <span class="ekf-section-title">Uncertainty (1&sigma;)</span>
+                        <div class="sensor-row"><span class="sensor-label">&sigma;<sub>x</sub>:</span><span id="ekf-sigma-x" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">&sigma;<sub>y</sub>:</span><span id="ekf-sigma-y" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">&sigma;<sub>&theta;</sub>:</span><span id="ekf-sigma-theta" class="sensor-value">--</span><span class="sensor-unit">deg</span></div>
+                    </div>
+
+                    <!-- Heading Divergence Warning -->
+                    <div class="ekf-section" id="ekf-heading-warn" style="display:none;">
+                        <span class="ekf-warn-text">&#9888; Heading divergence detected</span>
+                    </div>
+
+                    <!-- Tuning Sliders (collapsible) -->
+                    <details class="ekf-tuning">
+                        <summary>Tuning Parameters</summary>
+                        <div class="ekf-tuning-content">
+                            <div class="slider-row">
+                                <label>IMU Weight (&alpha;):</label>
+                                <input type="range" id="ekf-alpha-imu" min="0" max="1" step="0.05" value="0.7">
+                                <span id="ekf-alpha-imu-val">0.70</span>
+                            </div>
+                            <div class="slider-row">
+                                <label>Q Position:</label>
+                                <input type="range" id="ekf-q-pos" min="0.001" max="0.1" step="0.001" value="0.01">
+                                <span id="ekf-q-pos-val">0.010</span>
+                            </div>
+                            <div class="slider-row">
+                                <label>Q Heading:</label>
+                                <input type="range" id="ekf-q-theta" min="0.001" max="0.05" step="0.001" value="0.005">
+                                <span id="ekf-q-theta-val">0.005</span>
+                            </div>
+                            <div class="slider-row">
+                                <label>R Odom Pos:</label>
+                                <input type="range" id="ekf-r-odom" min="0.01" max="0.5" step="0.01" value="0.05">
+                                <span id="ekf-r-odom-val">0.050</span>
+                            </div>
+                            <div class="slider-row">
+                                <label>GPS Floor:</label>
+                                <input type="range" id="ekf-gps-floor" min="0.001" max="0.1" step="0.001" value="0.01">
+                                <span id="ekf-gps-floor-val">0.010</span>
+                            </div>
+                            <div class="slider-row">
+                                <label>CTE K<sub>p</sub>:</label>
+                                <input type="range" id="ekf-cte-kp" min="0" max="2" step="0.05" value="0.5">
+                                <span id="ekf-cte-kp-val">0.50</span>
+                            </div>
+                            <div class="ekf-tuning-buttons">
+                                <button id="ekf-apply-tuning" class="btn btn-small">Apply</button>
+                                <button id="ekf-reset-btn" class="btn btn-small btn-danger">Reset EKF</button>
+                            </div>
+                        </div>
+                    </details>
+
+                    <!-- Pattern Trail Visualization -->
+                    <div class="ekf-section" id="ekf-trail-section">
+                        <span class="ekf-section-title">Planned vs Actual Path</span>
+                        <canvas id="pattern-trail-canvas" width="280" height="200"></canvas>
+                        <div class="pattern-trail-legend">
+                            <span class="trail-legend-item"><span class="legend-dot planned"></span> Planned</span>
+                            <span class="trail-legend-item"><span class="legend-dot actual"></span> Actual</span>
+                        </div>
+                        <div id="pattern-trail-info" class="sensor-row" style="font-size:11px;color:#889;margin-top:4px;">
+                            Waiting for pattern execution...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMU Sub-panel -->
+                <div class="sensor-group" id="imu-panel">
+                    <h4>IMU <label class="sensor-toggle"><input type="checkbox" data-sensor="imu" checked><span class="toggle-slider"></span></label></h4>
+                    <div class="sensor-grid imu-grid">
+                        <div class="sensor-col">
+                            <span class="sensor-col-title">Orientation (deg)</span>
+                            <div class="sensor-row"><span class="sensor-label">Roll:</span><span id="imu-roll" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Pitch:</span><span id="imu-pitch" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Yaw:</span><span id="imu-yaw" class="sensor-value">--</span></div>
+                        </div>
+                        <div class="sensor-col">
+                            <span class="sensor-col-title">Ang. Vel (rad/s)</span>
+                            <div class="sensor-row"><span class="sensor-label">X:</span><span id="imu-gyro-x" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Y:</span><span id="imu-gyro-y" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Z:</span><span id="imu-gyro-z" class="sensor-value">--</span></div>
+                        </div>
+                        <div class="sensor-col">
+                            <span class="sensor-col-title">Accel (m/s&sup2;)</span>
+                            <div class="sensor-row"><span class="sensor-label">X:</span><span id="imu-accel-x" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Y:</span><span id="imu-accel-y" class="sensor-value">--</span></div>
+                            <div class="sensor-row"><span class="sensor-label">Z:</span><span id="imu-accel-z" class="sensor-value">--</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GPS Sub-panel -->
+                <div class="sensor-group" id="gps-panel">
+                    <h4>GPS / NavSat <label class="sensor-toggle"><input type="checkbox" data-sensor="gps" checked><span class="toggle-slider"></span></label></h4>
+                    <div class="sensor-row"><span class="sensor-label">Lat:</span><span id="gps-lat" class="sensor-value">--</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Lon:</span><span id="gps-lon" class="sensor-value">--</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Alt:</span><span id="gps-alt" class="sensor-value">--</span></div>
+                </div>
+
+                <!-- RTK GPS Sub-panel -->
+                <div class="sensor-group" id="rtk-panel">
+                    <h4>RTK GPS <label class="sensor-toggle"><input type="checkbox" data-sensor="rtk" checked><span class="toggle-slider"></span></label></h4>
+
+                    <!-- Fix Status Badge -->
+                    <div class="rtk-status-bar">
+                        <span class="rtk-fix-badge" id="rtk-fix-badge">SEARCHING</span>
+                        <span class="rtk-sats" id="rtk-sats" title="Satellites tracked">🛰️ --</span>
+                    </div>
+
+                    <!-- Convergence Progress Bar -->
+                    <div class="rtk-convergence">
+                        <span class="sensor-label">Convergence:</span>
+                        <div class="rtk-progress-bar">
+                            <div class="rtk-progress-fill" id="rtk-convergence-fill"></div>
+                        </div>
+                        <span class="rtk-progress-text" id="rtk-convergence-pct">0%</span>
+                    </div>
+
+                    <!-- Corrected Position -->
+                    <div class="rtk-section">
+                        <span class="rtk-section-title">Corrected Position</span>
+                        <div class="sensor-row"><span class="sensor-label">Lat:</span><span id="rtk-lat" class="sensor-value">--</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Lon:</span><span id="rtk-lon" class="sensor-value">--</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Alt:</span><span id="rtk-alt" class="sensor-value">--</span></div>
+                    </div>
+
+                    <!-- Precision -->
+                    <div class="rtk-section">
+                        <span class="rtk-section-title">Precision</span>
+                        <div class="sensor-row"><span class="sensor-label">H Acc:</span><span id="rtk-h-acc" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">V Acc:</span><span id="rtk-v-acc" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    </div>
+
+                    <!-- Baseline -->
+                    <div class="rtk-section">
+                        <span class="rtk-section-title">Baseline (Base → Rover)</span>
+                        <div class="sensor-row"><span class="sensor-label">Length:</span><span id="rtk-baseline-len" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Azimuth:</span><span id="rtk-baseline-az" class="sensor-value">--</span><span class="sensor-unit">°</span></div>
+                        <div class="sensor-row"><span class="sensor-label">East:</span><span id="rtk-baseline-e" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">North:</span><span id="rtk-baseline-n" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Up:</span><span id="rtk-baseline-u" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    </div>
+
+                    <!-- Corrections -->
+                    <div class="rtk-section">
+                        <span class="rtk-section-title">Corrections Applied</span>
+                        <div class="sensor-row"><span class="sensor-label">East:</span><span id="rtk-corr-e" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">North:</span><span id="rtk-corr-n" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Up:</span><span id="rtk-corr-u" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    </div>
+
+                    <!-- Base Station Info -->
+                    <div class="rtk-section">
+                        <span class="rtk-section-title">Base Station</span>
+                        <div class="sensor-row"><span class="sensor-label">Lat:</span><span id="rtk-base-lat" class="sensor-value">--</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Lon:</span><span id="rtk-base-lon" class="sensor-value">--</span></div>
+                        <div class="sensor-row"><span class="sensor-label">Epoch:</span><span id="rtk-epoch" class="sensor-value">--</span></div>
+                    </div>
+                </div>
+
+                <!-- Odometry Sub-panel -->
+                <div class="sensor-group" id="odom-panel">
+                    <h4>Odometry <label class="sensor-toggle"><input type="checkbox" data-sensor="odom" checked><span class="toggle-slider"></span></label></h4>
+                    <div class="sensor-row"><span class="sensor-label">X:</span><span id="odom-x" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Y:</span><span id="odom-y" class="sensor-value">--</span><span class="sensor-unit">m</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Heading:</span><span id="odom-heading" class="sensor-value">--</span><span class="sensor-unit">deg</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Lin Vel:</span><span id="odom-lin-vel" class="sensor-value">--</span><span class="sensor-unit">m/s</span></div>
+                    <div class="sensor-row"><span class="sensor-label">Ang Vel:</span><span id="odom-ang-vel" class="sensor-value">--</span><span class="sensor-unit">rad/s</span></div>
+                </div>
+
+                <!-- Camera Sub-panel -->
+                <div class="sensor-group" id="camera-panel">
+                    <h4>Front Camera
+                        <button id="camera-fullscreen-btn" class="btn btn-small" title="Toggle fullscreen" style="margin-left:8px;font-size:11px;padding:2px 8px;">&#x26F6;</button>
+                    </h4>
+                    <!-- Feed Toggle -->
+                    <div class="camera-feed-toggle">
+                        <button id="feed-toggle-raw" class="feed-toggle-btn active" title="Raw camera feed">Raw</button>
+                        <button id="feed-toggle-detection" class="feed-toggle-btn" title="Cotton detection overlay">Detection</button>
+                    </div>
+                    <div id="camera-feed-wrapper">
+                        <img id="camera-feed" alt="Front camera feed">
+                        <div id="camera-no-signal">No Signal</div>
+                        <!-- Detection Stats Overlay -->
+                        <div id="detection-stats-overlay" class="detection-stats-overlay" style="display:none;">
+                            <div class="det-stat-row"><span class="det-stat-label">Cotton:</span><span id="det-cotton-count" class="det-stat-value">0</span></div>
+                            <div class="det-stat-row"><span class="det-stat-label">Not Pickable:</span><span id="det-not-pickable-count" class="det-stat-value">0</span></div>
+                            <div class="det-stat-row"><span class="det-stat-label">Total:</span><span id="det-total-count" class="det-stat-value">0</span></div>
+                            <div class="det-stat-row"><span class="det-stat-label">Time:</span><span id="det-processing-time" class="det-stat-value">--</span><span class="det-stat-unit">ms</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Odometry Trail Mini-Map -->
+                <div class="sensor-group" id="odom-trail-panel">
+                    <h4>Odometry Trail</h4>
+                    <canvas id="odom-trail-canvas" width="250" height="250"></canvas>
+                    <button id="odom-trail-clear" class="clear-trail-btn">Clear Trail</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js?v=2026022402"></script>
+</body>
+</html>

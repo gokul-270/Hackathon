@@ -1,0 +1,118 @@
+# ROS2 Build Artifacts
+build/
+install/
+log/
+.logs/
+
+# ROS2 Cross-compile Artifacts (RPi)
+build_rpi/
+install_rpi/
+
+# Python
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+*.egg
+dist/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+*.tar.gz
+*.zip
+
+# Test outputs (ignore raw data, track summaries)
+test_output/coverage/
+test_output/regression/
+test_output/integration/
+!test_output/summaries/
+*.gcda
+*.gcno
+*.gcov
+.coverage
+
+# Python virtual environment
+venv/
+.venv/
+env/
+
+# Build caches and temporary files
+.ccache/
+.pytest_cache/
+.tmp/
+.restored/
+
+# Build cache
+.ccache/
+
+# ROS2 runtime logs
+logs/ros2/
+
+# Stale build folders in source
+**/build_test/
+
+# AI agent configs
+.agent/
+.factory/
+.gemini/
+.opencode/*
+!.opencode/skills/
+!.opencode/command/
+.github/prompts/
+.github/skills/
+
+# Machine-specific generated files (setup_environment.sh)
+configs/
+scripts/maintenance/daily_cleanup.sh
+
+# Video recordings from demo patterns
+videos/
+
+# Runtime artifacts
+centroid.txt
+data/dashboard.db
+
+# Web dashboard runtime data (sessions, runtime DBs)
+web_dashboard/data/session_*.json
+web_dashboard/data/*.db
+web_dashboard/data/pid_sessions/
+web_dashboard/data/audit.jsonl
+web_dashboard/data/analysis_results/
+web_dashboard/data/sync_config.json
+web_dashboard/data/pid_benchmarks/
+web_dashboard/data/operations_logs/
+
+# Node.js (simulation web UI tests)
+node_modules/
+test-results/
+
+# Generated git version file for RPi builds (created by sync.sh)
+.git_version
+
+# Field trial log collection (pulled by sync.sh --collect-logs)
+collected_logs/
+
+# Machine-specific environment config
+config.env
+
+# Temporary session files
+session.json
+test_detail.json
+
+# E2E test artifacts
+web_dashboard/config_defaults/pid_profiles/mg6010/e2e_test_profile.yaml
+web_dashboard/config/entities.yaml

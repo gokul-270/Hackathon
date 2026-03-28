@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati Sim — Testing UI</title>
+    <link rel="stylesheet" href="testing_ui.css?v=20260328a">
+    <!-- ROSLIB.js — WebSocket bridge to ROS2 -->
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+    <!-- nipplejs — virtual joystick -->
+    <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.10.2/dist/nipplejs.min.js"></script>
+</head>
+<body>
+    <!-- ===== TOP BAR ===== -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <span class="logo">🤖</span>
+            <h1>Pragati — Testing Simulation</h1>
+        </div>
+        <div class="top-bar-center">
+            <span class="conn-badge" id="ros-badge" title="rosbridge">
+                <span class="dot red" id="ros-dot"></span> rosbridge
+            </span>
+            <span class="conn-badge" id="gz-badge" title="Gazebo">
+                <span class="dot red" id="gz-dot"></span> Gazebo
+            </span>
+            <span class="conn-badge" id="kin-badge" title="Kinematics">
+                <span class="dot red" id="kin-dot"></span> Kinematics
+            </span>
+        </div>
+        <div class="top-bar-right">
+            <input type="text" id="rosbridge-url" placeholder="ws://host:9090" value="">
+            <button id="btn-connect" class="btn btn-small btn-primary">Connect</button>
+        </div>
+    </header>
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <div class="main-layout">
+        <!-- ──────────── LEFT PANEL ──────────── -->
+        <div class="panel left-panel">
+            <!-- Spawn Section -->
+            <section class="section">
+                <h2>🚀 Spawn Model</h2>
+                <div class="spawn-controls">
+                    <select id="urdf-select"><option value="">Loading...</option></select>
+                    <div class="spawn-buttons">
+                        <button id="btn-spawn" class="btn btn-primary">Spawn</button>
+                        <button id="btn-respawn" class="btn btn-secondary">Re-Spawn</button>
+                    </div>
+                </div>
+                <div id="spawn-status" class="status-msg"></div>
+            </section>
+
+            <!-- Arm 1 Joint Control -->
+            <section class="section">
+                <h2>🦾 Arm 1 — Joints</h2>
+                <div class="joint-group">
+                    <div class="joint-row">
+                        <label>J3 <small>(Tilt)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint3"
+                               data-topic="/joint3_cmd" data-unit="rad"
+                               min="-0.9" max="0" step="0.01" value="0">
+                        <span class="joint-val" id="val-joint3">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J4 <small>(Lateral)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint4"
+                               data-topic="/joint4_cmd" data-unit="m"
+                               min="-0.25" max="0.35" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint4">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J5 <small>(Extend)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint5"
+                               data-topic="/joint5_cmd" data-unit="m"
+                               min="0" max="0.45" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint5">0.000</span>
+                    </div>
+                    <button class="btn btn-small btn-secondary" data-reset-arm="arm1">Reset Arm 1</button>
+                </div>
+            </section>
+
+            <!-- Arm 2 Joint Control -->
+            <section class="section">
+                <h2>🦾 Arm 2 — Joints</h2>
+                <div class="joint-group">
+                    <div class="joint-row">
+                        <label>J3c <small>(Tilt)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint3_copy"
+                               data-topic="/joint3_copy_cmd" data-unit="rad"
+                               min="-0.9" max="0" step="0.01" value="0">
+                        <span class="joint-val" id="val-joint3_copy">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J4c <small>(Lateral)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint4_copy"
+                               data-topic="/joint4_copy_cmd" data-unit="m"
+                               min="-0.25" max="0.35" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint4_copy">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J5c <small>(Extend)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint5_copy"
+                               data-topic="/joint5_copy_cmd" data-unit="m"
+                               min="0" max="0.45" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint5_copy">0.000</span>
+                    </div>
+                    <button class="btn btn-small btn-secondary" data-reset-arm="arm2">Reset Arm 2</button>
+                </div>
+            </section>
+
+            <!-- Arm 3 Joint Control -->
+            <section class="section">
+                <h2>🦾 Arm 3 — Joints</h2>
+                <div class="joint-group">
+                    <div class="joint-row">
+                        <label>J3c1 <small>(Tilt)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint3_copy1"
+                               data-topic="/arm_joint3_copy1_cmd" data-unit="rad"
+                               min="-0.9" max="0" step="0.01" value="0">
+                        <span class="joint-val" id="val-joint3_copy1">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J4c1 <small>(Lateral)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint4_copy1"
+                               data-topic="/arm_joint4_copy1_cmd" data-unit="m"
+                               min="-0.25" max="0.35" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint4_copy1">0.000</span>
+                    </div>
+                    <div class="joint-row">
+                        <label>J5c1 <small>(Extend)</small></label>
+                        <input type="range" class="joint-slider" id="slider-joint5_copy1"
+                               data-topic="/arm_joint5_copy1_cmd" data-unit="m"
+                               min="0" max="0.45" step="0.005" value="0">
+                        <span class="joint-val" id="val-joint5_copy1">0.000</span>
+                    </div>
+                    <button class="btn btn-small btn-secondary" data-reset-arm="arm3">Reset Arm 3</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ──────────── CENTER PANEL ──────────── -->
+        <div class="panel center-panel">
+            <!-- Joystick -->
+            <section class="section joystick-section">
+                <h2>🕹️ Vehicle Control</h2>
+                <div id="joystick-zone" class="joystick-zone">
+                    <div class="crosshair-h"></div>
+                    <div class="crosshair-v"></div>
+                </div>
+                <div class="cmd-display">
+                    <span>Linear: <strong id="cmd-linear">0.00</strong> m/s</span>
+                    <span>Angular: <strong id="cmd-angular">0.00</strong> rad/s</span>
+                </div>
+            </section>
+
+            <!-- Speed Modes -->
+            <section class="section">
+                <div class="speed-modes">
+                    <button class="speed-btn active" data-mode="slow">🐢 Slow</button>
+                    <button class="speed-btn" data-mode="medium">🐇 Medium</button>
+                    <button class="speed-btn" data-mode="fast">🚀 Fast</button>
+                </div>
+            </section>
+
+            <!-- E-STOP -->
+            <section class="section estop-section">
+                <button id="btn-estop" class="estop-btn">E-STOP</button>
+                <div class="estop-hint">Space / Esc to toggle</div>
+            </section>
+
+            <!-- Keyboard info -->
+            <section class="section keyboard-hint">
+                <div>↑↓ Forward/Back &nbsp; ←→ Turn &nbsp; Space E-STOP</div>
+            </section>
+
+            <!-- ──────── CUSTOM JOINT SEQUENCE ──────── -->
+            <section class="section custom-seq-section">
+                <h2>🎯 Custom Joint Sequence</h2>
+                <!-- Arm selector -->
+                <div class="seq-control-row">
+                    <label>Arm:
+                        <select id="seq-arm-select">
+                            <option value="arm1">Arm 1</option>
+                            <option value="arm2">Arm 2</option>
+                            <option value="arm3">Arm 3</option>
+                        </select>
+                    </label>
+                    <!-- Repeat control -->
+                    <label>Repeat:
+                        <input type="number" id="seq-repeat-count" value="1" min="1" step="1" class="seq-input seq-repeat-input">
+                    </label>
+                    <label class="seq-loop-label">
+                        <input type="checkbox" id="seq-loop"> Loop ∞
+                    </label>
+                </div>
+                <!-- Sequence table -->
+                <table class="seq-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>J3 (rad)</th>
+                            <th>J4 (m)</th>
+                            <th>J5 (m)</th>
+                            <th>Hold (s)</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="seq-table-body"></tbody>
+                </table>
+                <!-- Table action buttons -->
+                <div class="seq-table-actions">
+                    <button id="seq-btn-add-row" class="btn btn-small btn-secondary">+ Add Row</button>
+                </div>
+                <!-- Run controls -->
+                <div class="seq-run-buttons">
+                    <button id="seq-btn-start" class="btn btn-primary">▶ Start</button>
+                    <button id="seq-btn-stop" class="btn btn-danger" disabled>⏹ Stop</button>
+                </div>
+                <!-- Progress -->
+                <div id="seq-progress" class="seq-progress" style="display:none;">
+                    <div class="progress-bar"><div id="seq-progress-fill" class="progress-fill"></div></div>
+                    <span id="seq-progress-label">—</span>
+                </div>
+            </section>
+
+            <!-- ──────── ARM COSINE TEST ──────── -->
+            <section class="section arm-test-section">
+                <h2>🧪 Arm Cosine Test</h2>
+                <p class="test-desc">
+                    Extends J5 using cosine relation: <code>J5 = 0.25 / cos(θ)</code><br>
+                    J3 = −θ (tilt), J4 = 0 (homing), θ: 0°→75° in 15° steps
+                </p>
+                <div class="test-config">
+                    <label>Adj (m): <input type="number" id="test-adj" value="0.25" min="0.05" max="0.45" step="0.01" class="test-input"></label>
+                    <label>Step (°): <input type="number" id="test-step" value="15" min="5" max="45" step="5" class="test-input"></label>
+                    <label>Max θ (°): <input type="number" id="test-max-theta" value="75" min="15" max="90" step="5" class="test-input"></label>
+                    <label>Hold (s): <input type="number" id="test-hold" value="5" min="0.5" max="15" step="0.5" class="test-input"></label>
+                </div>
+                <div class="test-arms">
+                    <label><input type="checkbox" id="test-arm1" checked> Arm 1</label>
+                    <label><input type="checkbox" id="test-arm2" checked> Arm 2</label>
+                    <label><input type="checkbox" id="test-arm3" checked> Arm 3</label>
+                </div>
+                <div class="test-buttons">
+                    <button id="btn-run-test" class="btn btn-primary">▶ Run Test</button>
+                    <button id="btn-stop-test" class="btn btn-danger" disabled>⏹ Stop</button>
+                    <button id="btn-home-all" class="btn btn-secondary">🏠 Home All</button>
+                </div>
+                <div id="test-progress" class="test-progress" style="display:none;">
+                    <div class="progress-bar"><div id="test-progress-fill" class="progress-fill"></div></div>
+                    <span id="test-progress-label">—</span>
+                </div>
+                <table id="test-table" class="test-table">
+                    <thead>
+                        <tr>
+                            <th>θ (°)</th><th>J3 (rad)</th><th>J5 calc</th><th>J5 cmd</th><th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="test-table-body"></tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- ──────────── RIGHT PANEL ──────────── -->
+        <div class="panel right-panel">
+            <!-- Telemetry: Steering & Wheels -->
+            <section class="section">
+                <h2>📊 Vehicle Telemetry</h2>
+                <div class="telemetry-grid">
+                    <div class="telem-item">
+                        <label>Front Steer</label>
+                        <span id="telem-steer-front">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Left Steer</label>
+                        <span id="telem-steer-left">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Right Steer</label>
+                        <span id="telem-steer-right">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Front Wheel</label>
+                        <span id="telem-wheel-front">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Left Wheel</label>
+                        <span id="telem-wheel-left">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Right Wheel</label>
+                        <span id="telem-wheel-right">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Telemetry: Arm Joints -->
+            <section class="section">
+                <h2>🦾 Arm Telemetry</h2>
+                <div class="telemetry-grid">
+                    <div class="telem-item">
+                        <label>arm_joint3</label>
+                        <span id="telem-arm_joint3">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint4</label>
+                        <span id="telem-arm_joint4">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint5</label>
+                        <span id="telem-arm_joint5">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint3_copy</label>
+                        <span id="telem-arm_joint3_copy">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint4_copy</label>
+                        <span id="telem-arm_joint4_copy">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint5_copy</label>
+                        <span id="telem-arm_joint5_copy">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint3_copy1</label>
+                        <span id="telem-arm_joint3_copy1">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint4_copy1</label>
+                        <span id="telem-arm_joint4_copy1">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>arm_joint5_copy1</label>
+                        <span id="telem-arm_joint5_copy1">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Odometry -->
+            <section class="section">
+                <h2>📍 Odometry</h2>
+                <div class="telemetry-grid">
+                    <div class="telem-item">
+                        <label>X</label>
+                        <span id="telem-odom-x">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Y</label>
+                        <span id="telem-odom-y">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Heading</label>
+                        <span id="telem-odom-theta">—</span>
+                    </div>
+                    <div class="telem-item">
+                        <label>Speed</label>
+                        <span id="telem-odom-speed">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Log -->
+            <section class="section">
+                <h2>📝 Log</h2>
+                <div id="log-area" class="log-area"></div>
+            </section>
+        </div>
+    </div>
+
+    <script src="testing_ui.js?v=20260328a"></script>
+</body>
+</html>

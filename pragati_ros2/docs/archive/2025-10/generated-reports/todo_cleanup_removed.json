@@ -1,0 +1,338 @@
+[
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 229,
+    "text": "TODO : Removed from here and called from the odrive_hw_interface->read() in",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 18,
+    "text": "TODO.*(?:ros1|ROS1|migrate.*ros2|NodeHandle|rospy)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 21,
+    "text": "TODO.*(?:CMakeLists|package\\.xml|colcon.*build|fix.*build)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 24,
+    "text": "TODO.*(?:CAN.*bitrate.*mismatch|motor_on\\(\\).*command|launch.*MG6010|safety.*limits)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 27,
+    "text": "TODO.*(?:Integrate.*ROS2|topic.*communication|Remove.*legacy.*service|Thread.*safe.*data|signal.*handlers)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 30,
+    "text": "TODO.*(?:DONE|COMPLETE|IMPLEMENTED|RESOLVED|FIXED)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 33,
+    "text": "TODO.*(?:Fix.*protocol.*implementation|Create.*test.*nodes)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 38,
+    "text": "TODO.*(?:ODrive|odrive)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 41,
+    "text": "TODO.*(?:RealSense|realsense)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 44,
+    "text": "TODO.*(?:ROS1.*bridge|ros1.*bridge)',",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 47,
+    "text": "TODO.*(?:old.*config.*format|legacy.*config)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 50,
+    "text": "TODO.*(?:Melodic|melodic)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 53,
+    "text": "TODO.*(?:CANopen.*MG6010|canopen.*mg)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 56,
+    "text": "TODO.*(?:intermediate.*service.*layer)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 59,
+    "text": "TODO.*(?:temp.*file.*polling)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 62,
+    "text": "TODO.*(?:Manual.*parameter.*loading)',",
+    "reason": "obsolete"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 238,
+    "text": "todo in completed[:50]:  # Show first 50",
+    "reason": "completed"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 334,
+    "text": "TODO CLEANUP - Removing Completed & Obsolete Items\")",
+    "reason": "completed"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 3051,
+    "text": "TODO: remove this except clause when python/cpython#103632 is fixed.",
+    "reason": "completed"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 110,
+    "text": "TODO cleanup (remove 1,400 done/obsolete items)",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/STATUS_REALITY_MATRIX.md",
+    "line": 68,
+    "text": "TODO comments in `depthai_manager.cpp`; `MIGRATION_GUIDE.md` references future work. | Not implemented. | Leave as future work; ensure docs frame as TODO.",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TRUTH_PRECEDENCE_AND_SCORING.md",
+    "line": 195,
+    "text": "TODO/FIXME in \"completed\" features",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 32,
+    "text": "TODO: Fix CAN bitrate mismatch` \u2705 Fixed (250kbps)",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 33,
+    "text": "TODO: Implement motor_on() command` \u2705 Already present",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 34,
+    "text": "TODO: Create launch files for MG6010` \u2705 Already exist",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 35,
+    "text": "TODO: Add safety limits` \u2705 Implemented",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 46,
+    "text": "TODO: Integrate with ROS2` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 47,
+    "text": "TODO: Add topic-based communication` \u2705 Implemented",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 48,
+    "text": "TODO: Remove legacy service` \u2705 Removed Oct 6",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 49,
+    "text": "TODO: Thread-safe data handling` \u2705 Mutex-protected buffers",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 50,
+    "text": "TODO: Add signal handlers` \u2705 SIGUSR1/SIGUSR2 implemented",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 60,
+    "text": "TODO: Remove ros:: patterns` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 61,
+    "text": "TODO: Migrate to rclcpp` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 62,
+    "text": "TODO: Update NodeHandle` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 63,
+    "text": "TODO: Convert services to ROS2` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 64,
+    "text": "TODO: Update launch files to Python` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 74,
+    "text": "TODO: Fix CMakeLists.txt` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 75,
+    "text": "TODO: Update package.xml` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 76,
+    "text": "TODO: Resolve dependencies` \u2705 Complete",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 77,
+    "text": "TODO: Test colcon build` \u2705 Passing",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 89,
+    "text": "TODO: Improve ODrive communication` \u274c Using MG6010 now",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 90,
+    "text": "TODO: Add ODrive calibration` \u274c Not needed",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 91,
+    "text": "TODO: Test ODrive multi-motor` \u274c Not using ODrive",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 102,
+    "text": "TODO: Fix RealSense integration` \u274c Reverted to OAK-D Lite",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 103,
+    "text": "TODO: Add ROS1 bridge` \u274c Full ROS2 migration",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 104,
+    "text": "TODO: Support old config format` \u274c YAML standard",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 105,
+    "text": "TODO: Test on ROS Melodic` \u274c ROS2 Jazzy only",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 115,
+    "text": "TODO: Implement CANopen for MG6010` \u274c Using proprietary protocol",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 116,
+    "text": "TODO: Add intermediate service layer` \u274c Direct topic communication",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 117,
+    "text": "TODO: Create temp file polling` \u274c Signal-based",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 118,
+    "text": "TODO: Manual parameter loading` \u274c YAML-based",
+    "reason": "obsolete"
+  },
+  {
+    "file": "docs/PHASE0_PYTHON_CRITICAL_FIXES.md",
+    "line": 200,
+    "text": "TODO: Implement restart logic if needed  \u2190 NEVER DONE",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/cleanup/DELETION_COMPLETE.md",
+    "line": 166,
+    "text": "todo list and will be done next.",
+    "reason": "completed"
+  },
+  {
+    "file": "docs/cleanup/DOCUMENTATION_RECONCILIATION_PLAN.md",
+    "line": 41,
+    "text": "TODO placeholders blocked production; reconciled Oct 2025 with clear \"implemented + backlog\" messaging. | \u2705 Done \u2014 ensure future docs point to Status Matrix; enhancements remain in backlog (trend logging, telemetry export).",
+    "reason": "completed"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 26,
+    "text": "TODO placeholders instead of real safety logic (joint limits, velocity checks, temperature monitoring, communication timeouts)",
+    "reason": "completed"
+  },
+  {
+    "file": ".restored/8ac7d2e/discrepancy_log.md",
+    "line": 231,
+    "text": "TODO but not implemented",
+    "reason": "completed"
+  }
+]

@@ -1,0 +1,35 @@
+[Unit]
+Description=Pragati Web Dashboard (FastAPI)
+After=network-online.target
+Wants=network-online.target
+# No hard dependency on ROS2 launch services — dashboard is best-effort monitoring.
+# It polls RPi health over HTTP and shows fleet status even if ROS2 nodes are down.
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/pragati_ros2/web_dashboard
+# Use bash -c to source ROS2 setup.bash so all env vars (PYTHONPATH, LD_LIBRARY_PATH,
+# AMENT_PREFIX_PATH) are set correctly for rclpy imports. This is more maintainable than
+# hardcoding paths in Environment= lines since ROS2 vendor library paths are extensive.
+ExecStart=/bin/bash -c '\
+  if [ -f /opt/ros/jazzy/setup.bash ]; then source /opt/ros/jazzy/setup.bash; fi && \
+  if [ -f /home/ubuntu/pragati_ros2/install/setup.bash ]; then source /home/ubuntu/pragati_ros2/install/setup.bash; fi && \
+  export PYTHONPATH="/home/ubuntu/pragati_ros2/web_dashboard:$${PYTHONPATH}" && \
+  exec /usr/bin/python3 -m uvicorn backend.dashboard_server:app --host 0.0.0.0 --port 8090 --log-level info'
+Restart=on-failure
+RestartSec=10
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# ROS2 domain/DDS config — must match arm_launch/vehicle_launch services so the
+# dashboard can discover the same ROS2 nodes. The EnvironmentFile provides
+# ROS_DOMAIN_ID, ROS_LOCALHOST_ONLY, RMW_IMPLEMENTATION (written by sync.sh --provision).
+# The '-' prefix makes the file optional — dashboard still starts without it.
+EnvironmentFile=-/etc/default/pragati-arm
+EnvironmentFile=-/etc/default/pragati-vehicle
+# Dashboard config is read from WorkingDirectory/config/dashboard.yaml
+# Role is set per-RPi by sync.sh --provision (sed on dashboard.yaml)
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

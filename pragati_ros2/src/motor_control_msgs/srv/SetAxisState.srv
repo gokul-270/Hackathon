@@ -1,0 +1,10 @@
+# Set Axis State Service
+# Manually set ODrive axis state
+
+# Request
+int64 joint_id       # Joint ID or -1 for all joints
+uint32 axis_state    # ODrive axis state (1=IDLE, 8=CLOSED_LOOP_CONTROL, etc.)
+---
+# Response
+bool success
+string reason

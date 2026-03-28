@@ -1,0 +1,55 @@
+# Documentation Consolidation Sources Inventory
+# Generated: 2025-10-15
+# Branch: docs/consolidation-2025-10-15
+
+## Primary TODO/Task Documents (require consolidation)
+docs/TODO_MASTER.md                                  # ~2,540 items tracked
+docs/project-management/REMAINING_TASKS.md           # 19/41 tasks remaining
+docs/project-management/GAP_ANALYSIS_OCT2025.md      # 10 tasks, gap analysis
+docs/project-management/IMPLEMENTATION_PLAN_OCT2025.md # 3-tier, 6-week plan
+docs/project-management/COMPLETION_CHECKLIST.md       # Cotton detection migration checklist
+
+## Status/Reality Check Documents
+docs/STATUS_REALITY_MATRIX.md                        # Reality vs claims reconciliation
+docs/PRODUCTION_SYSTEM_EXPLAINED.md                  # System overview (v4.2.0)
+docs/production-system/01-SYSTEM_OVERVIEW.md         # Production system doc
+
+## Enhancement/Phase 2 Documents
+docs/enhancements/PHASE_2_ROADMAP.md                 # Production readiness roadmap
+docs/enhancements/WEB_DASHBOARD_ENHANCEMENT_PLAN.md  # Dashboard enhancements
+
+## Progress Tracking
+docs/project-management/REORGANIZATION_PROGRESS.md    # Documentation reorganization
+
+## Supporting/Generated Files
+docs/_code_todos_2025-10-15.txt                      # Code TODO extraction
+docs/_doc_checklist_2025-10-15.txt                   # Doc checklist items
+docs/_inventory_2025-10-15.txt                       # File inventory
+docs/_generated/todo_cleanup_kept.json               # Kept TODOs (from previous cleanup)
+docs/_generated/todo_cleanup_removed.json            # Removed TODOs (from previous cleanup)
+
+## Existing Tooling
+scripts/maintenance/cleanup_todos.py                 # TODO cleanup script (reusable)
+
+## Archive Folders (reference only, do not modify)
+docs/archive/2025-10/                                # Historical archive
+docs/archive/2025-10-audit/                          # Audit artifacts
+docs/archive/2025-10-analysis/                       # Analysis artifacts
+
+## Statistics from TODO_MASTER.md
+Total items: ~2,540
+- Already done: ~800 (32%) -> needs archiving
+- Obsolete: ~600 (24%) -> needs archiving  
+- Active backlog: ~700 (28%)
+- Future/parked: ~370 (15%)
+- Code TODOs: ~70 (3%)
+
+## Hardware Dependencies (from TODO_MASTER.md)
+Motor Control: 19-26h validation needed
+Cotton Detection: 10-18h validation needed
+Yanthra Move: 10-15h validation needed
+Total hardware-dependent: 38-52h
+
+## Production Readiness Gap
+Current: Phase 1 (stop-and-go, manual control, NOT production ready)
+Required: Phase 2 (continuous motion, autonomous, multi-cotton detection)

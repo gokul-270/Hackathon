@@ -1,0 +1,54 @@
+Loading content index...
+Index loaded: 6072 unique content hashes
+
+Checking: docs/_consolidation_sources.txt
+# docs/_consolidation_sources.txt: 11 preserved, 0 NOT preserved
+
+Loading content index...
+Index loaded: 6072 unique content hashes
+
+Checking: docs/_code_todos_2025-10-15.txt
+# docs/_code_todos_2025-10-15.txt: 1 preserved, 0 NOT preserved
+
+Loading content index...
+Index loaded: 6072 unique content hashes
+
+Checking: docs/_doc_checklist_2025-10-15.txt
+# docs/_doc_checklist_2025-10-15.txt: 1 preserved, 0 NOT preserved
+
+Loading content index...
+Index loaded: 6072 unique content hashes
+
+Checking: docs/_doc_signals_2025-10-15.txt
+# docs/_doc_signals_2025-10-15.txt: 1 preserved, 0 NOT preserved
+
+Loading content index...
+Index loaded: 6072 unique content hashes
+
+Checking: docs/_inventory_2025-10-15.txt
+# docs/_inventory_2025-10-15.txt: 1 preserved, 0 NOT preserved
+
+
+================================================================================
+SUMMARY:
+  Total preserved: 15
+  Total NOT preserved: 0
+  Preservation rate: 100.0%
+================================================================================
+SOURCE_FILE	PARA_NO	SHA1	PREVIEW	PRESERVED	FOUND_IN
+======================================================================================================================================================
+docs/_consolidation_sources.txt	1	4f3d031fac025c34fb3bff28d78021310e70de93	# Documentation Consolidation Sources Inventory # Generated: 2025-10-15 # Branch: docs/consolidation	YES	docs/_consolidation_sources.txt:1
+docs/_consolidation_sources.txt	2	85fbe7fb2473f36c6e7a0ed4247f645110f27ef5	## Primary TODO/Task Documents (require consolidation) docs/TODO_MASTER.md # ~2,540 items tracked do	YES	docs/_consolidation_sources.txt:2
+docs/_consolidation_sources.txt	3	3447e5cc733a6d3c117049504f6ff8b93349f7ce	## Status/Reality Check Documents docs/STATUS_REALITY_MATRIX.md # Reality vs claims reconciliation d	YES	docs/_consolidation_sources.txt:3
+docs/_consolidation_sources.txt	4	315ccb1453e3a3cb59a864426cddbb8413edc0d3	## Enhancement/Phase 2 Documents docs/enhancements/PHASE_2_ROADMAP.md # Production readiness roadmap	YES	docs/_consolidation_sources.txt:4
+docs/_consolidation_sources.txt	5	60c01177bf211e2937cb61f7695e9f74f94dc36d	## Progress Tracking docs/project-management/REORGANIZATION_PROGRESS.md # Documentation reorganizati	YES	docs/_consolidation_sources.txt:5
+docs/_consolidation_sources.txt	6	72f86601e1ab4961bd813d3e32fb2ad3cdd71741	## Supporting/Generated Files docs/_code_todos_2025-10-15.txt # Code TODO extraction docs/_doc_check	YES	docs/_consolidation_sources.txt:6
+docs/_consolidation_sources.txt	7	cbfdbf8bbae0fe2c324e93c249ae1fab2ef7dfa2	## Existing Tooling scripts/maintenance/cleanup_todos.py # TODO cleanup script (reusable)	YES	docs/_consolidation_sources.txt:7
+docs/_consolidation_sources.txt	8	d6a714e1bd95c8070a26c330be18ac2ffcfe3db9	## Archive Folders (reference only, do not modify) docs/archive/2025-10/ # Historical archive docs/a	YES	docs/_consolidation_sources.txt:8
+docs/_consolidation_sources.txt	9	e517db12e067da0cf3f286ecf5ed97f5591c73e9	## Statistics from TODO_MASTER.md Total items: ~2,540 - Already done: ~800 (32%) -> needs archiving 	YES	docs/_consolidation_sources.txt:9
+docs/_consolidation_sources.txt	10	bac70b600bb7fa928ef7ff1c881b25a2e5ef147b	## Hardware Dependencies (from TODO_MASTER.md) Motor Control: 19-26h validation needed Cotton Detect	YES	docs/_consolidation_sources.txt:10
+docs/_consolidation_sources.txt	11	dc181a3fa710f2e91c2b7d3eee96304a075c25d3	## Production Readiness Gap Current: Phase 1 (stop-and-go, manual control, NOT production ready) Req	YES	docs/_consolidation_sources.txt:11
+docs/_code_todos_2025-10-15.txt	1	2560a7aaab1e2089d1de1fd955c7638fa4376022	src/motor_control_ros2/src/generic_motor_controller.cpp:1118: // TODO: Implement actual temperature 	YES	docs/_code_todos_2025-10-15.txt:1
+docs/_doc_checklist_2025-10-15.txt	1	74d7cdebdc8346389337b4392d280862990dd16d	docs/FIX_IMPLEMENTATION_SUMMARY.md:85:- [x] Package builds without errors docs/FIX_IMPLEMENTATION_SU	YES	docs/_doc_checklist_2025-10-15.txt:1
+docs/_doc_signals_2025-10-15.txt	1	3952d33f47e79550dc98f9222487b89c3cf5f0ef	docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:3:**Date:** 2025-10-15 docs/DOCUMENTATION_CONSOL	YES	docs/_doc_signals_2025-10-15.txt:1
+docs/_inventory_2025-10-15.txt	1	98857bb95d5950e18e1092d648bff096f0a2a9a9	docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md docs/archive/2025-10-analysis	YES	docs/_inventory_2025-10-15.txt:1

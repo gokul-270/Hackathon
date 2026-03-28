@@ -1,0 +1,37 @@
+[Unit]
+Description=Vehicle Control Launch Service
+After=network-online.target pigpiod.service
+After=sys-devices-platform-soc-3f204000.spi-spi_master-spi0-spi0.1-spidev-spidev0.1.device
+Wants=network-online.target pigpiod.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/pragati_ros2
+
+# Wait for SPI device to be ready
+ExecStartPre=/bin/sleep 1
+ExecStartPre=/bin/sh -c 'timeout=30; elapsed=0; while [ ! -e /dev/spidev0.1 ]; do sleep 1; elapsed=$((elapsed+1)); if [ $elapsed -ge $timeout ]; then echo "WARN: SPI device /dev/spidev0.1 not found after ${timeout}s — proceeding without CAN" | systemd-cat -t %N -p warning; break; fi; done'
+
+ExecStart=/home/ubuntu/pragati_ros2/scripts/launch/launcher.sh
+Restart=on-failure
+RestartSec=5
+
+# Fast shutdown: motor parking takes ~12s, give 15s then SIGKILL.
+# Default is 90s which causes 3-4 minute shutdown delays.
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+# IMPORTANT: systemd does not source interactive shell profiles (e.g. ~/.bashrc).
+# Vehicle uses domain 0 -- cross-arm communication is via MQTT, not ROS2 topics.
+Environment="HOME=/home/ubuntu"
+Environment="ROS_DOMAIN_ID=0"
+Environment="ROS_LOCALHOST_ONLY=0"
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+Component,Compile_Time_Flag,Current_Value,Runtime_Parameter,Runtime_Value,Expected_Behavior,Actual_Behavior,Severity,Proposed_Fix,Fix_Command
+GPIO Control,ENABLE_PIGPIO,OFF,enable_gpio,1,GPIO pin control active,Placeholder logging only,CRITICAL,Enable at compile time,colcon build --cmake-args -DENABLE_PIGPIO=ON
+Camera Interface,HAS_REALSENSE,undefined,enable_camera,1,RealSense capture active,Compile error/no functionality,CRITICAL,Add CMake option and enable,Add HAS_REALSENSE option + rebuild
+Trigger Camera,HAS_REALSENSE,undefined,Trigger_Camera,1,Camera triggering functional,Silent failure,CRITICAL,Same as camera interface,Same as camera interface
+Motor Control,N/A (always enabled),enabled,motor_enabled,implicit,ODrive control active,Working correctly,OK,No action needed,N/A
+End Effector,ENABLE_PIGPIO,OFF,end_effector_enable,1,Pneumatic control active,Placeholder logging only,CRITICAL,Enable GPIO support,colcon build --cmake-args -DENABLE_PIGPIO=ON
+Vacuum Motor,ENABLE_PIGPIO,OFF,global_vaccum_motor,1,Vacuum pump control active,Placeholder logging only,CRITICAL,Enable GPIO support,colcon build --cmake-args -DENABLE_PIGPIO=ON
+LED Control,ENABLE_PIGPIO,OFF,led_control,implicit,LED indicators functional,Placeholder logging only,HIGH,Enable GPIO support,colcon build --cmake-args -DENABLE_PIGPIO=ON
+Limit Switches,ENABLE_PIGPIO,OFF,switch_inputs,implicit,Hardware feedback available,Placeholder logging only,HIGH,Enable GPIO support,colcon build --cmake-args -DENABLE_PIGPIO=ON
+Cotton Detection Service,N/A (always enabled),enabled,detection_service,implicit,Detection service available,Working correctly,OK,No action needed,N/A
+Cotton Detection Images,HAS_REALSENSE,undefined,image_input,implicit,Real image processing,Falls back to placeholders,CRITICAL,Enable camera support,Add HAS_REALSENSE option + rebuild
+Debug Visualization,HAS_REALSENSE,undefined,debug_images,implicit,Visual debugging available,No debug images,MEDIUM,Enable camera support,Add HAS_REALSENSE option + rebuild
+Safety E-Stop,ENABLE_PIGPIO,OFF,emergency_stop,implicit,Hardware E-stop functional,Software-only safety,HIGH,Enable GPIO + validate hardware,colcon build --cmake-args -DENABLE_PIGPIO=ON
+Joint Publishers,N/A (always enabled),enabled,joint_commands,implicit,Individual joint control,Working correctly,OK,No action needed,N/A
+Transform System,N/A (always enabled),enabled,tf2_system,implicit,TF2 transforms active,Working correctly,OK,No action needed,N/A
+Parameter System,N/A (always enabled),enabled,parameter_management,implicit,ROS2 parameter system,Working correctly,OK,No action needed,N/A
+Service Integration,N/A (always enabled),enabled,service_clients,implicit,Service-based communication,Working correctly,OK,No action needed,N/A

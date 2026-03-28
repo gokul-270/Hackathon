@@ -1,0 +1,12 @@
+# Clear Motor Errors Service
+# Request to clear error flags on a motor controller
+
+# Request
+uint8 motor_id              # Motor CAN ID
+---
+# Response
+bool success                # True if clear command was sent successfully
+string error_message        # Error description (empty on success)
+uint8 error_flags_after     # Error flags after clear attempt (0 = all cleared)
+                            # Bit layout: bit0=UVP, bit1=OVP, bit2=DTP, bit3=MTP,
+                            #             bit4=OCP, bit5=SCP, bit6=SP, bit7=LIP

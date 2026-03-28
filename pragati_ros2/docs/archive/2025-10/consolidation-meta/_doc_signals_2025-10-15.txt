@@ -1,0 +1,100 @@
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:3:**Date:** 2025-10-15  
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:6:**Status:** Plan ready for approval
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:24:   - "Last Updated: 2024-10-09" referencing "October 2025"
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:25:   - "PRODUCTION READY" claims without hardware validation evidence
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:81:- "Last Updated: 2024-10-09" but references "October 2025"
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:83:- Claims "PRODUCTION READY" but also says "⏳ Awaiting hardware"
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:257:**Question:** Do you approve downgrading unvalidated "PRODUCTION READY" claims?
+docs/DOCUMENTATION_CONSOLIDATION_PLAN_2025-10-15.md:376:4. Mark "PRODUCTION READY" → "Pending Hardware Validation" where appropriate
+docs/FIX_IMPLEMENTATION_SUMMARY.md:256:**Last Updated**: October 6, 2025
+docs/PHASE1_3_COMPLETE.md:3:**Status:** ✅ **COMPLETE**  
+docs/PHASE1_3_COMPLETE.md:4:**Date:** October 8, 2025  
+docs/PHASE1_3_COMPLETE.md:418:**Status:** ✅ **COMPLETE**
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:3:**Date:** 2025-01-06  
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:5:**Status:** 🎯 **HYBRID APPROACH - BEST OF BOTH WORLDS**
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:490:| **Cycle Time** | 2.8s | TBD | ≤2.8s ✅ |
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:491:| **Position Accuracy** | <1mm | TBD | <1mm ✅ |
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:492:| **Memory Leaks** | 0 | TBD | 0 ✅ |
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:493:| **Shutdown Time** | <1s | TBD | <1s ✅ |
+docs/OAK_D_LITE_HYBRID_MIGRATION_PLAN.md:494:| **System Health** | 95/100 | TBD | ≥95/100 ✅ |
+docs/CPP_USAGE_GUIDE.md:3:Status: Beta (Phase 1-3 complete)
+docs/CPP_USAGE_GUIDE.md:4:Last Updated: 2025-10-08
+docs/CPP_USAGE_GUIDE.md:33:- Cotton Detection Status:
+docs/PHASE1_1_COMPLETE.md:3:**Date:** October 8, 2025  
+docs/PHASE1_1_COMPLETE.md:5:**Status:** ✅ COMPLETE  
+docs/PHASE1_1_COMPLETE.md:324:**Document Status:** Final  
+docs/PHASE1_1_COMPLETE.md:325:**Last Updated:** October 8, 2025  
+docs/PHASE1_4_COMPLETE.md:3:**Status:** ✅ **COMPLETE**  
+docs/PHASE1_4_COMPLETE.md:4:**Date:** October 8, 2025  
+docs/PHASE1_4_COMPLETE.md:479:**Status:** ✅ **COMPLETE**
+docs/STATUS_REVIEW_CORRECTION_2025-09-30.md:3:**Date:** September 30, 2025  
+docs/STATUS_REVIEW_CORRECTION_2025-09-30.md:81:OLD: Overall Status: Task 2 of 18 Complete (11% progress)
+docs/STATUS_REVIEW_CORRECTION_2025-09-30.md:83:NEW: Overall Status: ✅ 18 of 18 Tasks COMPLETE (100%)
+docs/STATUS_REALITY_MATRIX.md:3:**Date:** 2025-10-14  
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:6:**Status:** **TASK 6 COMPLETE**
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:142:| "2.8s cycle times" | FINAL_REPORT.md | "Cotton detection subsystem specific performance TBD" | 🚩 **WRONG SUBSYSTEM** |
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:162:- Line 104: "2.8s cycle times" - "Cotton detection subsystem specific performance TBD"
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:204:**Current Status:**
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:236:**For Cotton Detection Status:**
+docs/archive/2025-10-analysis/CROSS_REFERENCE_ANALYSIS.md:517:**Status:** Cross-reference analysis complete  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/hardware_interface_comparison.md:161:System Components Status:
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/hardware_interface_comparison.md:412:*Analysis Date: 2025-01-25*  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/detection_comparison.md:362:Hardware Interface Status:
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/detection_comparison.md:507:*Analysis Date: $(date '+%Y-%m-%d %H:%M:%S')*  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/ros1_vs_ros2_comprehensive_analysis.md:322:### Current Status: ⚠️ **75% READY** (with critical blockers)
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/implementation_achievements.md:5:**Last Updated**: September 2025
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/implementation_achievements.md:232:**Last Updated**: September 29, 2025  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/logging_monitoring_comparison.md:186:### Current Status: **GOOD** ✅
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/motor_control_comparison.md:271:*Analysis Date: $(date '+%Y-%m-%d %H:%M:%S')*  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/README.md:5:**Last Updated**: September 2025
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:7:- Deployment Status: **PRODUCTION OPERATIONAL**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:18:### Deployment Status: **OPERATIONAL WITH IMPROVEMENT OPPORTUNITIES**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:98:Current Status:
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:44:**Last Updated**: Current Analysis  
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:275:  - **Status**: ✅ **PRODUCTION READY**
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:362:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:366:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:370:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:376:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:380:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:386:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/preflight_checklist.md:390:  - Name: ___________________ Date: ___________
+docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:2:**Date:** 2025-10-07  
+docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:47:- **README.md**: "100% COMPLETE", "PRODUCTION READY"
+docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:389:   - Claims "PRODUCTION READY" but has known limitations
+docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:1081:**Status:** READY FOR EXECUTION  
+docs/archive/2025-10-analysis/TASK_COMPARISON_PYTHON_VS_CPP.md:3:**Date:** October 8, 2025  
+docs/archive/2025-10-analysis/COTTON_DETECTION_SENIOR_CODE_REVIEW.md:2:**Date:** October 8, 2025  
+docs/archive/2025-10-analysis/COTTON_DETECTION_SENIOR_CODE_REVIEW.md:5:**Status:** Phase 1 Complete, Hardware Tested  
+docs/archive/2025-10-analysis/COTTON_DETECTION_SENIOR_CODE_REVIEW.md:1659:**Date:** October 8, 2025  
+docs/archive/2025-10-analysis/COTTON_DETECTION_SENIOR_CODE_REVIEW.md:1660:**Status:** Draft for Stakeholder Review  
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:18:| **HARDWARE_TEST_RESULTS.md** | TBD | Need to check | ⏳ TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:19:| **integration_test_results.md** | TBD | Need to check | ⏳ TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:117:- Status: ✅ COMPLETE
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:122:- Status: ⏳ PENDING (Hardware-dependent)
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:127:- Status: ⏳ PLANNED
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:135:- Status: NOT TESTED
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:139:- Status: NOT EXECUTED
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:143:- Status: BLOCKED ON HARDWARE
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:147:- Status: BLOCKED ON HARDWARE
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:225:### **Status:** Need to locate and parse
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:240:| **Yanthra Move** | 100% complete | TBD | TBD | TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:241:| **ODrive Control** | 100% complete | TBD | TBD | TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:242:| **Vehicle Control** | 100% complete | TBD | TBD | TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:243:| **Robo Description** | 100% complete | TBD | TBD | TBD |
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:270:- **README:** "100% COMPLETE", "PRODUCTION READY"
+docs/archive/2025-10-analysis/STATUS_CLAIMS_EXTRACTION.md:351:**Status:** Partial extraction complete (5 of 8 essential docs)  
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:78:| **HARDWARE_TEST_RESULTS.md** | "PRODUCTION READY" (!!) | 9/10 tests pass |
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:85:### Overall Result: ✅ **PRODUCTION READY**
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:214:**Status:**
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:266:   - Change "PRODUCTION READY" to "PHASE 1 HARDWARE VALIDATED"
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:274:   - Add "Production Status: DEVELOPMENT" badge
+docs/archive/2025-10-analysis/PRIMARY_VS_GENERATED_CROSSCHECK.md:369:**Status:** Cross-check complete  
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:3:**Date:** 2025-10-07  
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:84:- Status: Extensively tested
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:90:- Status: Production-ready
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:157:- Status: Production-ready
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:181:**Status:** 84% (Phase 1), ~28% overall  
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:209:**Overall Perception Status: ~85%** (weighted by importance)
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:217:**Status: EXCELLENT (98%)**
+docs/archive/2025-10-analysis/OTHER_MODULES_ANALYSIS.md:232:**Status: EXCELLENT (95%)**

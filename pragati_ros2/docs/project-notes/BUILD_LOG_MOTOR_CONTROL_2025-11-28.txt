@@ -1,0 +1,472 @@
+================================================================================
+BUILD LOG: motor_control_ros2
+================================================================================
+Date: 2025-11-28
+Build Type: Clean build (build/ and install/ directories removed)
+Build Time: 3 min 39s COLD (ccache cleared) / ~26s with ccache
+Compiler: GNU 13.3.0 (via ccache)
+Build Config: RelWithDebInfo with -O3 -march=native optimizations
+================================================================================
+
+COMMAND:
+colcon build --packages-select motor_control_ros2 --event-handlers console_direct+ 2>&1 | tee /tmp/motor_control_build.log
+
+PRE-BUILD CLEANUP:
+rm -rf build/motor_control_ros2 install/motor_control_ros2
+
+================================================================================
+CMAKE CONFIGURATION (11.8s)
+================================================================================
+
+[1.526s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[1.527s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+Starting >>> motor_control_ros2
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/ccache - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/ccache - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- ✅ Production optimizations enabled (-O3 -march=native)
+-- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Found hardware_interface: 4.32.0 (/opt/ros/jazzy/share/hardware_interface/cmake)
+-- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+-- Found rmw_implementation_cmake: 7.3.2 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 8.4.2 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+-- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found controller_manager: 4.32.0 (/opt/ros/jazzy/share/controller_manager/cmake)
+-- Found std_srvs: 5.3.6 (/opt/ros/jazzy/share/std_srvs/cmake)
+-- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+-- Found rosidl_adapter: 4.6.5 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+-- ✅ GPIO: Found pigpiod_if2 library: /usr/local/lib/libpigpiod_if2.so
+-- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+-- Found PythonExtra: /usr/bin/python3  
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+-- Building with MG6010 CAN motor controller
+-- Linking GPIO support: /usr/local/lib/libpigpiod_if2.so
+-- Skipping test nodes (enable with -DBUILD_TEST_NODES=ON)
+-- Found ament_lint_auto: 0.17.2 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+-- GTest found - building motor_control unit tests
+-- Found gtest sources under '/opt/ros/jazzy/src/gtest_vendor': C++ tests using 'Google Test' will be built
+-- Found Threads: TRUE  
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: /home/uday/Downloads/pragati_ros2/src/motor_control_ros2/include;$<BUILD_INTERFACE:/home/uday/Downloads/pragati_ros2/src/motor_control_ros2/include>;$<BUILD_INTERFACE:/home/uday/Downloads/pragati_ros2/src/motor_control_ros2/test>
+-- Configured cppcheck exclude dirs and/or files: 
+-- Configuring done (11.8s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/uday/Downloads/pragati_ros2/build/motor_control_ros2
+
+================================================================================
+BUILD PHASE (~35s)
+================================================================================
+
+--- ROSIDL TYPE GENERATION ---
+[  1%] Generating type hashes for ROS interfaces
+[  1%] Built target motor_control_ros2__rosidl_generator_type_description
+
+--- GTEST COMPILATION ---
+[  2%] Building CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[  3%] Linking CXX static library libgtest_main.a
+[  3%] Built target gtest_main
+[  3%] Building CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[  4%] Linking CXX static library libgtest.a
+[  4%] Built target gtest
+
+--- ROS INTERFACE GENERATION ---
+[  5%] Generating C++ code for ROS interfaces
+[  5%] Built target motor_control_ros2__cpp
+[  6%] Generating C code for ROS interfaces
+
+--- C INTERFACE COMPILATION (6 services) ---
+[  6%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_homing__description.c.o
+[  7%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_homing__functions.c.o
+[  8%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_homing__type_support.c.o
+[  9%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/motor_calibration__description.c.o
+[ 10%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/motor_calibration__functions.c.o
+[ 11%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/motor_calibration__type_support.c.o
+[ 12%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/encoder_calibration__description.c.o
+[ 13%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/encoder_calibration__functions.c.o
+[ 13%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/encoder_calibration__type_support.c.o
+[ 14%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_configuration__description.c.o
+[ 15%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_configuration__functions.c.o
+[ 16%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_configuration__type_support.c.o
+[ 17%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_status__description.c.o
+[ 18%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_status__functions.c.o
+[ 19%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_status__type_support.c.o
+[ 20%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_position_command__description.c.o
+[ 20%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_position_command__functions.c.o
+[ 21%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_c.dir/rosidl_generator_c/motor_control_ros2/srv/detail/joint_position_command__type_support.c.o
+[ 22%] Linking C shared library libmotor_control_ros2__rosidl_generator_c.so
+[ 22%] Built target motor_control_ros2__rosidl_generator_c
+
+--- UNIT TEST COMPILATION ---
+[ 22%] Building CXX object CMakeFiles/motor_control_parameter_tests.dir/test/test_parameter_validation.cpp.o
+[ 23%] Linking CXX executable motor_control_parameter_tests
+[ 23%] Built target motor_control_parameter_tests
+
+--- TYPESUPPORT COMPILATION ---
+[ 24%] Generating C++ type support dispatch for ROS interfaces
+[ 25%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/joint_homing__type_support.cpp.o
+[ 26%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/motor_calibration__type_support.cpp.o
+[ 27%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/encoder_calibration__type_support.cpp.o
+[ 28%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/joint_configuration__type_support.cpp.o
+[ 29%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/joint_status__type_support.cpp.o
+[ 29%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/motor_control_ros2/srv/joint_position_command__type_support.cpp.o
+[ 30%] Linking CXX shared library libmotor_control_ros2__rosidl_typesupport_cpp.so
+[ 30%] Built target motor_control_ros2__rosidl_typesupport_cpp
+
+--- FASTRTPS C TYPESUPPORT ---
+[ 31%] Generating C type support for eProsima Fast-RTPS
+[ 32%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/joint_homing__type_support_c.cpp.o
+[ 33%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/motor_calibration__type_support_c.cpp.o
+[ 34%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/encoder_calibration__type_support_c.cpp.o
+[ 35%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/joint_configuration__type_support_c.cpp.o
+[ 36%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/joint_status__type_support_c.cpp.o
+[ 36%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/motor_control_ros2/srv/detail/joint_position_command__type_support_c.cpp.o
+[ 37%] Linking CXX shared library libmotor_control_ros2__rosidl_typesupport_fastrtps_c.so
+[ 37%] Built target motor_control_ros2__rosidl_typesupport_fastrtps_c
+
+--- FASTRTPS C++ TYPESUPPORT ---
+[ 38%] Generating C++ type support for eProsima Fast-RTPS
+[ 39%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/joint_homing__type_support.cpp.o
+[ 40%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/motor_calibration__type_support.cpp.o
+[ 41%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/encoder_calibration__type_support.cpp.o
+[ 42%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/joint_configuration__type_support.cpp.o
+[ 43%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/joint_status__type_support.cpp.o
+[ 43%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/motor_control_ros2/srv/detail/dds_fastrtps/joint_position_command__type_support.cpp.o
+[ 44%] Linking CXX shared library libmotor_control_ros2__rosidl_typesupport_fastrtps_cpp.so
+[ 44%] Built target motor_control_ros2__rosidl_typesupport_fastrtps_cpp
+
+--- INTROSPECTION C TYPESUPPORT ---
+[ 45%] Generating C introspection for ROS interfaces
+[ 46%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/joint_homing__type_support.c.o
+[Processing: motor_control_ros2]
+[ 47%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/motor_calibration__type_support.c.o
+[ 48%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/encoder_calibration__type_support.c.o
+[ 49%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/joint_configuration__type_support.c.o
+[ 50%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/joint_status__type_support.c.o
+[ 50%] Building C object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/motor_control_ros2/srv/detail/joint_position_command__type_support.c.o
+[ 51%] Linking C shared library libmotor_control_ros2__rosidl_typesupport_introspection_c.so
+[ 51%] Built target motor_control_ros2__rosidl_typesupport_introspection_c
+
+--- C TYPESUPPORT DISPATCH ---
+[ 52%] Generating C type support dispatch for ROS interfaces
+[ 53%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/joint_homing__type_support.cpp.o
+[ 54%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/motor_calibration__type_support.cpp.o
+[ 55%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/encoder_calibration__type_support.cpp.o
+[ 56%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/joint_configuration__type_support.cpp.o
+[ 56%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/joint_status__type_support.cpp.o
+[ 57%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/motor_control_ros2/srv/joint_position_command__type_support.cpp.o
+[ 58%] Linking CXX shared library libmotor_control_ros2__rosidl_typesupport_c.so
+[ 58%] Built target motor_control_ros2__rosidl_typesupport_c
+
+--- INTROSPECTION C++ TYPESUPPORT ---
+[ 59%] Generating C++ introspection for ROS interfaces
+[ 60%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/joint_homing__type_support.cpp.o
+[ 61%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/motor_calibration__type_support.cpp.o
+[ 62%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/encoder_calibration__type_support.cpp.o
+[ 63%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/joint_configuration__type_support.cpp.o
+[ 64%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/joint_status__type_support.cpp.o
+[ 64%] Building CXX object CMakeFiles/motor_control_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/motor_control_ros2/srv/detail/joint_position_command__type_support.cpp.o
+[ 65%] Linking CXX shared library libmotor_control_ros2__rosidl_typesupport_introspection_cpp.so
+[ 65%] Built target motor_control_ros2__rosidl_typesupport_introspection_cpp
+
+--- SAFETY UNIT TESTS ---
+[ 66%] Building CXX object CMakeFiles/motor_control_safety_tests.dir/test/test_safety_monitor_unit.cpp.o
+[ 67%] Building CXX object CMakeFiles/motor_control_safety_tests.dir/src/safety_monitor.cpp.o
+[ 68%] Building CXX object CMakeFiles/motor_control_safety_tests.dir/src/gpio_interface.cpp.o
+[ 69%] Linking CXX executable motor_control_safety_tests
+[ 69%] Built target motor_control_safety_tests
+[ 69%] Built target motor_control_ros2
+
+================================================================================
+LIBRARY COMPILATION
+================================================================================
+
+--- motor_control_ros2_mg6010 (MG6010 CAN protocol library) ---
+[ 70%] Building CXX object CMakeFiles/motor_control_ros2_mg6010.dir/src/mg6010_protocol.cpp.o
+[ 70%] Building CXX object CMakeFiles/motor_control_ros2_mg6010.dir/src/mg6010_can_interface.cpp.o
+[ 71%] Building CXX object CMakeFiles/motor_control_ros2_mg6010.dir/src/generic_motor_controller.cpp.o
+[ 72%] Linking CXX shared library libmotor_control_ros2_mg6010.so
+[ 72%] Built target motor_control_ros2_mg6010
+
+--- motor_control_ros2_hardware (Hardware interface library) ---
+[ 73%] Building CXX object CMakeFiles/motor_control_ros2_hardware.dir/src/generic_hw_interface.cpp.o
+[ 74%] Building CXX object CMakeFiles/motor_control_ros2_hardware.dir/src/gpio_interface.cpp.o
+[ 75%] Building CXX object CMakeFiles/motor_control_ros2_hardware.dir/src/gpio_control_functions.cpp.o
+[ 76%] Building CXX object CMakeFiles/motor_control_ros2_hardware.dir/src/safety_monitor.cpp.o
+[ 77%] Linking CXX shared library libmotor_control_ros2_hardware.so
+[ 77%] Built target motor_control_ros2_hardware
+
+--- motor_control_ros2_motor_abstraction (Motor abstraction library) ---
+[ 78%] Building CXX object CMakeFiles/motor_control_ros2_motor_abstraction.dir/src/motor_abstraction.cpp.o
+[ 79%] Building CXX object CMakeFiles/motor_control_ros2_motor_abstraction.dir/src/motor_parameter_mapping.cpp.o
+[ 80%] Building CXX object CMakeFiles/motor_control_ros2_motor_abstraction.dir/src/mg6010_controller.cpp.o
+[ 81%] Linking CXX shared library libmotor_control_ros2_motor_abstraction.so
+[ 81%] Built target motor_control_ros2_motor_abstraction
+
+================================================================================
+TEST BINARIES
+================================================================================
+
+--- Protocol encoding tests ---
+[ 82%] Building CXX object CMakeFiles/motor_control_protocol_tests.dir/test/test_protocol_encoding.cpp.o
+[ 83%] Building CXX object CMakeFiles/motor_control_protocol_tests.dir/src/mg6010_protocol.cpp.o
+[ 84%] Linking CXX executable motor_control_protocol_tests
+[ 84%] Built target motor_control_protocol_tests
+
+--- CAN communication tests ---
+[ 85%] Building CXX object CMakeFiles/motor_control_can_tests.dir/test/test_can_communication.cpp.o
+[ 86%] Linking CXX executable motor_control_can_tests
+[ 86%] Built target motor_control_can_tests
+
+================================================================================
+PRODUCTION NODE (mg6010_controller_node)
+================================================================================
+
+[ 87%] Building CXX object CMakeFiles/mg6010_controller_node.dir/src/mg6010_controller_node.cpp.o
+[ 88%] Linking CXX executable mg6010_controller_node
+[ 88%] Built target mg6010_controller_node
+
+================================================================================
+PYTHON BINDINGS
+================================================================================
+
+[ 89%] Generating Python code for ROS interfaces
+[ 89%] Built target motor_control_ros2__py
+[ 89%] Built target ament_cmake_python_copy_motor_control_ros2
+[ 90%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_joint_homing_s.c.o
+[ 91%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_encoder_calibration_s.c.o
+[ 92%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_joint_configuration_s.c.o
+[ 93%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_joint_status_s.c.o
+[ 93%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_joint_position_command_s.c.o
+[ 94%] Building C object CMakeFiles/motor_control_ros2__rosidl_generator_py.dir/rosidl_generator_py/motor_control_ros2/srv/_motor_calibration_s.c.o
+[ 95%] Linking C shared library libmotor_control_ros2__rosidl_generator_py.so
+[ 95%] Built target motor_control_ros2__rosidl_generator_py
+
+--- Python egg-info ---
+running egg_info
+creating motor_control_ros2.egg-info
+writing motor_control_ros2.egg-info/PKG-INFO
+writing dependency_links to motor_control_ros2.egg-info/dependency_links.txt
+writing top-level names to motor_control_ros2.egg-info/top_level.txt
+writing manifest file 'motor_control_ros2.egg-info/SOURCES.txt'
+reading manifest file 'motor_control_ros2.egg-info/SOURCES.txt'
+writing manifest file 'motor_control_ros2.egg-info/SOURCES.txt'
+[ 95%] Built target ament_cmake_python_build_motor_control_ros2_egg
+
+--- Python typesupport modules ---
+[ 96%] Building C object CMakeFiles/motor_control_ros2_s__rosidl_typesupport_c.dir/rosidl_generator_py/motor_control_ros2/_motor_control_ros2_s.ep.rosidl_typesupport_c.c.o
+[ 96%] Linking C shared module rosidl_generator_py/motor_control_ros2/motor_control_ros2_s__rosidl_typesupport_c.so
+[ 96%] Built target motor_control_ros2_s__rosidl_typesupport_c
+[ 97%] Building C object CMakeFiles/motor_control_ros2_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/motor_control_ros2/_motor_control_ros2_s.ep.rosidl_typesupport_introspection_c.c.o
+[ 98%] Linking C shared module rosidl_generator_py/motor_control_ros2/motor_control_ros2_s__rosidl_typesupport_introspection_c.so
+[ 98%] Built target motor_control_ros2_s__rosidl_typesupport_introspection_c
+[ 99%] Building C object CMakeFiles/motor_control_ros2_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/motor_control_ros2/_motor_control_ros2_s.ep.rosidl_typesupport_fastrtps_c.c.o
+[100%] Linking C shared module rosidl_generator_py/motor_control_ros2/motor_control_ros2_s__rosidl_typesupport_fastrtps_c.so
+[100%] Built target motor_control_ros2_s__rosidl_typesupport_fastrtps_c
+
+================================================================================
+INSTALL PHASE
+================================================================================
+
+-- Install configuration: "RelWithDebInfo"
+
+--- ROS interface definitions ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/ament_index/resource_index/rosidl_interfaces/motor_control_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/JointHoming.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/MotorCalibration.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/EncoderCalibration.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/JointConfiguration.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/JointStatus.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/srv/JointPositionCommand.json
+
+--- Shared libraries ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_generator_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_fastrtps_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_fastrtps_cpp.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_introspection_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_introspection_cpp.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_typesupport_cpp.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2_hardware.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2_mg6010.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2_motor_abstraction.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/libmotor_control_ros2__rosidl_generator_py.so
+
+--- Production executable ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/motor_control_ros2/mg6010_controller_node
+
+--- Headers ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/enhanced_motor_abstraction.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/mg6010_can_interface.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/safety_monitor.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/gpio_interface.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/gpio_control_functions.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/control_loop_node.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/mg6010_controller.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/motor_parameter_mapping.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/comprehensive_error_handler.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/enhanced_motor_examples.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/motor_abstraction.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/advanced_initialization_system.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/generic_hw_interface.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/enhanced_can_interface.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/generic_motor_controller.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/motor_control_ros2/mg6010_protocol.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/include/enhanced_logging.hpp
+
+--- Config files ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/config/production.yaml
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/config/production_odrive_legacy.yaml
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/config/hardware_interface.yaml
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/config/mg6010_test.yaml
+
+--- Launch files ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/launch/mg6010_test.launch.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/launch/mg6010_controller.launch.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/share/motor_control_ros2/launch/hardware_interface.launch.py
+
+--- Scripts ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/motor_control_ros2/test_mg6010_communication.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/motor_control_ros2/compare_can_messages.py
+
+--- Python packages ---
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2-1.0.0-py3.12.egg-info
+-- Installing: /home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/
+
+Listing '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/__init__.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/__init__.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_encoder_calibration.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_joint_configuration.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_joint_homing.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_joint_position_command.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_joint_status.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/motor_control_ros2/lib/python3.12/site-packages/motor_control_ros2/srv/_motor_calibration.py'...
+
+================================================================================
+BUILD SUMMARY
+================================================================================
+
+Finished <<< motor_control_ros2 [46.9s]
+Summary: 1 package finished [48.0s]
+
+================================================================================
+BUILD ARTIFACTS
+================================================================================
+
+SHARED LIBRARIES (11 total):
+  libmotor_control_ros2__rosidl_generator_c.so
+  libmotor_control_ros2__rosidl_typesupport_c.so
+  libmotor_control_ros2__rosidl_typesupport_cpp.so
+  libmotor_control_ros2__rosidl_typesupport_fastrtps_c.so
+  libmotor_control_ros2__rosidl_typesupport_fastrtps_cpp.so
+  libmotor_control_ros2__rosidl_typesupport_introspection_c.so
+  libmotor_control_ros2__rosidl_typesupport_introspection_cpp.so
+  libmotor_control_ros2__rosidl_generator_py.so
+  libmotor_control_ros2_hardware.so          (GPIO, safety monitor)
+  libmotor_control_ros2_mg6010.so            (MG6010 protocol/CAN)
+  libmotor_control_ros2_motor_abstraction.so (Motor abstraction layer)
+
+EXECUTABLES:
+  mg6010_controller_node     (PRODUCTION NODE)
+  motor_control_parameter_tests
+  motor_control_safety_tests
+  motor_control_protocol_tests
+  motor_control_can_tests
+
+ROS SERVICES (6):
+  JointHoming.srv
+  MotorCalibration.srv
+  EncoderCalibration.srv
+  JointConfiguration.srv
+  JointStatus.srv
+  JointPositionCommand.srv
+
+CONFIG FILES (4):
+  production.yaml
+  production_odrive_legacy.yaml
+  hardware_interface.yaml
+  mg6010_test.yaml
+
+LAUNCH FILES (3):
+  mg6010_controller.launch.py  (PRODUCTION)
+  mg6010_test.launch.py
+  hardware_interface.launch.py
+
+================================================================================
+BUILD TIME BREAKDOWN (estimated)
+================================================================================
+
+CMAKE Configuration:     11.8s  (25%)
+ROS Interface Generation: ~8s   (17%)
+TypeSupport Compilation: ~12s   (26%)
+Library Compilation:      ~6s   (13%)
+Test Compilation:         ~3s   (6%)
+Node Compilation:         ~2s   (4%)
+Python Bindings:          ~3s   (6%)
+Install Phase:            ~2s   (4%)
+----------------------------------------
+TOTAL:                   ~47s
+
+================================================================================
+OPTIMIZATION OPPORTUNITIES
+================================================================================
+
+1. ROS Interface Generation (~30% of build time)
+   - 6 service definitions generate significant boilerplate
+   - Consider consolidating services if possible
+   - fastrtps typesupport takes ~8s alone
+
+2. Unused Headers Being Installed:
+   - enhanced_motor_abstraction.hpp (not compiled)
+   - enhanced_motor_examples.hpp (not compiled)
+   - control_loop_node.hpp (not compiled)
+   - comprehensive_error_handler.hpp (not compiled)
+   - advanced_initialization_system.hpp (not compiled)
+   - enhanced_can_interface.hpp (not compiled)
+
+3. Test Compilation (~9% of build time)
+   - 4 test executables built every time
+   - Consider -DBUILD_TESTING=OFF for production builds
+
+4. Legacy Config Files:
+   - production_odrive_legacy.yaml (ODrive no longer used)
+   - hardware_interface.yaml (hardware_interface not in production)
+
+================================================================================
+COMPARISON WITH cotton_detection_ros2
+================================================================================
+
+Package              | Clean Build Time | Main Bottleneck
+---------------------|------------------|------------------
+cotton_detection_ros2| ~4min 11s        | DepthAI SDK linking
+motor_control_ros2   | ~47s             | ROS interface generation
+
+motor_control_ros2 builds ~5x faster primarily because:
+1. No heavy external SDK dependencies (DepthAI, OpenCV DNN)
+2. Simpler C++ code (no image processing)
+3. Smaller codebase overall
+
+================================================================================

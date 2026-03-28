@@ -1,0 +1,15 @@
+[Unit]
+Description=Pragati Boot Timing Capture Timer
+# Wait until the boot target is fully reached so systemd-analyze reports
+# boot as "finished" (kernel_s, userspace_s, critical_chain populated).
+After=graphical.target multi-user.target
+
+[Timer]
+# Fire once, 60s after boot — enough time for graphical.target + all
+# services to finish (plymouth-quit-wait alone can take 20s).
+OnBootSec=60s
+# Don't repeat
+Persistent=false
+
+[Install]
+WantedBy=multi-user.target

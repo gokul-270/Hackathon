@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="cotton_plant_tall">
+    <static>true</static>
+    <link name="plant_link">
+      <!-- Simplified cylinder collision for physics (1.2m tall) -->
+      <collision name="plant_collision">
+        <pose>0 0 0.6 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.25</radius>
+            <length>1.2</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Cotton plant OBJ mesh with texture (scaled to ~1.2m height) -->
+      <!-- Original mesh: Y-up, ~2.075m tall. Rotate +90° X for Z-up. -->
+      <!-- Scale 0.5783 gives ~1.2m height; z-offset 0.62 puts bottom at ground -->
+      <visual name="plant_visual">
+        <pose>0 0 0.62 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>../../meshes/cotton_plant.obj</uri>
+            <scale>0.5783 0.5783 0.5783</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

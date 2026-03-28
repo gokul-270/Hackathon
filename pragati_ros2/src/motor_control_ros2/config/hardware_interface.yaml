@@ -1,0 +1,148 @@
+# ROS2 Hardware Interface Configuration for ODrive Controllers
+# This file provides low-level hardware interface configuration for the Pragati robot arm
+# Uses the generic_hw_interface for complete hardware abstraction
+
+hardware:
+  - name: odrive_hardware
+    type: motor_control_ros2/GenericHWInterface
+    parameters:
+      use_simulation: false
+      can_interface: "can0"
+      can_socket: "socketcan"
+    joints:
+      - name: joint2
+        command_interfaces:
+          - position
+          - velocity
+          - effort
+        state_interfaces:
+          - position
+          - velocity
+          - effort
+        parameters:
+          can_id: "0x003"  # CanID 3 from ROS1
+          odrive_id: 1
+          axis_id: 1
+          transmission_factor: 125.23664  # RESTORED from ROS1
+          direction: 1  # RESTORED from ROS1
+          position_offset: 0.03  # RESTORED JointOffSet from ROS1
+          p_gain: 35.0  # RESTORED from ROS1
+          v_gain: 0.000549  # RESTORED from ROS1
+          velocity_limit: 133.0  # RESTORED from ROS1
+          effort_limit: 20.0  # RESTORED max_cur from ROS1
+          limit_switch: 5  # RESTORED from ROS1
+      - name: joint3
+        command_interfaces:
+          - position
+          - velocity
+          - effort
+        state_interfaces:
+          - position
+          - velocity
+          - effort
+        parameters:
+          can_id: "0x001"
+          odrive_id: 0
+          axis_id: 1
+          transmission_factor: 0.870047022  # RESTORED from ROS1 
+          direction: -1  # RESTORED from ROS1
+          position_offset: 0.890118  # RESTORED JointOffSet from ROS1
+          p_gain: 35.0  # RESTORED from ROS1
+          v_gain: 0.000549  # RESTORED from ROS1
+          velocity_limit: 50.0  # RESTORED from ROS1
+          effort_limit: 100.0
+      - name: joint4
+        command_interfaces:
+          - position
+          - velocity
+          - effort
+        state_interfaces:
+          - position
+          - velocity
+          - effort
+        parameters:
+          can_id: "0x002"  # CanID 2 from ROS1
+          odrive_id: 1
+          axis_id: 0
+          transmission_factor: 14.28571  # RESTORED from ROS1
+          direction: -1  # RESTORED from ROS1
+          position_offset: -0.200  # RESTORED JointOffSet from ROS1
+          p_gain: 100.0  # RESTORED from ROS1
+          v_gain: 0.000928  # RESTORED from ROS1
+          velocity_limit: 60.0  # RESTORED from ROS1
+          effort_limit: 50.0  # RESTORED max_cur from ROS1
+          limit_switch: 16  # RESTORED from ROS1
+      - name: joint5
+        command_interfaces:
+          - position
+          - velocity
+          - effort
+        state_interfaces:
+          - position
+          - velocity
+          - effort
+        parameters:
+          can_id: "0x000"  # CanID 0 from ROS1
+          odrive_id: 0
+          axis_id: 0
+          transmission_factor: 25.477  # RESTORED from ROS1
+          direction: -1  # RESTORED from ROS1
+          position_offset: -0.330  # RESTORED JointOffSet from ROS1
+          p_gain: 35.0  # RESTORED from ROS1
+          v_gain: 0.000549  # RESTORED from ROS1
+          velocity_limit: 133.0  # RESTORED from ROS1
+          effort_limit: 40.0  # RESTORED max_cur from ROS1
+          limit_switch: 26  # RESTORED from ROS1
+
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+    
+    # Available controllers
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    
+    position_controller:
+      type: position_controllers/JointGroupPositionController
+    
+    velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+      
+    effort_controller:
+      type: effort_controllers/JointGroupEffortController
+
+# Position controller configuration
+position_controller:
+  ros__parameters:
+    joints:
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+
+# Velocity controller configuration  
+velocity_controller:
+  ros__parameters:
+    joints:
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+
+# Effort controller configuration
+effort_controller:
+  ros__parameters:
+    joints:
+      - joint2
+      - joint3
+      - joint4
+      - joint5
+
+# Joint state broadcaster configuration
+joint_state_broadcaster:
+  ros__parameters:
+    joints:
+      - joint2
+      - joint3
+      - joint4
+      - joint5

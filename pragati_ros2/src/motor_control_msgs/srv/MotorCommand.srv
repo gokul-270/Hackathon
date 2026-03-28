@@ -1,0 +1,27 @@
+# Motor Command Service
+# Send a motor control command (8 modes: torque, speed, angle, increment)
+
+# Request
+uint8 motor_id          # Motor CAN ID
+uint8 command_type      # Command mode (use constants below)
+float64 value           # Command value (torque mA, speed dps, or angle degrees)
+float64 max_speed       # Max speed in dps (for MULTI_ANGLE_2, SINGLE_ANGLE_2, INCREMENT_2; 0 = use default)
+uint8 direction         # Spin direction for single-turn modes: 0=CW, 1=CCW (SINGLE_ANGLE_1, SINGLE_ANGLE_2)
+
+# Command type constants
+uint8 TORQUE=0
+uint8 SPEED=1
+uint8 MULTI_ANGLE_1=2
+uint8 MULTI_ANGLE_2=3
+uint8 SINGLE_ANGLE_1=4
+uint8 SINGLE_ANGLE_2=5
+uint8 INCREMENT_1=6
+uint8 INCREMENT_2=7
+---
+# Response
+bool success            # True if command was executed successfully
+string error_message    # Error description (empty on success)
+int8 temperature        # Motor temperature in Celsius
+int16 torque_current    # Torque current raw value
+int16 speed             # Motor speed in dps
+uint16 encoder          # Encoder position

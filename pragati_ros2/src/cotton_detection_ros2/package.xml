@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>cotton_detection_ros2</name>
+  <version>2.0.0</version>
+  <description>Cotton Detection ROS2 Node - Migrated from ROS1</description>
+
+  <maintainer email="dev@techmagic.co">TechMagic Team</maintainer>
+  <license>Proprietary</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core ROS2 dependencies (C++) -->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>cv_bridge</depend>
+
+  <!-- TF2 for coordinate transforms -->
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+
+  <!-- Image processing dependencies -->
+  <depend>image_transport</depend>
+
+  <!-- Vision and diagnostics -->
+  <depend>diagnostic_updater</depend>
+
+  <!-- Custom interfaces from separate msgs package -->
+  <depend>cotton_detection_msgs</depend>
+
+  <!-- Computer Vision -->
+  <depend>libopencv-dev</depend>
+
+  <!-- JSON serialization (structured logging) -->
+  <depend>nlohmann-json3-dev</depend>
+
+  <!-- Shared logging helpers -->
+  <depend>common_utils</depend>
+
+  <!-- DepthAI camera support (C++ native integration) -->
+  <!-- depthai library provided via ROS2 packages -->
+  <exec_depend>depthai</exec_depend>
+  <exec_depend>depthai_bridge</exec_depend>
+
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>launch_testing</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

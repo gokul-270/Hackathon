@@ -1,0 +1,21 @@
+# Read Motor State Service
+# Request to read comprehensive state from a motor controller
+
+# Request
+uint8 motor_id              # Motor CAN ID
+---
+# Response
+bool success                # True if motor state was read successfully
+string error_message        # Error description (empty on success)
+float32 temperature_c       # Motor temperature in Celsius
+float32 voltage_v           # Supply voltage in Volts
+float32 torque_current_a    # Torque current in Amps
+float32 speed_dps           # Motor speed in degrees per second
+uint16 encoder_position     # Encoder position (from 0x9C)
+float64 multi_turn_deg      # Multi-turn angle in degrees (0.01 deg resolution)
+float64 single_turn_deg     # Single-turn angle in degrees (0-360, 0.01 deg resolution)
+float32 phase_a             # Phase A current in Amps
+float32 phase_b             # Phase B current in Amps
+float32 phase_c             # Phase C current in Amps
+uint8 error_flags           # Error flags byte (bit0=UVP, bit1=OVP, bit2=DTP, bit3=MTP,
+                            #                   bit4=OCP, bit5=SCP, bit6=SP, bit7=LIP)

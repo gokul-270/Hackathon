@@ -1,0 +1,278 @@
+# MG6010-i6 Motor Test Configuration
+# Motor: MG6010E-i6 (48V Integrated Servo Motor)
+# Protocol: LK-TECH CAN Protocol V2.35
+# Manufacturer: Shanghai LingKong Technology Co., Ltd
+
+# ==============================================================================
+# CAN Communication Settings
+# ==============================================================================
+
+mg6010_test_node:
+  ros__parameters:
+    # CAN Interface Configuration
+    interface_name: "can0"
+    baud_rate: 500000  # 500kbps (Pragati default)
+                        # Supported rates: 1000000, 500000, 125000, 100000
+    
+    # Motor Identification
+    node_id: 1         # Motor ID (1-32)
+    can_id: 0x141      # CAN Identifier = 0x140 + node_id
+    
+    # Test Mode
+    mode: "status"     # Options: status, position, velocity, torque, on_off, angle
+
+# ==============================================================================
+# Motor Specifications (MG6010E-i6)
+# ==============================================================================
+
+motor_specifications:
+  ros__parameters:
+    # Model Information
+    motor_model: "MG6010E-i6"
+    motor_type: "mg6010"
+    series: "MG"
+    manufacturer: "LK-TECH"
+    
+    # Electrical Specifications
+    rated_voltage: 24.0        # V
+    voltage_min: 7.4           # V (minimum operating voltage)
+    voltage_max: 32.0          # V (maximum operating voltage)
+    voltage_warning: 22.0      # V (low voltage warning)
+    voltage_critical: 20.0     # V (critical voltage shutdown)
+    
+    rated_current: 5.5         # A
+    max_current: 33.0          # A (MG series maximum per protocol)
+    current_limit: 15.0        # A (recommended safe limit)
+    
+    # Mechanical Specifications
+    rated_torque: 5.0          # N.m
+    max_torque: 10.0           # N.m
+    rated_speed: 170.0         # RPM @ rated conditions
+    max_speed: 251.0           # RPM @ 24V
+    speed_constant: 62.9       # RPM/V
+    torque_constant: 0.91      # N.m/A (approximate)
+    
+    # Encoder
+    encoder_type: "absolute_magnetic"
+    encoder_resolution: 18     # bits (262,144 counts/rev)
+    
+    # Gear Ratio
+    gear_ratio: 6.0            # i6 = 1:6 reduction
+    
+    # Physical
+    rotor_inertia: 500.0       # g·cm² (approximate)
+    motor_poles: 14            # pole pairs
+
+# ==============================================================================
+# Control Parameters
+# ==============================================================================
+
+control_parameters:
+  ros__parameters:
+    # Position Control PID
+    position_kp: 50.0
+    position_ki: 0.0
+    position_kd: 0.0
+    
+    # Velocity Control PID
+    velocity_kp: 20.0
+    velocity_ki: 0.1
+    velocity_kd: 0.0
+    
+    # Torque Control PID
+    torque_kp: 1.0
+    torque_ki: 0.01
+    torque_kd: 0.0
+    
+    # Feed-forward gains (optional)
+    velocity_ff: 0.0
+    acceleration_ff: 0.0
+
+# ==============================================================================
+# Safety Limits
+# ==============================================================================
+
+safety_limits:
+  ros__parameters:
+    # Position Limits (radians)
+    position_limit_min: -6.28318  # -2π rad (~-360°)
+    position_limit_max: 6.28318   # +2π rad (~+360°)
+    
+    # Velocity Limits
+    velocity_limit: 5.0           # rad/s (safe limit)
+    velocity_limit_max: 10.0      # rad/s (absolute maximum)
+    
+    # Acceleration Limits
+    max_acceleration: 1000        # dps/s (degrees per second squared)
+    
+    # Current/Torque Limits
+    current_limit: 15.0           # A (recommended safe limit)
+    current_limit_max: 33.0       # A (absolute maximum per protocol)
+    
+    # Temperature Limits
+    temperature_warning: 65.0     # °C (warning threshold)
+    temperature_critical: 70.0    # °C (emergency stop threshold)
+    temperature_max: 80.0         # °C (absolute maximum)
+    
+    # Voltage Limits
+    voltage_warning_low: 22.0     # V (low voltage warning)
+    voltage_critical_low: 20.0    # V (critical low voltage)
+    voltage_warning_high: 30.0    # V (high voltage warning)
+    voltage_critical_high: 32.0   # V (critical high voltage)
+
+# ==============================================================================
+# Communication Settings
+# ==============================================================================
+
+communication:
+  ros__parameters:
+    # Protocol Timing (per LK-TECH CAN Protocol V2.35)
+    response_timeout_ms: 10      # Motor responds within 0.25ms, use 10ms for safety
+    command_retry_count: 3       # Number of retries on timeout
+    retry_delay_ms: 5            # Delay between retries
+    
+    # Command Rate Limits
+    max_command_rate_hz: 100     # Maximum command frequency (100 Hz = 10ms period)
+    
+    # Status Query Rates
+    status_query_rate_hz: 10     # How often to query motor status (10 Hz = 100ms)
+    position_query_rate_hz: 50   # How often to query position (50 Hz = 20ms)
+    
+    # Watchdog
+    communication_timeout_s: 1.0 # Communication timeout (1 second)
+
+# ==============================================================================
+# Safety Monitor Configuration
+# ==============================================================================
+
+safety_monitor:
+  ros__parameters:
+    # Enable/Disable Safety Features
+    enable_safety_monitoring: true
+    enable_position_limits: true
+    enable_velocity_limits: true
+    enable_temperature_monitoring: true
+    enable_voltage_monitoring: true
+    enable_error_monitoring: true
+    enable_communication_timeout: true
+    
+    # Safety Check Intervals
+    safety_check_interval_ms: 10     # Check every 10ms
+    
+    # Error Response
+    auto_clear_errors: true          # Automatically try to clear errors
+    max_error_clear_attempts: 3      # Maximum attempts to clear errors
+    emergency_stop_on_critical: true # Trigger E-stop on critical errors
+
+# ==============================================================================
+# Logging and Debugging
+# ==============================================================================
+
+logging:
+  ros__parameters:
+    # Log Levels
+    console_log_level: "info"   # debug, info, warn, error
+    file_log_level: "debug"     # More detailed file logging
+    
+    # Log Motor Data
+    log_motor_status: true
+    log_can_messages: false     # WARNING: Very verbose, use only for debugging
+    log_commands: true
+    log_responses: true
+    
+    # Performance Monitoring
+    log_timing: true            # Log command/response timing
+    log_errors: true            # Log all errors
+    warn_on_timeout: true       # Warn on communication timeouts
+
+# ==============================================================================
+# Test Scenarios
+# ==============================================================================
+
+test_scenarios:
+  ros__parameters:
+    # Status Test
+    status_test:
+      duration_s: 10.0
+      query_interval_ms: 100
+    
+    # Position Test
+    position_test:
+      target_positions: [0.0, 1.57, 0.0, -1.57, 0.0]  # radians
+      dwell_time_s: 2.0
+      max_speed: 2.0  # rad/s
+    
+    # Velocity Test
+    velocity_test:
+      target_velocities: [0.0, 1.0, 0.0, -1.0, 0.0]  # rad/s
+      dwell_time_s: 2.0
+    
+    # Torque Test
+    torque_test:
+      target_currents: [0.0, 5.0, 0.0, -5.0, 0.0]  # A
+      dwell_time_s: 1.0
+      
+    # On/Off Test
+    on_off_test:
+      cycle_count: 5
+      on_duration_s: 2.0
+      off_duration_s: 1.0
+
+# ==============================================================================
+# Advanced Settings (Modify with caution)
+# ==============================================================================
+
+advanced:
+  ros__parameters:
+    # CAN Protocol Settings
+    use_extended_can_id: false   # Use standard 11-bit CAN ID
+    can_filter_id: 0x140         # Filter for motor responses
+    can_filter_mask: 0x7E0       # Mask for filtering
+    
+    # Motor Configuration
+    auto_enable_on_init: true    # Automatically send motor_on command
+    verify_status_on_init: true  # Read status after initialization
+    clear_errors_on_init: true   # Clear errors during initialization
+    
+    # Performance Tuning
+    use_realtime_priority: false # Set realtime thread priority (requires permissions)
+    realtime_priority: 50        # Priority level (0-99)
+    cpu_affinity: -1             # CPU core affinity (-1 = no affinity)
+    
+    # Error Recovery
+    auto_restart_on_error: false # Automatically restart motor after error
+    max_restart_attempts: 3      # Maximum restart attempts
+    restart_delay_s: 5.0         # Delay before restart
+
+# ==============================================================================
+# Notes
+# ==============================================================================
+# 
+# Protocol Reference: LK-TECH CAN Protocol V2.35
+# 
+# CAN Message Format:
+#   - Identifier: 0x140 + node_id (1-32)
+#   - Frame Type: Standard (11-bit)
+#   - DLC: 8 bytes
+#   - Response Time: < 0.25ms typical
+# 
+# Unit Conversions:
+#   - Angle: 0.01° per LSB (36000 = 360°)
+#   - Speed: 0.01 dps per LSB (36000 = 360 dps)
+#   - Torque Current: 1/2048 * 33A per LSB (2048 = 33A for MG series)
+#   - Temperature: 1°C per LSB
+#   - Voltage: 0.1V per LSB (240 = 24V)
+# 
+# Common CAN Commands:
+#   - 0x80: Motor OFF
+#   - 0x88: Motor ON
+#   - 0x81: Motor STOP
+#   - 0x9A: Read Status 1 (temp, voltage, errors)
+#   - 0x9B: Clear Errors
+#   - 0x9C: Read Status 2 (temp, current, speed, encoder)
+#   - 0xA1: Torque Control
+#   - 0xA2: Speed Control
+#   - 0xA3: Multi-turn Position Control 1
+#   - 0xA4: Multi-turn Position Control 2
+# 
+# ==============================================================================

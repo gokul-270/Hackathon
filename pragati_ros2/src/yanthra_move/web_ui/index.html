@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pragati Arm Simulation</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Try CDN first, fallback to local copy -->
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js" 
+            onerror="this.onerror=null; this.remove(); var s=document.createElement('script'); s.src='roslib.min.js'; document.head.appendChild(s);"></script>
+</head>
+<body>
+
+<!-- ═══════════ Header ═══════════ -->
+<header id="header">
+    <h1>🦾 Pragati Arm Simulation</h1>
+    <div class="connection-bar">
+        <label for="rosbridge-url">Bridge:</label>
+        <input type="text" id="rosbridge-url" placeholder="ws://localhost:9090">
+        <button id="connect-btn">Connect</button>
+        <span id="status-dot" class="dot disconnected"></span>
+        <span id="status-text">Disconnected</span>
+    </div>
+</header>
+
+<!-- ═══════════ Camera View Bar ═══════════ -->
+<div id="camera-bar">
+    <span class="cam-label">📷 Gazebo View:</span>
+    <button class="cam-btn" data-view="front">Front</button>
+    <button class="cam-btn" data-view="back">Back</button>
+    <button class="cam-btn" data-view="top">Top</button>
+    <button class="cam-btn" data-view="left">Left</button>
+    <button class="cam-btn" data-view="right">Right</button>
+    <button class="cam-btn" data-view="iso">Iso</button>
+    <button class="cam-btn active" data-view="front_close">Front Close</button>
+</div>
+
+<main>
+    <!-- ═══════════ Left: Direct Joint Control ═══════════ -->
+    <section class="panel" id="joint-panel">
+        <h2>🎮 Direct Joint Control</h2>
+        <p class="hint">Move joints directly in Gazebo (bypasses yanthra_move pipeline)</p>
+
+        <div class="joint-control">
+            <label>J3 — Phi / Tilt (rad)</label>
+            <div class="slider-row">
+                <input type="range" id="j3-slider" min="-0.9" max="0.0" step="0.001" value="0">
+                <input type="number" id="j3-input" step="0.001" value="0">
+                <span class="unit">rad</span>
+            </div>
+            <div class="limit-labels"><span>-0.9rad (-51.6°)</span><span>0rad (0°)</span></div>
+        </div>
+
+        <div class="joint-control">
+            <label>J4 — Theta / Lateral (m)</label>
+            <div class="slider-row">
+                <input type="range" id="j4-slider" min="-0.250" max="0.350" step="0.001" value="0">
+                <input type="number" id="j4-input" step="0.001" value="0">
+                <span class="unit">m</span>
+            </div>
+            <div class="limit-labels"><span>-250mm</span><span>+350mm</span></div>
+        </div>
+
+        <div class="joint-control">
+            <label>J5 — R / Extension (m)</label>
+            <div class="slider-row">
+                <input type="range" id="j5-slider" min="0" max="0.450" step="0.001" value="0">
+                <input type="number" id="j5-input" step="0.001" value="0">
+                <span class="unit">m</span>
+            </div>
+            <div class="limit-labels"><span>0mm</span><span>450mm</span></div>
+        </div>
+
+        <div class="button-row">
+            <button id="home-btn" class="btn btn-secondary">🏠 Home All</button>
+        </div>
+    </section>
+
+    <!-- ═══════════ Center: Cotton Placement & Test ═══════════ -->
+    <section class="panel" id="cotton-panel">
+        <h2>🎯 Cotton Placement & Test</h2>
+        <p class="hint">Place cotton in Gazebo and test arm reachability</p>
+
+        <div class="input-group">
+            <h3>Camera Coordinates (meters)</h3>
+            <div class="coord-row">
+                <label>X:</label><input type="number" id="cam-x" step="0.001" value="0.328">
+                <label>Y:</label><input type="number" id="cam-y" step="0.001" value="-0.011">
+                <label>Z:</label><input type="number" id="cam-z" step="0.001" value="-0.003">
+            </div>
+        </div>
+
+        <div class="input-group">
+            <h3>L4 Scan Position (meters)</h3>
+            <div class="coord-row">
+                <label>J4:</label>
+                <input type="number" id="l4-pos" step="0.001" value="-0.100">
+                <span class="unit">m</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <h3>⚙️ Compensation Settings</h3>
+            <div class="compensation-controls">
+                <label class="toggle-label">
+                    <input type="checkbox" id="enable-j4-compensation" checked>
+                    <span class="toggle-text">J4 Offset Compensation</span>
+                </label>
+                <label class="toggle-label">
+                    <input type="checkbox" id="enable-phi-compensation">
+                    <span class="toggle-text">Phi Angle Compensation</span>
+                </label>
+            </div>
+            <p class="hint" style="margin-top: 8px; font-size: 11px;">Match physical arm compensation settings</p>
+        </div>
+
+        <div class="button-row">
+            <button id="place-cotton-btn" class="btn btn-primary">☁️ Place Cotton</button>
+            <button id="remove-cotton-btn" class="btn btn-danger">🗑️ Remove</button>
+        </div>
+
+        <div class="button-row">
+            <button id="compute-btn" class="btn btn-secondary">📐 Compute Joints</button>
+            <button id="write-centroid-btn" class="btn btn-secondary">📝 Write Centroid</button>
+        </div>
+
+        <div class="button-row">
+            <button id="pick-cotton-btn" class="btn btn-warning btn-large">🤚 Pick Cotton</button>
+        </div>
+        <p class="hint">Moves arm to reach &amp; pick the placed cotton (Gazebo animation)</p>
+
+        <hr>
+
+        <div class="button-row">
+            <button id="trigger-btn" class="btn btn-success btn-large">▶️ Trigger Start</button>
+        </div>
+        <p class="hint">Sends /start_switch/command = true</p>
+
+        <!-- Status Log -->
+        <div id="status-log">
+            <h3>📋 Status</h3>
+            <div id="log-entries"></div>
+        </div>
+    </section>
+
+    <!-- ═══════════ Right: Telemetry ═══════════ -->
+    <section class="panel" id="telemetry-panel">
+        <h2>📊 Telemetry</h2>
+
+        <div class="telem-group">
+            <h3>Joint States (live)</h3>
+            <div id="joint-states">
+                <span class="telem-value stale">Waiting for data...</span>
+            </div>
+        </div>
+
+        <div class="telem-group">
+            <h3>Computed Approach</h3>
+            <table id="computed-table">
+                <tr><td>Arm X:</td><td id="comp-arm-x">—</td></tr>
+                <tr><td>Arm Y:</td><td id="comp-arm-y">—</td></tr>
+                <tr><td>Arm Z:</td><td id="comp-arm-z">—</td></tr>
+                <tr class="sep"><td>r:</td><td id="comp-r">—</td></tr>
+                <tr><td>θ (lateral):</td><td id="comp-theta">—</td></tr>
+                <tr><td>φ (tilt):</td><td id="comp-phi">—</td></tr>
+                <tr class="sep"><td>J3 cmd:</td><td id="comp-j3">—</td></tr>
+                <tr><td>J4 cmd:</td><td id="comp-j4">—</td></tr>
+                <tr><td>J5 cmd:</td><td id="comp-j5">—</td></tr>
+                <tr class="sep"><td>Reachable:</td><td id="comp-reach">—</td></tr>
+            </table>
+        </div>
+
+        <div class="telem-group">
+            <h3>Cotton Position (world)</h3>
+            <div id="cotton-world-pos">
+                <span class="telem-value stale">No cotton placed</span>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

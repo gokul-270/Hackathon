@@ -1,0 +1,64 @@
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_PHASE2_SUMMARY.md:71:**Rationale:** Historical plans superseded by TODO_MASTER.md (2,540 items) and STATUS_TRACKER.md.
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_PHASE2_SUMMARY.md:85:- TODO_CONSOLIDATED.md (Oct 9, 2024 → superseded by TODO_MASTER.md Oct 15, 2025)
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_PHASE2_SUMMARY.md:86:- MOTOR_TUNING_GUIDE_2025-10-09_ODrive.md (ODrive version → superseded by MG6010 version)
+/home/uday/Downloads/pragati_ros2/docs/TODO_MASTER.md:18:> - Completed (~800) and obsolete (~600) items will be moved to `docs/archive/2025-10-15/todos_completed.md` and `docs/archive/2025-10-15/todos_obsolete.md` respectively.
+/home/uday/Downloads/pragati_ros2/docs/STATUS_REALITY_MATRIX.md:189:- `docs/TODO_MASTER.md` — Original TODO master (superseded by consolidated version)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-analysis/ros1_vs_ros2_comparison/production_readiness.md:65:✅ Arm moved to parking position (proper shutdown sequence)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:152:- ✅ All "completion" claims superseded by later documents
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:155:- ✅ All "task tracking" superseded by current checklists
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:156:- ✅ All "validation" reports superseded by later tests
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-analysis/COMPREHENSIVE_DOC_ANALYSIS_2025-10-07.md:524:rm SESSION_SUMMARY_2025-10-07.md  # Will be superseded by this analysis
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_completed.md:12:### T-PR2-2025-10-d08fbd93: > - Completed (~800) and obsolete (~600) items will be moved to `docs/archive/2025-10-15/s_completed
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_completed.md:17:- **Details:** > - Completed (~800) and obsolete (~600) items will be moved to `docs/archive/2025-10-15/todos_completed.md` and `docs/archive/2025-10-15/todos_obsolete.md` respectively.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_all.json:532:    "title": "> - Completed (~800) and obsolete (~600) items will be moved to `docs/archive/2025-10-15/s_completed",
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_all.json:540:    "raw_text": "> - Completed (~800) and obsolete (~600) items will be moved to `docs/archive/2025-10-15/todos_completed.md` and `docs/archive/2025-10-15/todos_obsolete.md` respectively."
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_all.json:1036:    "title": "> Note: This list is being consolidated into `docs/_MASTER.md`.",
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-15/todos_all.json:1044:    "raw_text": "> Note: This list is being consolidated into `docs/TODO_MASTER.md`."
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-14/todo_full_raw.txt:285:docs/_generated/master_status.md (Historical snapshot):684:(Historical) Calibration service reported "Not implemented"; superseded by verified handler.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-14/todo_full_raw.txt:815:./doc_audit/todo_full_raw.txt:285:docs/_generated/master_status.md (Historical snapshot):684:(Historical) "Not implemented" note superseded by verification results.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-14/todo_inventory.csv:809:./doc_audit/todo_full_raw.txt,285,INFO,"docs/_generated/master_status.md (Historical snapshot):684 — ""Not implemented"" note superseded by new verification." 
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-14/COMPREHENSIVE_AUDIT_REPORT.md:17:> - TODO/TASK dumps under `docs/archive/2025-10-generated/` → consolidated into `docs/cleanup/odrive_refs_all.txt`, `docs/cleanup/odrive_refs_non_legacy.txt`, and `doc_audit/todo_inventory.csv`.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-07/PROJECT_STATUS_REALITY_CHECK_CORRECTED.md:76:- ❌ ODrive code exists but system moved to **MG Motor** - confusion exists
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-audit/2025-10-07/PROJECT_STATUS_REALITY_CHECK_CORRECTED.md:312:- ⏳ C++/Python code consolidated into single implementation
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/generated-reports/TODO_CLEANUP_EXECUTION_SUMMARY.md:74:**ODrive Legacy** (replaced by MG6010)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/generated-reports/TODO_CLEANUP_EXECUTION_SUMMARY.md:144:   - ODrive references (replaced by MG6010)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/generated-reports/master_status.md:97:**Recommendation:** These should be consolidated into ONE master status document.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONSOLIDATION_LOG_2025-10-Phase1.md:174:- **Phase 4 (Motor Control):** 19 files archived (merged into README), 1 moved to evidence
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONSOLIDATION_LOG_2025-10-Phase1.md:180:- **Files moved to evidence:** 1 (Safety Monitor implementation)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/DOC_INVENTORY_FOR_AUDIT.md:122:**Rationale:** Superseded meta-documents replaced by the reconciliation plan and status matrix. Git history retains prior versions.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/DOC_INVENTORY_FOR_AUDIT.md:251:**Action:** Check if superseded by newer test results  
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:260:57bb02c5134d5c8d049f8efeadecb2717b8e2716	docs/CLEANUP_PHASE2_SUMMARY.md	20	**Rationale:** Historical plans superseded by TODO_MASTER.md (2,540 items) and STATUS_TRACKER.md.
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:265:4fbec6a6f1725d833403d20f2a7dc12a4beb047c	docs/CLEANUP_PHASE2_SUMMARY.md	25	- TODO_CONSOLIDATED.md (Oct 9, 2024 → superseded by TODO_MASTER.md Oct 15, 2025) - MOTOR_TUNING_GUID
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:443:d33212eee3bb2f96c7d90c2d58c34a3437d4d833	docs/CONSOLIDATION_LOG.md	30	**Rationale:** Historical plans superseded by: - [TODO_MASTER.md](TODO_MASTER.md) - Consolidated 2,5
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:453:7bda94f1a56d49301f82df8b6670e6c526c7c0d7	docs/CONSOLIDATION_LOG.md	40	**Rationale:** - **TODO_CONSOLIDATED.md:** Over a year old; replaced by TODO_MASTER.md with 70 addit
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:2887:88783d1494087080d00ab66136f6662eabe75afa	docs/TODO_MASTER_CONSOLIDATED.md	43	- [ ] **[T-PR2-2025-10-64a84bab]** [SW-only] > Note: This list is being consolidated into `docs/_MAS
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:4163:13a88a56c5abb86a8ef725cf64e4410b4065cae9	docs/guides/GAPS_AND_ACTION_PLAN.md	54	- `robust_cotton_detection_client.cpp` already lives outside the build (moved to `src/yanthra_move/d
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:4164:900a70f13b46054ef05fe75031249c525d1bccba	docs/guides/GAPS_AND_ACTION_PLAN.md	55	**Acceptance Criteria:** - [x] Files moved to archive/ - [x] Archive README.md updated with rational
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/consolidation-meta/CONTENT_INDEX_2025-10-16.tsv:7057:05083d1f0d9a8b6d181a860b75b2f6f1d527e9da	docs/project-management/REMAINING_TASKS.md	2	> Note: This list is being consolidated into `docs/TODO_MASTER.md`. > - For production readiness and
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:76:**Purpose:** Historical execution plans superseded by `TODO_MASTER.md`
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:95:**Purpose:** Motor control package docs consolidated into package README
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:131:**Purpose:** Documents replaced by newer, more authoritative versions
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:134:- `TODO_CONSOLIDATED.md` (Oct 9, 2024) → superseded by `TODO_MASTER.md` (Oct 15, 2025)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:135:- `MOTOR_TUNING_GUIDE_2025-10-09_ODrive.md` → superseded by MG6010 version
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:136:- `PRODUCTION_SYSTEM_EXPLAINED_2025-10-10_Monolithic.md` (1,337 lines) → superseded by modular `production-system/*.md` (7 files)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/README.md:287:- ✅ Package-level docs consolidated into READMEs
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/todos_obsolete.md:51:**Reason:** Python wrapper fully replaced by C++ DepthAI integration
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/todos_obsolete.md:157:**Reason:** Original design replaced by improved architecture
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/todos_completed.md:138:- 213+ documents consolidated into 3 authoritative package READMEs
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/superseded/README.md:5:**Purpose:** Documents that have been replaced by newer, more authoritative versions
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10/execution-plans/README.md:19:These are historical planning documents that have been superseded by current active trackers:
+/home/uday/Downloads/pragati_ros2/docs/CONSOLIDATION_SUMMARY.md:31:- PRODUCTION_SYSTEM_EXPLAINED.md (now superseded by production-system/*.md)
+/home/uday/Downloads/pragati_ros2/docs/archive/2025-10-21/scripts/reorganize_docs.sh:140:echo "   ✓ MG6010 docs moved to motor_control_ros2"
+/home/uday/Downloads/pragati_ros2/docs/project-management/REMAINING_TASKS.md:3:> Note: This list is being consolidated into `docs/TODO_MASTER.md`.
+/home/uday/Downloads/pragati_ros2/docs/TODO_MASTER_CONSOLIDATED.md:168:- [ ] **[T-PR2-2025-10-64a84bab]** [SW-only] > Note: This list is being consolidated into `docs/_MASTER.md`.
+/home/uday/Downloads/pragati_ros2/docs/CONSOLIDATION_LOG.md:99:**Rationale:** Historical plans superseded by:
+/home/uday/Downloads/pragati_ros2/docs/CONSOLIDATION_LOG.md:126:- MOTOR_TUNING_GUIDE.md (Oct 9, ODrive) → MOTOR_TUNING_GUIDE_2025-10-09_ODrive.md (superseded by MG6010 version)
+/home/uday/Downloads/pragati_ros2/docs/CONSOLIDATION_LOG.md:129:- **TODO_CONSOLIDATED.md:** Over a year old; replaced by TODO_MASTER.md with 70 additional items from code audit
+/home/uday/Downloads/pragati_ros2/docs/CONSOLIDATION_LOG.md:130:- **MOTOR_TUNING_GUIDE.md:** ODrive-focused guide replaced by MG6010-specific guide in guides/ folder
+/home/uday/Downloads/pragati_ros2/docs/guides/GAPS_AND_ACTION_PLAN.md:202:- `robust_cotton_detection_client.cpp` already lives outside the build (moved to `src/yanthra_move/deprecated/` during the ROS2 cleanup; no references remain in CMake).
+/home/uday/Downloads/pragati_ros2/docs/guides/GAPS_AND_ACTION_PLAN.md:206:- [x] Files moved to archive/
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_ROUND3_SUMMARY_2025-10-16.md:16:- ✅ PRODUCTION_SYSTEM_EXPLAINED.md archived (superseded by modular production-system/*.md)
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_ROUND3_SUMMARY_2025-10-16.md:130:**Message:** `docs: archive PRODUCTION_SYSTEM_EXPLAINED.md (superseded by modular production-system/*.md)`
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_ROUND3_SUMMARY_2025-10-16.md:139:  + PRODUCTION_SYSTEM_EXPLAINED.md (now superseded by production-system/*.md)
+/home/uday/Downloads/pragati_ros2/docs/CLEANUP_ROUND3_SUMMARY_2025-10-16.md:201:0471087 docs: archive PRODUCTION_SYSTEM_EXPLAINED.md (superseded by modular production-system/*.md)
+/home/uday/Downloads/pragati_ros2/docs/integration/INTEGRATION_COMPLETE_FINAL_SUMMARY.md:111:✅ **Bridge deprecated**: `cotton_detection_bridge.py` moved to deprecated/  

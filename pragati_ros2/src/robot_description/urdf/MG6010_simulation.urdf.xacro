@@ -1,0 +1,353 @@
+<?xml version="1.0"?>
+<!--
+MG6010 Robot URDF for Gazebo Simulation (based on MG6010_FLU.urdf)
+This version replaces mesh-based collisions with primitive shapes
+because dartsim physics engine doesn't support mesh collisions.
+Visual mesh origins match the original FLU.urdf exactly.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="MG6010">
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.001334 0 0.18943" rpy="0 0 0"/>
+      <mass value="29.128"/>
+      <inertia ixx="2.1068" ixy="0" ixz="-0.0069722"
+               iyy="2.1115" iyz="0" izz="0.22457"/>
+    </inertial>
+    <visual name="base_link_visual">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/base_link.STL"/>
+      </geometry>
+      <material name="base_material">
+        <color rgba="0.65098 0.61961 0.58824 1"/>
+      </material>
+    </visual>
+    <collision name="base_link_collision">
+      <origin xyz="0 0 0.25" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.35 0.35 0.5"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Link2 - vertical prismatic -->
+  <link name="link2">
+    <inertial>
+      <origin xyz="0.0023258 0.39197 0.0012124" rpy="0 0 0"/>
+      <mass value="7.2824"/>
+      <inertia ixx="0.56505" ixy="-0.0011051" ixz="0.00023875"
+               iyy="0.0071252" iyz="-0.00046822" izz="0.56327"/>
+    </inertial>
+    <visual name="link2_visual">
+      <origin xyz="0 0 -0.445" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link2.STL"/>
+      </geometry>
+      <material name="yellow">
+        <color rgba="1 1 0 1"/>
+      </material>
+    </visual>
+    <collision name="link2_collision">
+      <origin xyz="0 0.4 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.8 0.08"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint2" type="prismatic">
+    <origin xyz="0 0 0.45922" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="link2"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="0.1" upper="0.32" effort="1000" velocity="0.5"/>
+    <dynamics damping="50.0" friction="10.0"/>
+  </joint>
+
+  <!-- Link4 - horizontal prismatic -->
+  <link name="link4">
+    <inertial>
+      <origin xyz="-0.044144 0.0378 -0.072925" rpy="0 0 0"/>
+      <mass value="0.86357"/>
+      <inertia ixx="0.0063398" ixy="0.00091722" ixz="-0.0017328"
+               iyy="0.0061419" iyz="0.0015638" izz="0.0031822"/>
+    </inertial>
+    <visual name="link4_visual">
+      <origin xyz="0.008 -0.334 -0.459" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link4.STL"/>
+      </geometry>
+      <material name="purple">
+        <color rgba="0.29216 0.11961 0.93333 1"/>
+      </material>
+    </visual>
+    <collision name="link4_collision">
+      <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.25 0.2 0.15"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint4" type="prismatic">
+    <origin xyz="0 0.33411 0" rpy="0 0 0"/>
+    <parent link="link2"/>
+    <child link="link4"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.25" upper="0.35" effort="1000" velocity="0.5"/>
+    <dynamics damping="50.0" friction="10.0"/>
+  </joint>
+
+  <!-- Link7 - fixed to link4 -->
+  <link name="link7">
+    <inertial>
+      <origin xyz="-0.004 0.0041238 0" rpy="0 0 0"/>
+      <mass value="0.05924"/>
+      <inertia ixx="4.4262E-05" ixy="0" ixz="0"
+               iyy="4.0102E-05" iyz="0" izz="4.7957E-06"/>
+    </inertial>
+    <visual name="link7_visual">
+      <origin xyz="0.234 -0.395 -0.144" rpy="0 -0.7854 1.5708"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link7.STL"/>
+      </geometry>
+      <material name="white">
+        <color rgba="0.89804 0.91765 0.92941 1"/>
+      </material>
+    </visual>
+    <collision name="link7_collision">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.04 0.04 0.04"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint7" type="fixed">
+    <origin xyz="-0.062994 0.061 -0.19179" rpy="0 0.7854 0"/>
+    <parent link="link4"/>
+    <child link="link7"/>
+  </joint>
+
+  <!-- Camera mount link -->
+  <link name="camera_mount_link">
+    <inertial>
+      <origin xyz="-0.0041238 0 -0.004" rpy="0 0 0"/>
+      <mass value="0.05924"/>
+      <inertia ixx="4.0102E-05" ixy="0" ixz="0"
+               iyy="4.7957E-06" iyz="0" izz="4.4262E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white_mat">
+        <color rgba="0.89804 0.91765 0.92941 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.02 0.02 0.02"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="camera_mount_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+    <parent link="link7"/>
+    <child link="camera_mount_link"/>
+  </joint>
+
+  <!-- Link3 - revolute joint -->
+  <link name="link3">
+    <inertial>
+      <origin xyz="-0.033163 -0.04027 -0.0050659" rpy="0 0 0"/>
+      <mass value="1.4316"/>
+      <inertia ixx="0.0037572" ixy="-0.00082268" ixz="-0.0011479"
+               iyy="0.043868" iyz="-0.00017008" izz="0.044751"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.069 -0.378 -0.330" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link3.STL"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0.59216 0.79608 0.23333 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.04 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.4"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint3" type="revolute">
+    <origin xyz="-0.0675 0.042 -0.127" rpy="0 0.0063952 0"/>
+    <parent link="link4"/>
+    <child link="link3"/>
+    <axis xyz="0 -1 0"/>
+    <limit lower="-1.5708" upper="0.0" effort="1000" velocity="1.0"/>
+  </joint>
+
+  <!-- Yanthra link -->
+  <link name="yanthra_link">
+    <inertial>
+      <origin xyz="-0.033163 0.04173 -0.0050659" rpy="0 0 0"/>
+      <mass value="1.4316"/>
+      <inertia ixx="0.0037572" ixy="-0.00082268" ixz="-0.0011479"
+               iyy="0.043868" iyz="-0.00017008" izz="0.044751"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white_mat2">
+        <color rgba="0.89804 0.91765 0.92941 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="yantra_joint" type="fixed">
+    <origin xyz="0 -0.082 0" rpy="0 0 0"/>
+    <parent link="link3"/>
+    <child link="yanthra_link"/>
+  </joint>
+
+  <!-- Camera link -->
+  <link name="camera_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.044809"/>
+      <inertia ixx="3.1898E-05" ixy="0" ixz="0"
+               iyy="4.0973E-06" iyz="0" izz="3.3708E-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0.395 -0.145 -0.2335" rpy="0 0.7854 1.5708"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/camera_link.STL"/>
+      </geometry>
+      <material name="camera_white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.09 0.025"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="camera_link_joint" type="fixed">
+    <origin xyz="0.016845 0.100461 -0.077129" rpy="1.5708 0.785398 0"/>
+    <parent link="yanthra_link"/>
+    <child link="camera_link"/>
+  </joint>
+
+  <!-- Link5 origin -->
+  <link name="link5_origin">
+    <inertial>
+      <origin xyz="-0.033163 0.04173 -0.0050659" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white_mat3">
+        <color rgba="0.89804 0.91765 0.92941 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="link5_origin_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="yanthra_link"/>
+    <child link="link5_origin"/>
+  </joint>
+
+  <!-- Link5 - gripper prismatic -->
+  <link name="link5">
+    <inertial>
+      <origin xyz="-0.24702 0.0038414 0.0022102" rpy="0 0 0"/>
+      <mass value="0.50477"/>
+      <inertia ixx="0.00073373" ixy="0.00051748" ixz="-0.00013446"
+               iyy="0.014642" iyz="4.7355E-06" izz="0.014712"/>
+    </inertial>
+    <visual>
+      <origin xyz="-0.209 -0.300 -0.329" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://robot_description/meshes/link5.STL"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0.25 0.28 0.3 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.25 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.5 0.08 0.08"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint5" type="prismatic">
+    <origin xyz="0.27774 0.00375 -0.001" rpy="0 0 0"/>
+    <parent link="link5_origin"/>
+    <child link="link5"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0" upper="0.45" effort="100" velocity="0.2"/>
+  </joint>
+
+  <!-- End effector link -->
+  <link name="ee_link">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.001"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="ee_white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="ee_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <parent link="link5"/>
+    <child link="ee_link"/>
+  </joint>
+
+</robot>

@@ -1,0 +1,13 @@
+# Factory default PID gains for MG6010 motor
+# Read from a fresh motor using CAN command 0x30
+profile_name: factory_default
+motor_type: mg6010
+description: "Factory default PID parameters as shipped with MG6010-i6 motor"
+created: "2026-03-06"
+gains:
+  position_kp: 30
+  position_ki: 10
+  speed_kp: 50
+  speed_ki: 20
+  torque_kp: 40
+  torque_ki: 15

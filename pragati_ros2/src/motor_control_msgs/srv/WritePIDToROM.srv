@@ -1,0 +1,16 @@
+# Write PID Parameters to ROM Service
+# Request to write PID tuning parameters to motor controller ROM
+# Parameters persist across power cycles — use with caution
+
+# Request
+uint8 motor_id          # Motor CAN ID
+uint8 angle_kp          # Angle loop proportional gain (0-255)
+uint8 angle_ki          # Angle loop integral gain (0-255)
+uint8 speed_kp          # Speed loop proportional gain (0-255)
+uint8 speed_ki          # Speed loop integral gain (0-255)
+uint8 current_kp        # Current loop proportional gain (0-255)
+uint8 current_ki        # Current loop integral gain (0-255)
+---
+# Response
+bool success            # True if PID parameters were written to ROM successfully
+string error_message    # Error description (empty on success)

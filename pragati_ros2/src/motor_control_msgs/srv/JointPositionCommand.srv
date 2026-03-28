@@ -1,0 +1,13 @@
+# Joint Position Command Service
+# Request to move a joint to a specific position
+
+# Request
+int64 joint_id         # Joint ID (2, 3, 4, 5)
+float64 target_position # Target position in radians
+bool wait_for_completion # Whether to wait for movement completion
+float64 max_velocity    # Optional: Maximum velocity for this move (0 = use default)
+---
+# Response
+bool success           # True if command was accepted and executed
+string reason          # Success/failure reason
+float64 actual_position # Current position after command (if available)

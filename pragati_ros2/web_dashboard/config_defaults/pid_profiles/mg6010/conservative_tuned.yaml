@@ -1,0 +1,13 @@
+# Conservative tuned PID gains for MG6010 arm joint
+# Tested on Joint 3, suitable as starting point for all arm joints
+profile_name: conservative_tuned
+motor_type: mg6010
+description: "Conservative gains prioritizing stability over speed"
+created: "2026-03-06"
+gains:
+  position_kp: 45
+  position_ki: 8
+  speed_kp: 60
+  speed_ki: 15
+  torque_kp: 50
+  torque_ki: 12

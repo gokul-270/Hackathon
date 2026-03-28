@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    "/joint_state_publisher",
+    "/odrive_service_node",
+    "/robot_state_publisher",
+    "/transform_listener_impl_61c9ed0cb300",
+    "/yanthra_move"
+  ],
+  "topics": {
+    "/drop_cotton/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint2/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint2/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint2_position_controller/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint3/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint3/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint3_position_controller/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint4/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint4/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint4_position_controller/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint5/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint5/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint5_position_controller/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/joint_states": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/led_control/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/lid_open/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/parameter_events": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/pick_cotton/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/problem_led/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/robot_description": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/rosout": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/shutdown_switch/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/shutdown_switch_in/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/start_switch/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/start_switch_in/state": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/start_switch_out/command": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/tf": {
+      "publishers": [],
+      "subscribers": []
+    },
+    "/tf_static": {
+      "publishers": [],
+      "subscribers": []
+    }
+  },
+  "generated": "2025-09-10T21:53:18.435407"
+}

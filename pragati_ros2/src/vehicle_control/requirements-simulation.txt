@@ -1,0 +1,26 @@
+# Vehicle Control System - Simulation Requirements
+# Additional dependencies for simulation and GUI features
+
+# Core GUI and visualization
+matplotlib>=3.5.0
+tkinter; sys_platform != "linux"  # Usually built-in on Windows/Mac
+
+# Scientific computing
+numpy>=1.21.0
+scipy>=1.7.0
+
+# Optional advanced visualization
+plotly>=5.0.0
+dash>=2.0.0
+
+# Optional 3D visualization
+mayavi>=4.7.0; python_version >= "3.8"
+
+# Performance and testing
+pytest>=6.0.0
+pytest-benchmark>=3.4.0
+
+# Development tools
+black>=21.0.0
+flake8>=3.9.0
+mypy>=0.910

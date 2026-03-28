@@ -1,0 +1,22 @@
+# Step Response Test Action
+# Executes a step response test on a motor and records time-series data
+# Used for PID tuning analysis (overshoot, settling time, steady-state error)
+
+# Goal
+uint8 motor_id              # Motor CAN ID
+float32 step_size_degrees   # Step size in degrees
+float32 duration_seconds    # Total test duration in seconds
+---
+# Result
+bool success                # True if test completed successfully
+string error_message        # Error description (empty on success)
+float64[] timestamps        # Time values in seconds from test start
+float64[] positions         # Position samples in degrees
+float64[] velocities        # Velocity samples in degrees/second
+float64[] currents          # Current samples in amps
+float64 setpoint            # Target position that was commanded
+---
+# Feedback
+float32 progress_percent    # Test progress (0.0 to 100.0)
+float64 current_position    # Current motor position in degrees
+float64 elapsed_seconds     # Time elapsed since test start

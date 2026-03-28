@@ -1,0 +1,24 @@
+# Motor Lifecycle Service
+# Control motor lifecycle operations (on, off, stop, reboot, save to ROM)
+
+# Request
+uint8 motor_id                # Motor CAN ID
+
+uint8 action                  # Lifecycle action
+uint8 ON=0
+uint8 OFF=1
+uint8 STOP=2
+uint8 REBOOT=3
+uint8 SAVE_PID_ROM=4
+uint8 SAVE_ZERO_ROM=5
+---
+# Response
+bool success
+uint8 motor_state             # Current motor state after action
+uint8 STATE_OFF=0
+uint8 STATE_RUNNING=1
+uint8 STATE_STOPPED=2
+uint8 STATE_ERROR=3
+uint8 STATE_UNKNOWN=4
+
+string error_message

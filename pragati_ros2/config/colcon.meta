@@ -1,0 +1,7 @@
+{
+  "names": {
+    "pattern_finder": {
+      "cmake-args": ["-Wno-dev"]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+test_suite/integration/phase10/test_phase10_documentation.sh
+test_suite/integration/phase11/test_phase11_performance.sh
+test_suite/integration/phase12/test_phase12_security.sh
+test_suite/integration/phase13/test_phase13_final_integration.sh
+test_suite/integration/phase1/test_start_switch_topic.sh
+test_suite/integration/phase2/test_phase2_validation.sh
+test_suite/integration/phase3/test_phase3_error_recovery.sh
+test_suite/integration/phase3/test_phase3_resilience.sh
+test_suite/integration/phase4/test_phase4_hot_reloading.sh
+test_suite/integration/phase5/test_phase5_configuration.sh
+test_suite/integration/phase6/test_phase6_services.sh
+test_suite/integration/phase7/test_phase7_hardware_interfaces.sh
+test_suite/integration/phase8/test_phase8_monitoring.sh
+test_suite/integration/phase9/test_phase9_testing_framework.sh
+test_suite/README.md
+test_suite/run_tests.sh
+test_suite/utils/test_comprehensive_validation.sh

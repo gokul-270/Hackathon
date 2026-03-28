@@ -1,0 +1,29 @@
+/**:
+  ros__parameters:
+    # Simulation mode configuration
+    simulation_mode: true
+    use_depthai: false
+
+    # Simulated cotton field positions (meters in camera frame)
+    # Represents a realistic cluster of cotton bolls
+    simulated_positions:
+      x: [0.40, 0.35, 0.50, 0.45, 0.38]
+      y: [-0.15, -0.10, -0.15, -0.10, -0.12]
+      z: [0.10, 0.10, 0.10, 0.10, 0.10]
+
+    # Noise injection for realistic simulation
+    simulation_noise_stddev: 0.005    # 5mm Gaussian noise
+    simulation_confidence_min: 0.70    # Minimum confidence
+    simulation_confidence_max: 0.95    # Maximum confidence
+
+    # Detection settings (same as production defaults)
+    detection:
+      cache_validity_ms: 100
+
+    # Fallback positions disabled in simulation
+    publish_fallback_on_zero: false
+
+    # Camera settings (not used in simulation, but declared to avoid parameter warnings)
+    camera_topic: "/camera/color/image_raw"
+    detection_confidence_threshold: 0.5
+    enable_debug_output: false

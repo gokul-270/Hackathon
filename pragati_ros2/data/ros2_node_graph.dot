@@ -1,0 +1,70 @@
+digraph ros2_graph {
+  rankdir=LR;
+  node [fontname=Helvetica];
+  "_joint_state_publisher" [label="/joint_state_publisher", shape=ellipse, style=filled, fillcolor="#eef7ff"];
+
+  "_odrive_service_node" [label="/odrive_service_node", shape=ellipse, style=filled, fillcolor="#eef7ff"];
+
+  "_robot_state_publisher" [label="/robot_state_publisher", shape=ellipse, style=filled, fillcolor="#eef7ff"];
+
+  "_transform_listener_impl_61c9ed0cb300" [label="/transform_listener_impl_61c9ed0cb300", shape=ellipse, style=filled, fillcolor="#eef7ff"];
+
+  "_yanthra_move" [label="/yanthra_move", shape=ellipse, style=filled, fillcolor="#eef7ff"];
+
+  "_drop_cotton_command" [label="/drop_cotton/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint2_command" [label="/joint2/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint2_state" [label="/joint2/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint2_position_controller_command" [label="/joint2_position_controller/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint3_command" [label="/joint3/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint3_state" [label="/joint3/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint3_position_controller_command" [label="/joint3_position_controller/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint4_command" [label="/joint4/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint4_state" [label="/joint4/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint4_position_controller_command" [label="/joint4_position_controller/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint5_command" [label="/joint5/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint5_state" [label="/joint5/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint5_position_controller_command" [label="/joint5_position_controller/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_joint_states" [label="/joint_states", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_led_control_command" [label="/led_control/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_lid_open_command" [label="/lid_open/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_parameter_events" [label="/parameter_events", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_pick_cotton_command" [label="/pick_cotton/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_problem_led_command" [label="/problem_led/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_robot_description" [label="/robot_description", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_rosout" [label="/rosout", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_shutdown_switch_state" [label="/shutdown_switch/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_shutdown_switch_in_state" [label="/shutdown_switch_in/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_start_switch_state" [label="/start_switch/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_start_switch_in_state" [label="/start_switch_in/state", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_start_switch_out_command" [label="/start_switch_out/command", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_tf" [label="/tf", shape=box, style=filled, fillcolor="#fff7e6"];
+
+  "_tf_static" [label="/tf_static", shape=box, style=filled, fillcolor="#fff7e6"];
+
+}

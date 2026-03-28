@@ -1,0 +1,346 @@
+# Recommended ROS2 Parameters Configuration
+# Generated from analysis of existing production configs
+# Consolidates yanthra_move, cotton_detection, odrive_control, and vehicle_control parameters
+# This represents the optimal parameter structure for production deployment
+
+# ============================================================================
+# YANTHRA MOVE SYSTEM PARAMETERS
+# ============================================================================
+yanthra_move:
+  ros__parameters:
+    # === OPERATION CONTROL ===
+    continuous_operation: true               # Enable continuous picking cycles
+    simulation_mode: false                   # Single source of truth for simulation
+    save_logs: false                        # Enable detailed logging
+    
+    # === HARDWARE FEATURES === 
+    # NOTE: These MUST match compile-time flags
+    enable_gpio: true                        # Requires ENABLE_PIGPIO=ON
+    enable_camera: true                      # Requires ENABLE_CAMERA=ON
+    trigger_camera: true                     # Camera triggering enabled
+    global_vaccum_motor: true               # Vacuum pump control
+    end_effector_enable: true               # End effector control
+    reverse_endeffector: false              # End effector direction
+    parking_on: true                        # Auto-parking after cycles
+    
+    # === VISION AND PROCESSING ===
+    CAPTURE_MODE: 3                         # RealSense capture mode
+    YanthraDisparityShift: 15               # Disparity processing shift
+    UsePostProcessingFilter: true           # Enable post-processing
+    UseThresholdFilter: false               # Disable threshold filter
+    UseSpatialFilter: true                  # Enable spatial filtering
+    SpatialFilterHoleFillingMode: 1         # Hole filling mode
+    TemporalFilterPersistenceControl: 7     # Temporal filter persistence
+    UseTemporalFilter: false                # Disable temporal filter
+    PRAGATI_BYPASS_INTERNAL_PROCESSING: false  # Use internal processing
+    YoloThreshold: 0.55                     # YOLO detection threshold
+    continuous_vacuum: true                 # Continuous vacuum operation
+    
+    # === CALIBRATION AND TESTING ===
+    arm_calibration: false                  # Skip arm calibration
+    YanthraLabCalibrationTesting: false     # Lab calibration mode
+    EndEffectorDropConveyor: false          # Drop to conveyor mode
+    
+    # === MOTION CONTROL ===
+    joint_velocity: 1.0                     # Joint movement speed
+    jerk_enabled_theta: false               # Theta jerk compensation
+    jerk_enabled_phi: false                 # Phi jerk compensation
+    min_sleep_time_formotor_motion: 0.5     # Minimum motion delay
+    
+    # Sleep times for L2 joint operations
+    l2_homing_sleep_time: 6.0               # L2 homing duration
+    l2_step_sleep_time: 5.0                 # L2 step movement time
+    l2_idle_sleep_time: 2.0                 # L2 idle wait time
+    
+    # === TIMING AND DELAYS ===
+    delays:
+      picking: 0.200                        # Cotton picking delay (seconds)
+      pre_start_len: 0.050                  # Pre-start distance (meters)
+      end_effector_runtime: 600.0           # End effector runtime (ms)
+      back_valve_close_delay: 500.0         # Back valve close delay (ms)
+      EERunTimeDuringL5ForwardMovement: 4.0 # L5 forward movement time
+      EERunTimeDuringL5BackwardMovement: 0.5 # L5 backward movement time
+      EERunTimeDuringReverseRotation: 1.0   # L5 reverse rotation time
+    
+    # === HARDWARE TIMEOUTS ===
+    hardware_timeout: 1200000.0            # Hardware timeout (microseconds)
+    cotton_capture_detect_wait_time: 1.0    # Cotton detection timeout
+    
+    # === FIELD OF VIEW ===
+    fov_theta_max: 0.3926                   # Max theta FOV (22.5 degrees)
+    fov_phi_max: 0.3926                     # Max phi FOV (22.5 degrees)
+    
+    # === HEIGHT SCANNING ===
+    height_scan_enable: true                # Enable height scanning
+    height_scan_min: 0.01                   # Min scan height (meters)
+    height_scan_max: 1.0                    # Max scan height (meters)
+    height_scan_step: 0.2                   # Scan step size (meters)
+    
+    # === JOINT INITIALIZATION ===
+    joint_poses: [0.00001, 0.00001, 1.5708]  # Default joint positions
+    
+    # Joint2 (L2 - Vertical Axis) Configuration
+    joint2_init:
+      height_scan_enable: false             # Individual height scan control
+      min: 0.01                            # Minimum position (meters)
+      max: 0.85                            # Maximum position (meters) 
+      step: 0.125                          # Step size for movements
+    
+    # Joint3 (Base Rotation) Configuration
+    joint3_init:
+      park_position: 3.33                   # Parking position (radians)
+      homing_position: 0.00001             # Homing reference (radians)
+      multiple_zero_poses: true            # Multiple zero positions
+      zero_poses: [0.261799]               # Zero position array (radians)
+    
+    # Joint4 (Upper Arm) Configuration  
+    joint4_init:
+      park_position: 4.44                   # Parking position (radians)
+      homing_position: 0.00001             # Homing reference (radians)
+      multiple_zero_poses: false           # Single zero position
+      theta_jerk_value: 0.0                # Jerk compensation value
+      zero_poses: [0.0]                    # Zero position array
+    
+    # Joint5 (End Effector Linear) Configuration
+    joint5_init:
+      park_position: 0.001                  # Parking position (meters)
+      homing_position: 0.00001             # Homing reference (meters)
+      end_effector_len: 0.085              # End effector length (meters)
+      joint5_vel_limit: 2.0                # Velocity limit (m/s)
+      min_length: 0.162                    # Minimum extension (meters)
+      max_length: 0.601                    # Maximum extension (meters)
+      gear_ratio: 20.943951                # Gear ratio for calculations
+      phi_jerk_value: 0.0                  # Jerk compensation value
+    
+    # === SYSTEM PATHS ===
+    PRAGATI_INSTALL_DIR: "./"              # Installation directory
+    
+    # === MONITORING PARAMETERS ===
+    enable_network_monitoring: false        # Network monitoring
+    enable_ros_monitoring: false           # ROS system monitoring
+    enable_system_monitoring: false        # System resource monitoring
+    monitoring_rate: 1.0                   # Monitoring frequency (Hz)
+
+# ============================================================================
+# COTTON DETECTION PARAMETERS
+# ============================================================================
+cotton_detection_node:
+  ros__parameters:
+    # === CAMERA CONFIGURATION ===
+    camera_topic: "/camera/image_raw"
+    camera_compressed_topic: "/camera/image_raw/compressed"
+    use_realsense: false                    # Requires HAS_REALSENSE=ON
+    
+    # === DETECTION PARAMETERS ===
+    detection_confidence_threshold: 0.7     # Detection confidence threshold
+    max_cotton_detections: 50               # Maximum detections per frame
+    
+    # === IMAGE PROCESSING ===
+    enable_debug_output: false              # Debug image publishing
+    debug_image_topic: "/cotton_detection/debug_image/compressed"
+    
+    # === COTTON DETECTION ALGORITHM ===
+    cotton_detection:
+      # HSV color range for cotton (white/light colors)
+      hsv_lower_bound: [0, 0, 180]         # [H, S, V] lower bound
+      hsv_upper_bound: [180, 40, 255]      # [H, S, V] upper bound
+      
+      # Contour filtering parameters
+      min_contour_area: 50.0                # Minimum contour area
+      max_contour_area: 5000.0             # Maximum contour area
+      
+      # Morphological operations
+      morphology_kernel_size: 5            # Morphology kernel size
+      gaussian_blur_size: 3                # Gaussian blur kernel
+      
+      # Non-maximum suppression
+      nms_overlap_threshold: 0.3           # NMS overlap threshold
+    
+    # === IMAGE PREPROCESSING ===
+    image_preprocessing:
+      enable_denoising: true               # Image denoising
+      enable_histogram_equalization: false # Histogram equalization
+      enable_sharpening: false             # Image sharpening
+      
+      # Denoising parameters
+      denoise_h: 10                        # Denoising strength
+      denoise_template_window_size: 7      # Template window size
+      denoise_search_window_size: 21       # Search window size
+      
+      # Brightness/contrast adjustment
+      contrast_alpha: 1.0                  # Contrast multiplier
+      brightness_beta: 0                   # Brightness offset
+      
+      # Gamma correction
+      gamma_correction: 1.0                # Gamma correction value
+      
+      # Sharpening parameters
+      sharpen_amount: 1.0                  # Sharpening strength
+    
+    # === COORDINATE TRANSFORMATION ===
+    coordinate_transform:
+      pixel_to_meter_scale_x: 0.001        # X-axis pixel to meter scaling
+      pixel_to_meter_scale_y: 0.001        # Y-axis pixel to meter scaling
+      assumed_depth_m: 0.5                 # Assumed object depth (meters)
+      camera_frame_id: "camera_link"       # Camera coordinate frame
+      world_frame_id: "base_link"          # World coordinate frame
+    
+    # === PERFORMANCE SETTINGS ===
+    performance:
+      max_processing_fps: 10.0             # Maximum processing frequency
+      processing_timeout_ms: 5000          # Processing timeout
+    
+    # === LEGACY BRIDGE CONFIGURATION ===
+    legacy_bridge:
+      enabled: true                        # Enable legacy file bridge
+      signal_file_path: "/tmp/cotton_detection_signal.json"
+      result_file_path: "/tmp/cotton_detection_results.txt"
+    
+    # === LOGGING ===
+    logging:
+      level: "INFO"                        # Log level (DEBUG, INFO, WARN, ERROR)
+      log_detection_timing: true          # Log timing information
+      log_detection_details: false        # Log detailed detection info
+
+# ============================================================================
+# ODRIVE CONTROL PARAMETERS
+# ============================================================================
+odrive_service_node:
+  ros__parameters:
+    # === JOINT CONFIGURATION ===
+    joints: ["joint2", "joint3", "joint4", "joint5"]
+    
+    # === JOINT2 (L2 - Vertical Axis) ===
+    joint2.odrive_id: 1                    # ODrive board ID
+    joint2.can_id: 3                       # CAN bus ID
+    joint2.axis_id: 1                      # Axis on ODrive
+    joint2.transmission_factor: 125.23664  # Motor-to-joint ratio
+    joint2.direction: 1                    # Movement direction
+    joint2.p_gain: 35.0                    # Position P gain
+    joint2.v_gain: 0.000549               # Velocity gain  
+    joint2.v_int_gain: 0.000549           # Velocity integral gain
+    joint2.max_cur: 20.0                   # Maximum current (A)
+    joint2.max_vel: 133.0                  # Maximum velocity
+    joint2.min_vel: 27.0                   # Minimum velocity
+    joint2.max_t: 80.0                     # Maximum torque
+    joint2.homing_pos: 0.03                # Homing position
+    joint2.limit_switch: 26                # Limit switch pin
+    
+    # === JOINT3 (Base Rotation) ===
+    joint3.odrive_id: 0                    # ODrive board ID
+    joint3.can_id: 1                       # CAN bus ID
+    joint3.axis_id: 0                      # Axis on ODrive
+    joint3.transmission_factor: 0.870047022 # Motor-to-joint ratio
+    joint3.direction: -1                   # Movement direction
+    joint3.p_gain: 35.0                    # Position P gain
+    joint3.v_gain: 0.000549               # Velocity gain
+    joint3.v_int_gain: 0.000549           # Velocity integral gain
+    joint3.max_cur: 40.0                   # Maximum current (A)
+    joint3.max_vel: 50.0                   # Maximum velocity
+    joint3.min_vel: 27.0                   # Minimum velocity
+    joint3.max_t: 80.0                     # Maximum torque
+    joint3.homing_pos: 1.4108              # Homing position
+    joint3.limit_switch: 5                 # Limit switch pin
+    
+    # === JOINT4 (Upper Arm) ===
+    joint4.odrive_id: 1                    # ODrive board ID
+    joint4.can_id: 2                       # CAN bus ID
+    joint4.axis_id: 0                      # Axis on ODrive
+    joint4.transmission_factor: 0.870047022 # Motor-to-joint ratio
+    joint4.direction: -1                   # Movement direction
+    joint4.p_gain: 100.0                   # Position P gain
+    joint4.v_gain: 0.000928               # Velocity gain
+    joint4.v_int_gain: 0.000928           # Velocity integral gain
+    joint4.max_cur: 10.0                   # Maximum current (A)
+    joint4.max_vel: 50.0                   # Maximum velocity
+    joint4.min_vel: 27.0                   # Minimum velocity
+    joint4.max_t: 80.0                     # Maximum torque
+    joint4.homing_pos: 3.19159             # Homing position
+    joint4.limit_switch: 6                 # Limit switch pin
+    
+    # === JOINT5 (End Effector Linear) ===
+    joint5.odrive_id: 0                    # ODrive board ID
+    joint5.can_id: 0                       # CAN bus ID
+    joint5.axis_id: 1                      # Axis on ODrive
+    joint5.transmission_factor: 22.777777778 # Motor-to-joint ratio
+    joint5.direction: -1                   # Movement direction
+    joint5.p_gain: 35.0                    # Position P gain
+    joint5.v_gain: 0.000549               # Velocity gain
+    joint5.v_int_gain: 0.000549           # Velocity integral gain
+    joint5.max_cur: 20.0                   # Maximum current (A)
+    joint5.max_vel: 133.0                  # Maximum velocity
+    joint5.min_vel: 27.0                   # Minimum velocity
+    joint5.max_t: 80.0                     # Maximum torque
+    joint5.homing_pos: 0.001               # Homing position
+    joint5.limit_switch: 16                # Limit switch pin
+
+# ============================================================================
+# VEHICLE CONTROL PARAMETERS
+# ============================================================================
+vehicle_control:
+  ros__parameters:
+    # === JOINT COMPATIBILITY ===
+    joint_names: ['joint2', 'joint3', 'joint4', 'joint5']
+    
+    # === VEHICLE PHYSICAL PARAMETERS ===
+    physical_params:
+      wheel_diameter: 0.6096               # 24" wheels in meters
+      wheel_distance_per_rotation: 1.91489 # Distance per wheel rotation
+      drive_gear_ratio_left: 17.4615      # Left drive gear ratio
+      drive_gear_ratio_front: 17.4615     # Front drive gear ratio
+      drive_gear_ratio_right: 17.4615     # Right drive gear ratio
+      steering_gear_ratio: 50.0           # Steering gear ratio
+      steering_limits:
+        min: -45.0                         # Minimum steering angle (degrees)
+        max: 45.0                          # Maximum steering angle (degrees)
+      min_steer_limit: 3.0                 # Steering dead zone (degrees)
+      steering_angle_error_tolerance: 3.0  # Steering tolerance (degrees)
+    
+    # === CAN BUS CONFIGURATION ===
+    can_bus:
+      interface: 'can0'                    # CAN interface name
+      bitrate: 250000                      # CAN bitrate
+      enable_pin: 8                        # CAN enable GPIO pin
+      adc_enable_pin: 7                    # ADC enable GPIO pin
+      
+      # Motor CAN IDs
+      motor_ids:
+        steering_motor_left: 3             # Left steering motor CAN ID
+        steering_motor_right: 1            # Right steering motor CAN ID
+        steering_motor_front: 5            # Front steering motor CAN ID
+        front_drive_motor: 4               # Front drive motor CAN ID
+        left_back_drive_motor: 0           # Left back drive motor CAN ID
+        right_back_drive_motor: 2          # Right back drive motor CAN ID
+      
+      # Active motors list
+      active_motor_list: [3, 1, 5, 4, 0, 2]
+    
+    # === GPIO PIN CONFIGURATION ===
+    gpio_pins:
+      direction_switch_pin: 21             # Forward/reverse switch
+      stop_button_pin: 4                   # Emergency stop button
+      auto_manual_switch_pin: 26           # Auto/manual mode switch
+      arm_start_pin: 16                    # Manual arm start button
+    
+    # === CONTROL PARAMETERS ===
+    movement_tolerance: 0.5                # Movement completion tolerance
+    time_for_unit_distance: 0.0036        # Time scaling for distance
+    time_for_full_wheel_steering_rotation: 30.0  # Full steering time
+    cmd_vel_timeout: 1.0                   # Command velocity timeout
+    steering_angular_scale: 30.0          # Angular velocity scaling
+    
+    # === IMU CONFIGURATION ===
+    imu_serial_port: '/dev/ttyACM0'        # IMU serial port
+    imu_baud_rate: 9600                    # IMU baud rate
+    imu_timeout: 1.0                       # IMU communication timeout
+    imu_sampling_time: 0.02                # IMU sampling period
+    
+    # === CONTROL LOOP FREQUENCIES ===
+    control_frequency: 50.0                # Main control loop (Hz)
+    joint_state_frequency: 10.0           # Joint state publishing (Hz)
+    gpio_frequency: 10.0                   # GPIO monitoring (Hz)
+    status_frequency: 5.0                  # Status reporting (Hz)
+    
+    # === DEBUG AND LOGGING ===
+    vehicle_control_debug: false           # Enable debug output
+    debug_info: false                      # Additional debug information

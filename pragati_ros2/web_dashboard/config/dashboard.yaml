@@ -1,0 +1,466 @@
+# Pragati ROS2 Dashboard Configuration
+# LazyROS-style configuration with Pragati-specific extensions
+
+# Dashboard Role Configuration
+# DEPRECATED (Phase 3, D5): This field is no longer used for role selection.
+# The dashboard role is now hardcoded to "dev" in app_factory.py (design D1).
+# Entity topology is driven by config.env + EntityManager instead.
+# This key is retained for backward compatibility only.
+# Determines which tabs and API routes are available.
+# Valid roles: dev | vehicle | arm
+# - dev: All tabs including Fleet hub (for development PC)
+# - vehicle: Vehicle-specific tabs (no Motor Config, Health, Fleet)
+# - arm: Arm-specific tabs (no Multi-Arm, Fleet)
+# Defaults to 'dev' if absent.
+role: dev
+
+# Fleet Configuration (only used when role is 'dev')
+# DEPRECATED (Phase 3, D5): Fleet topology is now defined in config.env
+# and managed by EntityManager (entity_manager.py). This section is only
+# used as a fallback if config.env has no remote entities defined.
+# Prefer adding ARM_{N}_IP / VEHICLE_IP entries to config.env instead.
+# Defines the RPi fleet members for the Fleet hub tab.
+# If absent or empty, Fleet tab shows "No fleet configured".
+fleet:
+  vehicle:
+    name: "vehicle-rpi"
+    ip: "192.168.137.203"
+    role: "vehicle"
+  arms:
+    - name: "arm1-rpi"
+      ip: "192.168.137.12"
+      role: "arm"
+    - name: "arm2-rpi"
+      ip: "192.168.137.238"
+      role: "arm"
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8090
+  websocket_rate_hz: 1.0
+  api_version: "1.2.0"
+  cors_enabled: true
+  debug_mode: false
+  max_clients: 50                  # From capabilities.yaml
+  max_log_entries: 50000          # From capabilities.yaml
+  ros_command_timeout: 10.0       # From capabilities.yaml
+  ros_info_timeout: 2.0           # From capabilities.yaml
+  workers: 1                       # Single worker for RPi
+  log_level: "INFO"
+
+# Feature Capabilities (with backward compatibility)
+capabilities:
+  # Phase 0: Core system
+  basic_monitoring: true
+  websocket_updates: true
+
+  # Phase 1: Enhanced features
+  topic_echo: true
+  topic_stats: true
+  message_envelope: true
+  advanced_logging: false
+  logs_history: true
+  logs_export: true
+  topic_graph_introspection: true
+
+  # Phase 2: Node management
+  node_lifecycle: true
+  node_restart: true
+  dependency_visualization: true
+
+  # Phase 3: Performance monitoring
+  performance_metrics: true
+  cpu_memory_tracking: true
+  network_latency_probes: true
+
+  # Phase 4: UX enhancements
+  keyboard_shortcuts: true
+  fuzzy_search: true
+  mobile_responsive: true
+  theme_switching: true
+  user_preferences: true
+  accessibility_features: true
+
+  # Phase 5: Pragati-specific
+  arm_status_graphs: false
+  cotton_detection_monitor: false
+  vehicle_control_dashboard: false
+  odrive_health_metrics: false
+
+  # Enhanced feature modules
+  debug_tools: true
+  health_monitoring: true
+  historical_data: true
+  alert_system: true
+  max_concurrent_echoes: 3
+  service_tester: true
+  parameter_editor: true
+
+# MQTT Multi-Arm Configuration
+# Set broker_host to enable multi-arm MQTT status tracking.
+# If this section is absent or broker_host is empty, MqttStatusService is skipped.
+mqtt:
+  broker_host: ""                 # MQTT broker hostname (auto-resolve or explicit override)
+  broker_port: 1883               # MQTT broker port
+  heartbeat_timeout_s: 15.0       # Seconds before arm marked stale
+
+health:
+  agent:
+    health_interval_s: 10.0
+    health_timeout_s: 5.0
+    health_failure_threshold: 2
+  ping:
+    ping_interval_s: 3.0
+    ping_timeout_s: 2.0
+    ping_failure_threshold: 2
+
+# Topic Echo Configuration
+topic_echo:
+  default_rate_hz: 10.0
+  max_rate_hz: 100.0             # Increased from capabilities.yaml
+  buffer_size: 1000
+  max_message_size_kb: 1024
+  max_message_size_bytes: 1048576 # From capabilities.yaml
+  truncate_large_messages: true   # From capabilities.yaml
+  statistics_window_size: 100
+  qos:
+    reliability: "best_effort"  # "reliable" | "best_effort"
+    durability: "volatile"      # "volatile" | "transient_local"
+    depth: 10
+
+# Monitoring Configuration (RPi-optimized)
+monitoring:
+  # Update rate for WebSocket broadcasts
+  update_rate_hz: 1.0
+
+  # Critical nodes that are always monitored at full rate
+  critical_nodes:
+    - "/motor_control"
+    - "/cotton_detection"
+    - "/safety_monitor"
+    - "/yanthra_move"
+
+  # Sampling configuration for RPi optimization
+  sampling:
+    high_frequency_topics: 0.1  # Sample 10% of messages for topics >10Hz
+    standard_topics: 1.0        # Sample all messages for standard topics
+    critical_sample_rate: 1.0   # Always sample critical nodes
+
+  # Buffer sizes (fixed memory allocation)
+  buffer_sizes:
+    performance_history: 60     # 1 minute at 1Hz
+    error_logs: 1000            # Max error entries
+    message_cache: 100          # Per-topic message cache
+    system_history: 300         # 5 minutes of system stats
+
+# LazyROS-style Ignore Configuration
+ignore:
+  # Topics to hide from topic lists
+  topics:
+    - "/rosout"
+    - "/parameter_events"
+    - "/tf"
+    - "/tf_static"
+    - "/_*"  # ROS2 internal topics
+    - "/bond*"
+    - "/clicked_point"
+    - "/goal_pose"
+    - "/initialpose"
+
+  # Nodes to hide from node lists
+  nodes:
+    - "/_ros2cli_*"
+    - "/rviz2*"
+    - "/rqt*"
+    - "*_lifecycle_manager"
+
+  # Services to hide from service lists
+  services:
+    - "/_*"
+    - "/*/get_parameters"
+    - "/*/set_parameters*"
+    - "/*/describe_parameters"
+    - "/*/list_parameters"
+
+  # Dashboard internal elements (hide by default for cleaner view)
+  hide_dashboard_internals: true  # Set to false to show web_dashboard_* nodes/topics/services
+  dashboard_internal_patterns:
+    - "web_dashboard_*"
+    - "/web_dashboard*"
+
+# Advanced Logging Configuration (Phase 1)
+logging:
+  enabled: true
+  rosout_buffer_size: 10000
+  log_levels:
+    - "DEBUG"
+    - "INFO"
+    - "WARN"
+    - "ERROR"
+    - "FATAL"
+  export_formats:
+    - "json"
+    - "csv"
+    - "txt"
+  filters:
+    exclude_patterns:
+      - "parameter_events"
+      - "bond_*"
+  # Dashboard server logging (from enhanced config)
+  file_path: "./logs/dashboard.log"
+  max_size_mb: 50
+  backup_count: 3
+  # ROS log aggregation
+  aggregate_ros_logs: true
+  max_log_lines: 10000
+  log_retention_hours: 24
+
+# Performance Monitoring (Phase 3)
+performance:
+  enabled: true
+  update_interval_seconds: 5.0
+  cpu_threshold_percent: 80.0
+  memory_threshold_mb: 500       # Enhanced: RPi-appropriate threshold
+  network_timeout_seconds: 5.0
+  latency_threshold_ms: 100      # Alert threshold in milliseconds
+  rate_drop_threshold: 0.5       # 50% rate drop triggers alert
+  enable_per_node_tracking: true
+  enable_topic_latency: true
+  enable_system_monitoring: true
+  health_check_topics:
+    - "/joint_states"
+    - "/joint2_position_controller/command"
+
+# UX Enhancements (Phase 4)
+ux_enhancements:
+  enabled: true
+
+  # Keyboard shortcuts configuration
+  keyboard_shortcuts:
+    enabled: true
+    help_key: "?"
+    search_key: "ctrl+k"
+    preferences_key: "ctrl+comma"
+    navigation_enabled: true
+    global_shortcuts: true
+
+  # Fuzzy search configuration
+  fuzzy_search:
+    enabled: true
+    search_history_size: 50
+    min_search_chars: 2
+    max_results: 20
+    categories:
+      - "nodes"
+      - "topics"
+      - "services"
+      - "performance"
+      - "logs"
+    search_index_refresh_interval: 10.0  # seconds
+
+  # Theme and accessibility
+  themes:
+    enabled: true
+    default_theme: "light"  # "light" | "dark" | "auto"
+    available_themes:
+      - "light"
+      - "dark"
+      - "auto"
+    high_contrast_mode: true
+    reduced_motion_support: true
+
+  # User preferences
+  preferences:
+    enabled: true
+    storage_type: "localStorage"  # "localStorage" | "sessionStorage"
+    auto_save: true
+    export_import: true
+    reset_to_defaults: true
+
+  # Responsive design
+  responsive:
+    enabled: true
+    mobile_breakpoint: "768px"
+    tablet_breakpoint: "1024px"
+    touch_friendly_controls: true
+    adaptive_layouts: true
+
+  # Accessibility features
+  accessibility:
+    enabled: true
+    wcag_compliance: true
+    skip_links: true
+    aria_labels: true
+    keyboard_navigation: true
+    screen_reader_support: true
+    focus_management: true
+
+# Storage Configuration (historical data)
+storage:
+  # SQLite database for historical data
+  database_path: "./data/dashboard.db"
+  max_db_size_mb: 100
+  retention_days: 7
+  # Auto-cleanup settings
+  enable_auto_cleanup: true
+  cleanup_interval_hours: 24
+  # Backup settings
+  enable_backups: false
+  backup_path: "./data/backups"
+
+# Alert Configuration
+alerts:
+  enabled: true
+  config_file: "./config/alerts.yaml"
+  # Notification channels
+  webhook_url: null              # Optional: Discord/Slack webhook
+  log_alerts: true
+  websocket_alerts: true
+  # Alert debouncing
+  min_duration_sec: 5            # Alert must persist for this long
+  cooldown_sec: 60               # Minimum time between repeated alerts
+
+# Optimization Settings (RPi performance)
+optimization:
+  # WebSocket optimization
+  websocket_compression: true
+  delta_updates: true            # Send only changes
+  batch_small_updates: true
+  max_message_size_kb: 64
+  # Backend optimization
+  lazy_loading: true
+  cache_ros_metadata: true
+  aggressive_gc: true            # Run garbage collection more frequently
+  # Frontend optimization
+  max_chart_points: 500
+  virtual_scrolling: true
+  lazy_render: true
+
+# UI Configuration
+ui:
+  # Dashboard appearance
+  theme: "dark"
+  refresh_rate_ms: 1000
+  # Display options
+  show_system_tray: true
+  show_performance_overlay: true
+  compact_mode: false
+  # Chart settings
+  chart_animation: false         # Disable for performance
+  chart_interpolation: "linear"  # vs "smooth"
+
+# Pragati-Specific Configuration
+pragati:
+  # Critical system components for health assessment
+  critical_nodes:
+    - "yanthra_move"
+    - "robot_state_publisher"
+    - "odrive_service_node"
+    - "joint_trajectory_controller"
+
+  critical_topics:
+    - "/joint_states"
+    - "/joint2_position_controller/command"
+    - "/start_switch/state"
+
+  critical_services:
+    - "/joint_homing"
+    - "/joint_status"
+    - "/emergency_stop"
+
+  # Arm configuration
+  arm:
+    joint_names:
+      - "joint1"
+      - "joint2"
+      - "joint3"
+    position_limits:
+      joint1: [-180.0, 180.0]  # degrees
+      joint2: [-90.0, 90.0]    # degrees
+      joint3: [-45.0, 45.0]    # degrees
+    velocity_limits:
+      joint1: 30.0  # deg/s
+      joint2: 45.0  # deg/s
+      joint3: 60.0  # deg/s
+
+  # Cotton detection pipeline
+  cotton_detection:
+    enabled: true
+    topics:
+      camera_feed: "/camera/image_raw"
+      detection_results: "/cotton_detector/results"
+      bounding_boxes: "/cotton_detector/boxes"
+    thresholds:
+      confidence_min: 0.7
+      detection_rate_hz: 5.0
+
+  # Vehicle control
+  vehicle:
+    topics:
+      odometry: "/odom"
+      cmd_vel: "/cmd_vel"
+      battery_state: "/battery_state"
+      gps: "/fix"
+    limits:
+      max_linear_velocity: 2.0   # m/s
+      max_angular_velocity: 1.0  # rad/s
+      min_battery_voltage: 22.0  # V
+
+  publishable_topics:
+    # Topics that operators can publish to from the dashboard.
+    # Each entry requires: name, message_type, label.
+    # Optional: default_data (dict) pre-populates the publish form.
+    # Safety: only topics listed here can be published from the dashboard.
+    - name: "/start_switch/command"
+      message_type: "std_msgs/msg/Bool"
+      label: "Start Switch"
+      default_data:
+        data: false
+    - name: "/emergency_stop/command"
+      message_type: "std_msgs/msg/Bool"
+      label: "Emergency Stop"
+      default_data:
+        data: true
+
+# Security and Safety
+security:
+  # Node restart requires confirmation
+  dangerous_operations_require_confirmation: true
+
+  # Rate limiting for API calls
+  api_rate_limit_per_minute: 1000
+
+  # WebSocket connection limits
+  max_websocket_connections: 50
+
+  # Audit logging for critical operations
+  audit_log_enabled: true
+  audit_log_path: "/tmp/pragati_dashboard_audit.log"
+
+# Authentication
+auth:
+  enabled: false  # Set to true in production deployments
+  api_key: ""     # Set a strong key when enabled; read from PRAGATI_DASHBOARD_AUTH_API_KEY env var
+
+# CORS Configuration
+cors:
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8090"
+    - "http://127.0.0.1:8090"
+
+# Development and Testing
+development:
+  mock_ros2_data: false
+  synthetic_topic_data: false
+  performance_profiling: false
+  debug_websocket_messages: false
+  compatibility_mode: "pragati_v1"  # Ensure backward compatibility
+
+# Environment-specific overrides
+# These can be set via environment variables with PRAGATI_DASHBOARD_ prefix
+# Example: PRAGATI_DASHBOARD_SERVER_PORT=8090
+environment_overrides:
+  enabled: true
+  prefix: "PRAGATI_DASHBOARD_"

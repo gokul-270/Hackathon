@@ -1,0 +1,8 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[tool.colcon_cd]
+completion_paths = [
+    "install/_local_setup_util_ps1.py",
+    "install/_local_setup_util_sh.py",
+]

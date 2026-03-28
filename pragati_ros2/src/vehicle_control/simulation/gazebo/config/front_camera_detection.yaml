@@ -1,0 +1,87 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Front Camera Cotton Detection - Simulation Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Configuration for the front camera cotton detector running in Gazebo simulation.
+# Uses HSV color-based detection to identify cotton bolls in the simulated cotton field.
+#
+# The front camera (OAK-D Lite equivalent) is mounted in front of the front wheel
+# with a 15° downward tilt, matching the URDF definition.
+#
+# Model reference: cotton_detection_ros2/models/yolov112.blob (2-class YOLOv11)
+#   - Class 0: cotton (pickable)
+#   - Class 1: not_pickable (dried/damaged)
+#
+# In simulation, HSV color detection replaces the neural network inference.
+# On real hardware, switch detection_mode to 'depthai_direct' for blob model.
+#
+# Author: Pragati Robotics
+# ═══════════════════════════════════════════════════════════════════════════════
+
+front_camera_cotton_detector:
+  ros__parameters:
+    # ─────────────────────────────────────────────────────────────
+    # Detection Mode
+    # ─────────────────────────────────────────────────────────────
+    # 'hsv'          - HSV color-based detection (simulation)
+    # 'opencv_dnn'   - OpenCV DNN with ONNX model (desktop testing)
+    # 'depthai_direct' - DepthAI blob model (real OAK-D hardware)
+    detection_mode: "hsv"
+    simulation_mode: true
+
+    # ─────────────────────────────────────────────────────────────
+    # Model Configuration (for opencv_dnn / depthai_direct modes)
+    # ─────────────────────────────────────────────────────────────
+    # Path to YOLOv11 model - auto-resolved from cotton_detection_ros2 package
+    # Production: cotton_detection_ros2/models/yolov112.blob
+    model_path: ""
+    num_classes: 2                      # 2-class: cotton + not_pickable
+    confidence_threshold: 0.5           # Minimum detection confidence
+    nms_threshold: 0.45                 # Non-maximum suppression threshold
+
+    # ─────────────────────────────────────────────────────────────
+    # HSV Detection Thresholds (Simulation Mode)
+    # ─────────────────────────────────────────────────────────────
+    # Cotton bolls in Gazebo appear as bright white objects
+    # HSV range: H=0-180, S=0-255, V=0-255
+
+    # White cotton detection (pickable)
+    hsv_white_lower: [0, 0, 200]        # Low saturation, high value = white
+    hsv_white_upper: [180, 50, 255]
+
+    # Brown/dried cotton detection (not_pickable)
+    hsv_brown_lower: [10, 50, 50]       # Brown/tan hues
+    hsv_brown_upper: [30, 200, 200]
+
+    # ─────────────────────────────────────────────────────────────
+    # Contour Filtering
+    # ─────────────────────────────────────────────────────────────
+    min_contour_area: 100.0             # Minimum blob area (pixels²)
+    max_contour_area: 50000.0           # Maximum blob area (pixels²)
+    min_circularity: 0.3                # Minimum shape circularity (0..1)
+
+    # ─────────────────────────────────────────────────────────────
+    # Morphological Operations
+    # ─────────────────────────────────────────────────────────────
+    morph_kernel_size: 5                # Kernel size for open/close
+    morph_iterations: 2                 # Iterations for morphological ops
+
+    # ─────────────────────────────────────────────────────────────
+    # Performance
+    # ─────────────────────────────────────────────────────────────
+    max_fps: 10.0                       # Max detection rate (Hz)
+    max_detections: 50                  # Max detections per frame
+
+    # ─────────────────────────────────────────────────────────────
+    # Depth Estimation (monocular - no real depth sensor in sim)
+    # ─────────────────────────────────────────────────────────────
+    # Estimates depth from apparent cotton boll size in pixels
+    # depth = (real_diameter * focal_length) / apparent_diameter_pixels
+    estimated_cotton_diameter_m: 0.05   # Real cotton boll diameter (~5cm)
+    default_depth_m: 2.0                # Default depth when size unknown
+
+    # ─────────────────────────────────────────────────────────────
+    # Debug & Visualization
+    # ─────────────────────────────────────────────────────────────
+    enable_debug_image: true            # Publish annotated debug image
+    enable_verbose_logging: false       # Log every detection frame

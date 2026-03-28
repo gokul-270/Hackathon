@@ -1,0 +1,49 @@
+{
+  "generated_at": "2025-10-14T08:58:46+00:00",
+  "include_hidden": false,
+  "roots": [
+    {
+      "path": "docs",
+      "total_files": 271,
+      "total_bytes": 61481810,
+      "extensions": {
+        ".2025-10-07": {
+          "count": 1,
+          "bytes": 15641
+        },
+        ".backup": {
+          "count": 2,
+          "bytes": 73129
+        },
+        ".csv": {
+          "count": 9,
+          "bytes": 255803
+        },
+        ".md": {
+          "count": 217,
+          "bytes": 2500172
+        },
+        ".old": {
+          "count": 1,
+          "bytes": 6773
+        },
+        ".sh": {
+          "count": 15,
+          "bytes": 123540
+        },
+        ".txt": {
+          "count": 22,
+          "bytes": 5757211
+        },
+        ".yaml": {
+          "count": 3,
+          "bytes": 41332
+        },
+        ".zip": {
+          "count": 1,
+          "bytes": 52708209
+        }
+      }
+    }
+  ]
+}

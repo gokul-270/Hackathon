@@ -1,0 +1,18 @@
+# Joint Position Command Action
+# Moves a joint to a target position with feedback and cancellation support.
+# Replaces the blocking JointPositionCommand.srv wait_for_completion=true path.
+
+# Goal
+int64 joint_id               # Joint ID (2, 3, 4, 5)
+float64 target_position      # Target position in radians
+float64 max_velocity          # Maximum velocity for this move (0 = use default)
+---
+# Result
+bool success                  # True if target position reached within tolerance
+string reason                 # Success/failure reason (REACHED, TIMEOUT, CANCELLED, ERROR)
+float64 actual_position       # Final position in radians
+---
+# Feedback
+float64 current_position      # Current joint position in radians
+float64 error_from_target     # Signed error: target - current (radians)
+float64 elapsed_seconds       # Time since command started

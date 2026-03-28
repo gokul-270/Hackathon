@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<!--
+Gazebo Plugins for MG6010 Robot
+Includes physics properties, sensors, and ROS2 control integration
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ==================== PHYSICS PROPERTIES ==================== -->
+
+  <!-- Base link physics -->
+  <gazebo reference="base_link">
+    <gravity>true</gravity>
+    <self_collide>false</self_collide>
+  </gazebo>
+
+  <!-- ==================== ROS2 CONTROL PLUGIN ==================== -->
+
+  <gazebo>
+    <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(find robot_description)/config/controllers.yaml</parameters>
+      <controller_manager_name>controller_manager</controller_manager_name>
+      <ros>
+        <namespace>/</namespace>
+        <remapping>/controller_manager/robot_description:=/robot_description</remapping>
+      </ros>
+    </plugin>
+  </gazebo>
+
+  <!-- ==================== CAMERA SENSOR ==================== -->
+
+  <!-- Camera sensor removed - causing segfault, can be added back later -->
+
+  <!-- ==================== POSE PUBLISHER ==================== -->
+
+  <gazebo>
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <joint_name>joint2</joint_name>
+      <joint_name>joint3</joint_name>
+      <joint_name>joint4</joint_name>
+      <joint_name>joint5</joint_name>
+      <update_rate>100</update_rate>
+    </plugin>
+  </gazebo>
+
+  <!-- ==================== POSE PUBLISHER ==================== -->
+
+  <gazebo>
+    <plugin filename="gz-sim-pose-publisher-system" name="gz::sim::systems::PosePublisher">
+      <publish_link_pose>true</publish_link_pose>
+      <publish_collision_pose>false</publish_collision_pose>
+      <publish_visual_pose>false</publish_visual_pose>
+      <publish_nested_model_pose>false</publish_nested_model_pose>
+      <use_pose_vector_msg>true</use_pose_vector_msg>
+      <static_publisher>false</static_publisher>
+      <static_update_frequency>1</static_update_frequency>
+    </plugin>
+  </gazebo>
+
+  <!-- ==================== IMU SENSOR (Optional) ==================== -->
+
+  <gazebo reference="base_link">
+    <sensor name="imu_sensor" type="imu">
+      <always_on>1</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>imu</topic>
+
+      <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,550 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <world name="cotton_field">
+
+    <!-- Physics -->
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!-- Plugins -->
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="gz-sim-navsat-system" name="gz::sim::systems::NavSat"/>
+
+    <!-- Scene -->
+    <scene>
+      <ambient>0.8 0.8 0.8 1.0</ambient>
+      <background>0.6 0.8 1.0 1</background>
+      <sky></sky>
+    </scene>
+
+    <!-- Sun -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Ground Plane with collision (replaces unreliable heightmap) -->
+    <model name="ground_plane">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.45 0.35 0.2 1</ambient>
+            <diffuse>0.55 0.42 0.28 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Field Boundary Markers -->
+
+    <!-- START marker: green pole -->
+    <model name="field_marker_start">
+      <static>true</static>
+      <pose>-10 0 0 0 0 0</pose>
+      <link name="pole">
+        <visual name="pole_visual">
+          <pose>0 0 0.15 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.7 0.1 1</ambient>
+            <diffuse>0.2 0.8 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- END marker: red pole -->
+    <model name="field_marker_end">
+      <static>true</static>
+      <pose>10 0 0 0 0 0</pose>
+      <link name="pole">
+        <visual name="pole_visual">
+          <pose>0 0 0.15 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.3</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.7 0.1 0.1 1</ambient>
+            <diffuse>0.8 0.2 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Spherical coordinates for NavSat (Ahmedabad, India) -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>23.0225</latitude_deg>
+      <longitude_deg>72.5714</longitude_deg>
+      <elevation>53.0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+
+    <!-- ============================================================ -->
+    <!-- Soil Terrain Surface                                          -->
+    <!-- ============================================================ -->
+
+    <include>
+      <name>soil_terrain</name>
+      <uri>model://soil_terrain</uri>
+      <pose>0 0 0.1 0 0 0</pose>
+    </include>
+
+    <!-- ============================================================ -->
+    <!-- Cotton Plants                                                 -->
+    <!-- ============================================================ -->
+
+
+
+
+
+
+    <include>
+      <name>cotton_plant_r0_p0</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-3.5662 -3.2004 0 0 0 0.0021</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p1</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-2.3774 -3.2004 0 0 0 4.6208</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p2</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-1.1887 -3.2004 0 0 0 2.3639</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p3</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>0.0000 -3.2004 0 0 0 6.1316</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p4</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>1.1887 -3.2004 0 0 0 3.3329</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p5</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>2.3774 -3.2004 0 0 0 0.6728</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r0_p6</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>3.5662 -3.2004 0 0 0 5.6583</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p0</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-3.5662 -2.1336 0 0 0 1.5418</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p1</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-2.3774 -2.1336 0 0 0 1.1830</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p2</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>-1.1887 -2.1336 0 0 0 0.6500</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p3</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>0.0000 -2.1336 0 0 0 3.3578</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p4</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>1.1887 -2.1336 0 0 0 4.6308</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p5</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>2.3774 -2.1336 0 0 0 3.3867</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r1_p6</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>3.5662 -2.1336 0 0 0 5.4194</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p0</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-3.5662 -1.0668 0 0 0 2.9655</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p1</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-2.3774 -1.0668 0 0 0 1.4670</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p2</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>-1.1887 -1.0668 0 0 0 0.1447</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p3</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>0.0000 -1.0668 0 0 0 5.7519</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p4</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>1.1887 -1.0668 0 0 0 3.5866</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p5</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>2.3774 -1.0668 0 0 0 3.9180</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r2_p6</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>3.5662 -1.0668 0 0 0 2.3602</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p0</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-3.5662 0.0000 0 0 0 2.2100</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p1</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-2.3774 0.0000 0 0 0 2.2857</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p2</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-1.1887 0.0000 0 0 0 3.3217</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p3</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>0.0000 0.0000 0 0 0 2.8514</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p4</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>1.1887 0.0000 0 0 0 1.2113</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p5</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>2.3774 0.0000 0 0 0 6.1985</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r3_p6</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>3.5662 0.0000 0 0 0 0.5600</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p0</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>-3.5662 1.0668 0 0 0 2.7252</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p1</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-2.3774 1.0668 0 0 0 1.1733</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p2</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-1.1887 1.0668 0 0 0 6.2545</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p3</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>0.0000 1.0668 0 0 0 4.2993</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p4</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>1.1887 1.0668 0 0 0 2.7581</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p5</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>2.3774 1.0668 0 0 0 1.1188</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r4_p6</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>3.5662 1.0668 0 0 0 5.0649</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p0</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-3.5662 2.1336 0 0 0 0.1866</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p1</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-2.3774 2.1336 0 0 0 4.0051</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p2</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-1.1887 2.1336 0 0 0 1.5670</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p3</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>0.0000 2.1336 0 0 0 3.2745</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p4</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>1.1887 2.1336 0 0 0 6.1801</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p5</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>2.3774 2.1336 0 0 0 4.8275</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r5_p6</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>3.5662 2.1336 0 0 0 4.1874</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p0</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-3.5662 3.2004 0 0 0 2.9303</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p1</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>-2.3774 3.2004 0 0 0 5.7895</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p2</name>
+      <uri>model://cotton_plant_small</uri>
+      <pose>-1.1887 3.2004 0 0 0 6.1401</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p3</name>
+      <uri>model://cotton_plant_tall</uri>
+      <pose>0.0000 3.2004 0 0 0 4.9900</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p4</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>1.1887 3.2004 0 0 0 4.6661</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p5</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>2.3774 3.2004 0 0 0 5.1948</pose>
+    </include>
+
+    <include>
+      <name>cotton_plant_r6_p6</name>
+      <uri>model://cotton_plant_medium</uri>
+      <pose>3.5662 3.2004 0 0 0 1.9314</pose>
+    </include>
+
+
+
+
+
+
+    <!-- RTK Base Station — fixed GPS reference at known coordinates -->
+    <model name="rtk_base_station">
+      <static>true</static>
+      <pose>-12 5 0 0 0 0</pose>
+      <link name="base_link">
+        <!-- Tripod -->
+        <visual name="tripod_visual">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.03</radius>
+              <length>1.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.3 1</ambient>
+            <diffuse>0.4 0.4 0.4 1</diffuse>
+          </material>
+        </visual>
+        <!-- GPS Antenna dome -->
+        <visual name="antenna_visual">
+          <pose>0 0 1.1 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.08</radius>
+              <length>0.06</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.9 0.9 0.9 1</ambient>
+            <diffuse>1.0 1.0 1.0 1</diffuse>
+          </material>
+        </visual>
+        <!-- Status LED -->
+        <visual name="led_visual">
+          <pose>0 0 1.16 0 0 0</pose>
+          <geometry>
+            <sphere>
+              <radius>0.02</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.1 0.9 0.1 1</ambient>
+            <diffuse>0.2 1.0 0.2 1</diffuse>
+            <emissive>0.0 0.5 0.0 1</emissive>
+          </material>
+        </visual>
+        <!-- Base plate -->
+        <visual name="base_plate_visual">
+          <pose>0 0 0.02 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.15</radius>
+              <length>0.04</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.2 1</ambient>
+            <diffuse>0.3 0.3 0.3 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Overhead camera for video recording (server-side) -->
+    <model name="overhead_camera">
+      <static>true</static>
+      <!-- Centred over field, 25m up, looking straight down (pitch = +pi/2) -->
+      <pose>0 2.5 25 0 1.5708 0</pose>
+      <link name="link">
+        <sensor name="overhead_cam" type="camera">
+          <always_on>true</always_on>
+          <update_rate>30</update_rate>
+          <visualize>false</visualize>
+          <camera>
+            <horizontal_fov>1.5708</horizontal_fov>
+            <image>
+              <width>1280</width>
+              <height>720</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <plugin filename="gz-sim-camera-video-recorder-system"
+                  name="gz::sim::systems::CameraVideoRecorder">
+            <service>/overhead/record_video</service>
+            <use_sim_time>true</use_sim_time>
+            <fps>30</fps>
+            <bitrate>4000000</bitrate>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+
+  </world>
+</sdf>

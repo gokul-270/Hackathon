@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  CycloneDDS configuration for Pragati arm and vehicle RPis.
+
+  Why this exists:
+    CycloneDDS 0.10+ on ARM64 (RPi 4B) defaults to iceoryx shared-memory
+    transport for inter-process communication.  The iceoryx SHM transport is
+    broken on this platform — DDS participants that join at different times
+    cannot discover each other, causing Python nodes (arm_client, ros2 CLI)
+    to never see C++ nodes (yanthra_move, cotton_detection, motor_control).
+
+  What this does:
+    - Disables iceoryx shared-memory transport
+    - Forces all DDS traffic over loopback UDP (localhost)
+    - Keeps multicast enabled on loopback for local discovery
+
+  Deployed by:
+    - sync.sh --provision  (copies to RPi, sets CYCLONEDDS_URI in /etc/default/pragati-arm)
+    - arm_launcher.sh / launcher.sh  (exports CYCLONEDDS_URI at launch)
+
+  Reference: https://cyclonedds.io/docs/cyclonedds/latest/config/
+-->
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+  <Domain>
+    <General>
+      <Interfaces>
+        <NetworkInterface name="lo" />
+      </Interfaces>
+      <AllowMulticast>true</AllowMulticast>
+      <EnableMulticastLoopback>true</EnableMulticastLoopback>
+    </General>
+    <SharedMemory>
+      <Enable>false</Enable>
+    </SharedMemory>
+  </Domain>
+</CycloneDDS>

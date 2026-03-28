@@ -1,0 +1,11 @@
+# Read Motor Limits Service
+# Request to read torque and acceleration limits from a motor controller
+
+# Request
+uint8 motor_id          # Motor CAN ID
+---
+# Response
+bool success            # True if motor limits were read successfully
+string error_message    # Error description (empty on success)
+uint16 max_torque_ratio # Max torque current ratio (0-2000, maps to 0-100% of max current)
+float64 acceleration    # Acceleration in rad/s^2

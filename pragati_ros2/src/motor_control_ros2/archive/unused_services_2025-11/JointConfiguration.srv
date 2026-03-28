@@ -1,0 +1,15 @@
+# Joint configuration service definition
+# Update joint parameters at runtime
+
+# Input
+int64 joint_id                # Joint ID (1-5)
+string parameter_name         # Parameter to update (e.g., "velocity_limit", "current_limit")  
+float64 parameter_value       # New parameter value
+bool save_to_file            # True to save parameter persistently
+
+---
+
+# Output
+bool success                 # True if parameter updated successfully
+string reason               # Success message or error description
+float64 previous_value      # Previous value of the parameter

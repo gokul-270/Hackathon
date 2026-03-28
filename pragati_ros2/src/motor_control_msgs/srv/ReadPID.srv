@@ -1,0 +1,15 @@
+# Read PID Parameters Service
+# Request to read PID tuning parameters from a motor controller
+
+# Request
+uint8 motor_id          # Motor CAN ID
+---
+# Response
+bool success            # True if PID parameters were read successfully
+string error_message    # Error description (empty on success)
+uint8 angle_kp          # Angle loop proportional gain (0-255)
+uint8 angle_ki          # Angle loop integral gain (0-255)
+uint8 speed_kp          # Speed loop proportional gain (0-255)
+uint8 speed_ki          # Speed loop integral gain (0-255)
+uint8 current_kp        # Current loop proportional gain (0-255)
+uint8 current_ki        # Current loop integral gain (0-255)

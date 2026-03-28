@@ -1,0 +1,165 @@
+# YanthraMove Simulation Configuration
+# Optimized for Gazebo Harmonic simulation testing
+
+yanthra_move:
+  ros__parameters:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # SIMULATION MODE - ENABLED
+    # ═══════════════════════════════════════════════════════════════════════════
+    simulation_mode: true
+    use_simulation: true
+    enable_gpio: false
+    enable_camera: false  # Use Gazebo camera simulation
+
+    # Core Operation Mode
+    continuous_operation: true  # Keep running for testing
+    max_runtime_minutes: -1  # Infinite for testing
+
+    # START_SWITCH Configuration for simulation:
+    #   - enable_wait: true  → wait for trigger between cycles
+    #   - timeout_sec: -1.0  → wait infinitely (no timeout, no shutdown)
+    #   - prefer_topic: true → listen on /start_switch/command topic
+    # Trigger with: python3 scripts/sim_arm_trigger.py trigger
+    #   or: ros2 topic pub /start_switch/command std_msgs/Bool "data: true" --once
+    start_switch.timeout_sec: -1.0    # No timeout - wait forever
+    start_switch.enable_wait: true    # WAIT for trigger between cycles
+    start_switch.prefer_topic: true   # Listen on /start_switch/command topic
+
+    # ArUco Calibration Testing
+    YanthraLabCalibrationTesting: true
+    use_preloaded_centroids: true  # Load from centroid.txt
+    enable_detection_retrigger: false
+    enable_post_cycle_parking: false
+    enable_position_feedback: false
+    enable_l3_idle_parking: false
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # JOINT4 MULTI-POSITION SCANNING
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Set enabled: false for single-position testing from Web UI
+    # The Web UI controls J4 directly + writes centroid.txt + triggers
+    # Set enabled: true with positions list for multi-scan sweeps
+    # ═══════════════════════════════════════════════════════════════════════════
+    joint4_multiposition/enabled: true
+    joint4_multiposition/positions: [-0.075, -0.025, 0.025, 0.075]
+    joint4_multiposition/safe_min: -0.100
+    joint4_multiposition/safe_max: 0.100
+    joint4_multiposition/scan_strategy: "left_to_right"
+    joint4_multiposition/j4_settling_time: 0.150  # Allow simulation to settle
+    joint4_multiposition/detection_settling_time: 0.200
+    joint4_multiposition/early_exit_enabled: false  # Scan all positions
+    joint4_multiposition/on_j4_failure: "skip_position"
+    joint4_multiposition/enable_timing_stats: true
+    joint4_multiposition/enable_position_stats: true
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # MOTOR CONFIGURATION (Simulation values with limits)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Joint2 (Base rotation)
+    joint2_init/motor_id: 0
+    joint2_init/homing_position: 0.0
+    joint2_init/base_jerk_value: 0.0
+    joint2_init/min_length: -3.14159
+    joint2_init/max_length: 3.14159
+
+    # Joint3 (Phi angle - vertical tilt)
+    joint3_init/motor_id: 1
+    joint3_init/homing_position: 0.0
+    joint3_init/parking_position: 0.3
+    joint3_init/pre_approach_homing: true
+    joint3_init/min_length: -1.57
+    joint3_init/max_length: 1.57
+
+    # Joint4 (Theta - left/right lateral)
+    joint4_init/motor_id: 2
+    joint4_init/homing_position: 0.0
+    joint4_init/multiple_zero_poses: false
+    joint4_init/theta_jerk_value: 0.0
+    joint4_init/zero_poses: [0.0]
+    joint4_init/min_length: -0.125
+    joint4_init/max_length: 0.175
+
+    # Joint5 (R - extension)
+    joint5_init/motor_id: 3
+    joint5_init/homing_position: 0.0
+    joint5_init/end_effector_len: 0.085
+    joint5_init/joint5_vel_limit: 2.0
+    joint5_init/gear_ratio: 20.943951
+    joint5_init/phi_jerk_value: 0.0
+    joint5_init/hardware_offset: 0.290
+    joint5_init/min_length: 0.0
+    joint5_init/max_length: 0.6
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # J5 COLLISION AVOIDANCE (two-arm collision prevention)
+    # When enabled, dynamically limits J5 based on J3 tilt: J5_limit = clearance / cos(J3)
+    # See: docs/plans/2026-03-15-two-arm-collision-avoidance-analysis.md
+    # ═══════════════════════════════════════════════════════════════════════════
+    j5_collision_avoidance/enabled: true    # Enabled — limits J5 based on J3 tilt to prevent two-arm collision
+    j5_collision_avoidance/clearance: 0.20  # Collision clearance in meters
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # FIELD OF VIEW AND SCANNING
+    # ═══════════════════════════════════════════════════════════════════════════
+    fov_theta_max: 0.3926  # 22.5 degrees
+    fov_phi_max: 0.3926    # 22.5 degrees
+
+    # Height scanning (disabled for simulation)
+    height_scan_enable: false
+    height_scan_min: 0.01
+    height_scan_max: 1.0
+    height_scan_step: 0.2
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # END EFFECTOR AND HARDWARE (Disabled for simulation)
+    # ═══════════════════════════════════════════════════════════════════════════
+    global_vaccum_motor: false
+    end_effector_enable: false
+    trigger_camera: false
+    continuous_vacuum: false
+    EndEffectorDropConveyor: false
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # PHI COMPENSATION (Simplified for simulation)
+    # ═══════════════════════════════════════════════════════════════════════════
+    phi_compensation/enable: false  # Disable for initial sim testing
+    phi_compensation/zone1_max_deg: 50.5
+    phi_compensation/zone2_max_deg: 60.0
+    phi_compensation/zone1_slope: 0.0
+    phi_compensation/zone1_offset: 0.0
+    phi_compensation/zone2_slope: 0.0
+    phi_compensation/zone2_offset: 0.0
+    phi_compensation/zone3_slope: 0.0
+    phi_compensation/zone3_offset: 0.0
+    phi_compensation/l5_scale: 0.0
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # TIMING AND PERFORMANCE (Fast simulation settings)
+    # ═══════════════════════════════════════════════════════════════════════════
+    hardware_timeout: 10000.0  # 10 seconds for sim
+    cotton_capture_detect_wait_time: 0.5  # Quick captures in sim
+    stats_log_interval_sec: 10.0  # Frequent stats for debugging
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # MONITORING (Disabled for simulation)
+    # ═══════════════════════════════════════════════════════════════════════════
+    enable_network_monitoring: false
+    enable_ros_monitoring: false
+    enable_system_monitoring: false
+    monitoring_rate: 1.0
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # VISION PARAMETERS (Simplified for simulation)
+    # ═══════════════════════════════════════════════════════════════════════════
+    CAPTURE_MODE: 3
+    YanthraDisparityShift: 15
+    UsePostProcessingFilter: false
+    UseThresholdFilter: false
+    UseSpatialFilter: false
+    SpatialFilterHoleFillingMode: 1
+    TemporalFilterPersistenceControl: 1
+    UseTemporalFilter: false
+    PRAGATI_BYPASS_INTERNAL_PROCESSING: true
+    arm_calibration: false
+    YoloThreshold: 0.55
+    save_logs: false

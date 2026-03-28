@@ -1,0 +1,37 @@
+[Unit]
+Description=WiFi Auto-Recovery Watchdog
+Documentation=file:///home/ubuntu/pragati_ros2/scripts/maintenance/wifi/wifi_watchdog.sh
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+Requires=NetworkManager.service
+ConditionPathExists=/usr/local/sbin/wifi_watchdog.sh
+
+[Service]
+Type=simple
+
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Load configuration from system-wide file
+EnvironmentFile=-/etc/default/wifi-watchdog
+
+# Main watchdog process
+ExecStart=/usr/local/sbin/wifi_watchdog.sh
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Security: needs root for modprobe and nmcli radio control
+# No capability restriction -- modprobe requires full root
+
+# Resource limits (minimal -- watchdog is lightweight)
+MemoryMax=50M
+CPUQuota=5%
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=wifi-watchdog
+
+[Install]
+WantedBy=multi-user.target

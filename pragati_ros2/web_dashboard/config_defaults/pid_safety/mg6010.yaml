@@ -1,0 +1,49 @@
+# MG6010 motor PID gain safety limits
+# These defaults are copied to configs/pid_safety/ at runtime if not present
+# Modify configs/pid_safety/mg6010.yaml for machine-specific overrides
+motor_type: mg6010
+firmware_range:
+  min: 0
+  max: 255
+
+gain_limits:
+  position:
+    kp:
+      min: 0
+      max: 200
+      default: 30
+    ki:
+      min: 0
+      max: 100
+      default: 10
+  speed:
+    kp:
+      min: 0
+      max: 200
+      default: 50
+    ki:
+      min: 0
+      max: 100
+      default: 20
+  torque:
+    kp:
+      min: 0
+      max: 150
+      default: 40
+    ki:
+      min: 0
+      max: 80
+      default: 15
+
+ramping:
+  max_step: 20
+  delay_ms: 100
+
+oscillation_detection:
+  window_seconds: 2.0
+  min_zero_crossings: 3
+  amplitude_factor: 2.0
+  transient_threshold_seconds: 0.5
+
+session:
+  lock_timeout_seconds: 300

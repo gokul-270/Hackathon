@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<!--
+  OAK-D Lite Camera URDF/XACRO Definition
+  
+  Luxonis OAK-D Lite Spatial AI Camera
+  Replaces Intel RealSense D415 references
+  
+  Physical Specifications:
+  - Dimensions: 90.0mm (W) x 27.0mm (H) x 18.5mm (D)
+  - Mass: 64g (0.064 kg)
+  - Stereo Baseline: 75mm (left-right mono cameras)
+  - RGB Sensor: 4MP (IMX214), 1920x1080 output
+  - Mono Sensors: 1MP (OV9282), 800x600 native, 400P output
+  
+  Frame Convention (REP-103):
+  - X: Forward
+  - Y: Left
+  - Z: Up
+  - Optical frames have Z forward, X right, Y down
+  
+  Migration Notes:
+  - Phase 1-2: OAK-D Lite integration via DepthAI Python SDK
+  - Replaces RealSense D415 that was incorrectly introduced in ROS2
+  - Maintains ROS1 camera functionality with improved ROS2 architecture
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- 
+    OAK-D Lite Camera Macro
+    
+    Parameters:
+      parent: Parent link name to attach camera
+      name: Prefix for camera links (default: oak)
+      xyz: Position offset from parent [x y z] (default: "0 0 0")
+      rpy: Orientation offset from parent [r p y] (default: "0 0 0")
+  -->
+  <xacro:macro name="oak_d_lite_camera" params="parent name:=oak *origin">
+    
+    <!-- Physical Constants -->
+    <xacro:property name="camera_width" value="0.090"/>   <!-- 90mm -->
+    <xacro:property name="camera_height" value="0.027"/>  <!-- 27mm -->
+    <xacro:property name="camera_depth" value="0.0185"/>  <!-- 18.5mm -->
+    <xacro:property name="camera_mass" value="0.064"/>    <!-- 64g -->
+    
+    <!-- Stereo baseline (center to center of mono cameras) -->
+    <xacro:property name="stereo_baseline" value="0.075"/>  <!-- 75mm -->
+    
+    <!-- Optical center offsets (from camera_link) -->
+    <!-- RGB camera is centered horizontally, slightly forward -->
+    <xacro:property name="rgb_optical_offset_x" value="0.0"/>
+    <xacro:property name="rgb_optical_offset_y" value="0.0"/>
+    <xacro:property name="rgb_optical_offset_z" value="0.0"/>
+    
+    <!-- Left mono camera offset -->
+    <xacro:property name="left_optical_offset_y" value="${stereo_baseline / 2.0}"/>
+    
+    <!-- Right mono camera offset -->
+    <xacro:property name="right_optical_offset_y" value="${-stereo_baseline / 2.0}"/>
+    
+    
+    <!-- ============================================ -->
+    <!-- Main Camera Link (Physical Body)            -->
+    <!-- ============================================ -->
+    <joint name="${name}_camera_joint" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${name}_camera_link"/>
+    </joint>
+    
+    <link name="${name}_camera_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- Simplified box representation -->
+          <box size="${camera_depth} ${camera_width} ${camera_height}"/>
+        </geometry>
+        <material name="oak_lite_gray">
+          <color rgba="0.5 0.5 0.5 1.0"/>
+        </material>
+      </visual>
+      
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${camera_depth} ${camera_width} ${camera_height}"/>
+        </geometry>
+      </collision>
+      
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${camera_mass}"/>
+        <!-- Inertia tensor for rectangular box -->
+        <inertia 
+          ixx="${(1/12) * camera_mass * (camera_height*camera_height + camera_depth*camera_depth)}"
+          ixy="0.0"
+          ixz="0.0"
+          iyy="${(1/12) * camera_mass * (camera_depth*camera_depth + camera_width*camera_width)}"
+          iyz="0.0"
+          izz="${(1/12) * camera_mass * (camera_width*camera_width + camera_height*camera_height)}"/>
+      </inertial>
+    </link>
+    
+    
+    <!-- ============================================ -->
+    <!-- RGB Camera Frames                            -->
+    <!-- ============================================ -->
+    
+    <!-- RGB Camera Frame (Right-handed, Z forward) -->
+    <joint name="${name}_rgb_camera_joint" type="fixed">
+      <origin xyz="${rgb_optical_offset_x} ${rgb_optical_offset_y} ${rgb_optical_offset_z}" rpy="0 0 0"/>
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_rgb_camera_frame"/>
+    </joint>
+    
+    <link name="${name}_rgb_camera_frame"/>
+    
+    <!-- RGB Camera Optical Frame (REP-103: Z forward, X right, Y down) -->
+    <joint name="${name}_rgb_camera_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <parent link="${name}_rgb_camera_frame"/>
+      <child link="${name}_rgb_camera_optical_frame"/>
+    </joint>
+    
+    <link name="${name}_rgb_camera_optical_frame"/>
+    
+    
+    <!-- ============================================ -->
+    <!-- Left Mono Camera Frames                      -->
+    <!-- ============================================ -->
+    
+    <!-- Left Camera Frame -->
+    <joint name="${name}_left_camera_joint" type="fixed">
+      <origin xyz="0 ${left_optical_offset_y} 0" rpy="0 0 0"/>
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_left_camera_frame"/>
+    </joint>
+    
+    <link name="${name}_left_camera_frame"/>
+    
+    <!-- Left Camera Optical Frame (REP-103: Z forward, X right, Y down) -->
+    <joint name="${name}_left_camera_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <parent link="${name}_left_camera_frame"/>
+      <child link="${name}_left_camera_optical_frame"/>
+    </joint>
+    
+    <link name="${name}_left_camera_optical_frame"/>
+    
+    
+    <!-- ============================================ -->
+    <!-- Right Mono Camera Frames                     -->
+    <!-- ============================================ -->
+    
+    <!-- Right Camera Frame -->
+    <joint name="${name}_right_camera_joint" type="fixed">
+      <origin xyz="0 ${right_optical_offset_y} 0" rpy="0 0 0"/>
+      <parent link="${name}_camera_link"/>
+      <child link="${name}_right_camera_frame"/>
+    </joint>
+    
+    <link name="${name}_right_camera_frame"/>
+    
+    <!-- Right Camera Optical Frame (REP-103: Z forward, X right, Y down) -->
+    <joint name="${name}_right_camera_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+      <parent link="${name}_right_camera_frame"/>
+      <child link="${name}_right_camera_optical_frame"/>
+    </joint>
+    
+    <link name="${name}_right_camera_optical_frame"/>
+    
+    
+    <!-- ============================================ -->
+    <!-- Depth/Stereo Frame (Aligned to RGB)         -->
+    <!-- ============================================ -->
+    
+    <!-- Depth frame (same as RGB for OAK-D Lite with depth alignment enabled) -->
+    <joint name="${name}_depth_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <parent link="${name}_rgb_camera_frame"/>
+      <child link="${name}_depth_frame"/>
+    </joint>
+    
+    <link name="${name}_depth_frame"/>
+    
+    <!-- Depth Optical Frame (REP-103: Z forward, X right, Y down) -->
+    <joint name="${name}_depth_optical_joint" type="fixed">
+      <origin xyz="0 0 0" rpy="0 0 0"/>  <!-- Already rotated via parent -->
+      <parent link="${name}_rgb_camera_optical_frame"/>
+      <child link="${name}_depth_optical_frame"/>
+    </joint>
+    
+    <link name="${name}_depth_optical_frame"/>
+    
+  </xacro:macro>
+  
+  
+  <!-- ============================================ -->
+  <!-- Example Usage (Commented Out)                -->
+  <!-- ============================================ -->
+  <!--
+  <xacro:oak_d_lite_camera parent="camera_mount_link" name="oak">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:oak_d_lite_camera>
+  -->
+  
+</robot>

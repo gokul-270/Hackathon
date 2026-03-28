@@ -1,0 +1,20 @@
+[Unit]
+Description=Pragati Field Trial Monitoring
+After=arm_launch.service vehicle_launch.service
+# No Requires= — monitoring is best-effort, not a hard dependency on launch services.
+# The script captures dmesg, CPU temp, network stats, and disk usage even if the
+# launch service is not running.
+
+[Service]
+Type=simple
+User=ubuntu
+ExecStart=/home/ubuntu/pragati_ros2/scripts/field_trial_logging.sh
+Restart=on-failure
+RestartSec=10
+# KillMode=mixed sends SIGTERM to the main process (triggering cleanup via trap)
+# then SIGKILL to remaining children after TimeoutStopSec.
+KillMode=mixed
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

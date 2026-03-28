@@ -1,0 +1,3008 @@
+[
+  {
+    "file": "src/motor_control_ros2/test/test_generic_motor.cpp",
+    "line": 333,
+    "text": "TODO: Implement full temperature monitoring when MG6010 protocol supports it",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/motor_abstraction.cpp",
+    "line": 102,
+    "text": "TODO: Implement parameter loading from ROS2 parameter server",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/motor_abstraction.cpp",
+    "line": 116,
+    "text": "TODO: Implement parameter saving to ROS2 parameter server or file",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/control_loop_node.cpp",
+    "line": 230,
+    "text": "TODO(developer): Implement realtime priority setting for ROS2",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/safety_monitor.cpp",
+    "line": 470,
+    "text": "TODO(developer): Implement emergency shutdown sequence:",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/generic_hw_interface.cpp",
+    "line": 346,
+    "text": "TODO(developer): Add velocity and effort reading when available",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/generic_hw_interface.cpp",
+    "line": 351,
+    "text": "TODO: Add new MG motor controller read implementation here",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/generic_hw_interface.cpp",
+    "line": 377,
+    "text": "TODO(developer): Add velocity and effort control modes",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/generic_hw_interface.cpp",
+    "line": 382,
+    "text": "TODO: Add new MG motor controller write implementation here",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/motor_control_ros2/src/generic_hw_interface.cpp",
+    "line": 471,
+    "text": "TODO: Add new MG motor controller initialization here",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/pattern_finder/src/aruco_finder.cpp",
+    "line": 271,
+    "text": "TODO(developer) : Change to CMakelist with related to a run_directory",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 363,
+    "text": "TODO: Port cotton_detection service to ROS2 or wrap as needed",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 471,
+    "text": "TODO(developer) The motor controller homing position is independent of main program",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 473,
+    "text": "TODO(developer): Put a check  whether the services are available",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 623,
+    "text": "TODO(developer) move it to joint4_homing_position",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 649,
+    "text": "TODO change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 734,
+    "text": "TODO(developer) check whether the motor is still on or not",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 767,
+    "text": "TODO change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 837,
+    "text": "TODO change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 844,
+    "text": "TODO(developer) check whether the motor is still on or not",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 863,
+    "text": "TODO(developer) check whether the motor is still on or not",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 919,
+    "text": "TODO(developer) This homing Position is different from Initialisation homing position but both can be same",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_aruco_detect.cpp",
+    "line": 921,
+    "text": "TODO(developer) move it to joint4_homing_position",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 60,
+    "text": "TODO: Implement keyboard monitoring",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 64,
+    "text": "TODO: Implement keyboard monitoring cleanup",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 69,
+    "text": "TODO: Implement vacuum pump control",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 74,
+    "text": "TODO: Implement camera LED control",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 79,
+    "text": "TODO: Implement red LED control",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 85,
+    "text": "TODO: Implement timestamped log file creation",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 1812,
+    "text": "TODO: Implement if needed",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_system.cpp",
+    "line": 1914,
+    "text": "TODO: Implement proper arm status functionality",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 357,
+    "text": "TODO: Replace with ROS2 executor pattern",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 365,
+    "text": "TODO: Implement proper ROS2 shutdown",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 379,
+    "text": "TODO(developer) The Odrive Homing Position is Independent of main program",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 381,
+    "text": "TODO(developer): Put a check  whether the services are available",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 483,
+    "text": "TODO: Replace with ROS2 executor pattern",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 491,
+    "text": "TODO: Implement proper ROS2 shutdown",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 565,
+    "text": "TODO change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 566,
+    "text": "TODO(developer) change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 630,
+    "text": "TODO(developer) check whether the motor is still on or not",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 634,
+    "text": "TODO change 0.001 to joint_zero_poses[joint3_cnt]",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 681,
+    "text": "TODO(developer) Jerky Motion  // Author Mani",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 689,
+    "text": "TODO: Replace with ROS2 executor pattern",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 708,
+    "text": "TODO(developer) This homing Position is different from Initialisation homing position but both can be same",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/yanthra_move/src/yanthra_move_calibrate.cpp",
+    "line": 710,
+    "text": "TODO(developer) move it to joint4_homing_position",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 155,
+    "text": "TODO: Check device connection status (Phase 1.7)",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 304,
+    "text": "TODO: Update runtime configuration (Phase 1.2)",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 367,
+    "text": "TODO: Get actual temperature from device (Phase 1.8)",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 431,
+    "text": "TODO: Get calibration from device (Phase 2.3)",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 443,
+    "text": "TODO: Format as YAML (Phase 2.4)",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 545,
+    "text": "TODO: Implement conversion (Phase 1.2)",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/depthai_manager.cpp",
+    "line": 561,
+    "text": "TODO: Update statistics (Phase 1.8)",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/src/cotton_detection_node.cpp",
+    "line": 1322,
+    "text": "TODO: Add timing",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 27,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 79,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 99,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 220,
+    "text": "TODO this write  Routine need not be called for every write",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 223,
+    "text": "TODO Need a seperate function where we pass the motorid/jointid and the",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/yanthra_move_calibrate.h",
+    "line": 82,
+    "text": "TODO URDF limit is -110 deg",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/yanthra_move_calibrate.h",
+    "line": 83,
+    "text": "TODO URDF limit is +110 deg",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 27,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 79,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 99,
+    "text": "TODO:MR",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 220,
+    "text": "TODO this write  Routine need not be called for every write",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/joint_move_sensor_msgs.h",
+    "line": 223,
+    "text": "TODO Need a seperate function where we pass the motorid/jointid and the",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/yanthra_move_calibrate.h",
+    "line": 82,
+    "text": "TODO URDF limit is -110 deg",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/include/yanthra_move/yanthra_move_calibrate.h",
+    "line": 83,
+    "text": "TODO URDF limit is +110 deg",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/motor_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/motor_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/motor_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_homing__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_homing__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_homing__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_configuration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_configuration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_configuration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/encoder_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/encoder_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/encoder_calibration__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_position_command__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_position_command__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/motor_control_ros2/include/motor_control_ros2/motor_control_ros2/srv/detail/joint_position_command__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/yanthra_move/srv/detail/arm_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/yanthra_move/srv/detail/arm_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/yanthra_move/include/yanthra_move/yanthra_move/srv/detail/arm_status__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 18,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 39,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_introspection_cpp.hpp",
+    "line": 60,
+    "text": "TODO(dirk-thomas) these visibility macros should be message package specific",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/cotton_detect_ros2_wrapper.py",
+    "line": 266,
+    "text": "TODO: These values should come from URDF or calibration",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/cotton_detect_ros2_wrapper.py",
+    "line": 272,
+    "text": "TODO: Get from calibration",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/ArucoDetectYanthra.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/aicol.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/CottonDetect_WorkingCode_6Apr2023.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/col.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/aruco_1+.py",
+    "line": 143,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/CottonDetect.py",
+    "line": 352,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/CottonDetect.py",
+    "line": 412,
+    "text": "TODO:We have to indicate it to yanthra",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/CottonDetect-WithOutputFiles.py",
+    "line": 165,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetect-WithOutputFiles30APR2022.py",
+    "line": 266,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetect_Jan212023.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetectPragati2.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetect_6Apr2023.py",
+    "line": 376,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetect_Jan272023.py",
+    "line": 292,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 91,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 92,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 169,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetect-WithOutputFiles24APR.py",
+    "line": 165,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 19,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 20,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 179,
+    "text": "TODO:Changing to 0.5 sec to test marc quickly",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 299,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 107,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 108,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 196,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "install/cotton_detection_ros2/lib/cotton_detection_ros2/OakDTools/deprecated/CottonDetectTemp.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/cotton_detect_ros2_wrapper.py",
+    "line": 266,
+    "text": "TODO: These values should come from URDF or calibration",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/cotton_detect_ros2_wrapper.py",
+    "line": 272,
+    "text": "TODO: Get from calibration",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/ArucoDetectYanthra.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/aicol.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/CottonDetect_WorkingCode_6Apr2023.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/col.py",
+    "line": 144,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/aruco_1+.py",
+    "line": 143,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/CottonDetect.py",
+    "line": 352,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/CottonDetect.py",
+    "line": 412,
+    "text": "TODO:We have to indicate it to yanthra",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/CottonDetect-WithOutputFiles.py",
+    "line": 165,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect-WithOutputFiles30APR2022.py",
+    "line": 266,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_Jan212023.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetectPragati2.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_6Apr2023.py",
+    "line": 376,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect_Jan272023.py",
+    "line": 292,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 91,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 92,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra10May2022.py",
+    "line": 169,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetect-WithOutputFiles24APR.py",
+    "line": 165,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 19,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 20,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 179,
+    "text": "TODO:Changing to 0.5 sec to test marc quickly",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra_pragati3.py",
+    "line": 299,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 107,
+    "text": "TODO check whether file is open else exit",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 108,
+    "text": "TODO Change file absolute path to a PARAMETER",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/ArucoDetectYanthra12May2022.py",
+    "line": 196,
+    "text": "TODO check whether file is written",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/scripts/OakDTools/deprecated/CottonDetectTemp.py",
+    "line": 290,
+    "text": "TODO pass down parent PID or find a reliable",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 3,
+    "text": "TODO Cleanup Script",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 68,
+    "text": "TODO.*(?:Test.*actual.*MG6010|Test.*real.*cotton|hardware.*test|Validate.*CAN|Calibrate.*camera)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 71,
+    "text": "TODO.*(?:Phase [23]|direct.*DepthAI|pure.*C\\+\\+.*detection)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 74,
+    "text": "TODO.*(?:Optimize|optimize|performance|Performance|benchmark|Benchmark)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 77,
+    "text": "TODO.*(?:Add.*documentation|Document|documentation|API.*doc)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 80,
+    "text": "TODO.*(?:error.*handling|recovery|reconnection)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 83,
+    "text": "TODO.*(?:unit.*test|integration.*test|stress.*test)',",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 86,
+    "text": "TODO\\(developer\\)',",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 105,
+    "text": "TODO should be removed and why.\"\"\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 125,
+    "text": "TODO text from a line.\"\"\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 126,
+    "text": "TODO|FIXME|XXX).*$', line, re.IGNORECASE)",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 147,
+    "text": "TODO/FIXME/XXX",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 148,
+    "text": "TODO|FIXME|XXX)\\b', line, re.IGNORECASE):",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 211,
+    "text": "TODO Cleanup Report",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 213,
+    "text": "todo-cleanup-2025-10-14",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 239,
+    "text": "todo['file']}:{todo['line']}` - {todo['text']}\\n\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 246,
+    "text": "todo in obsolete[:50]:",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 247,
+    "text": "todo['file']}:{todo['line']}` - {todo['text']}\\n\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 264,
+    "text": "todo in hw_todos[:20]:",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 265,
+    "text": "todo['file']}:{todo['line']}` - {todo['text']}\\n\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 272,
+    "text": "todo in phase_todos[:20]:",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 273,
+    "text": "todo['file']}:{todo['line']}` - {todo['text']}\\n\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 280,
+    "text": "todo in other_todos[:30]:",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 281,
+    "text": "todo['file']}:{todo['line']}` - {todo['text']}\\n\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 292,
+    "text": "TODO\\\\|FIXME\\\\|XXX\" --include=\"*.py\" --include=\"*.cpp\" --include=\"*.h\" src/ scripts/ | wc -l",
+    "reason": "no_match"
+  },
+  {
+    "file": "scripts/maintenance/cleanup_todos.py",
+    "line": 295,
+    "text": "TODO\\\\|FIXME\\\\|XXX\" --include=\"*.md\" docs/ | wc -l",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/depthai_cli/cam_test.py",
+    "line": 615,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/depthai_cli/cam_test.py",
+    "line": 794,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/cache.py",
+    "line": 279,
+    "text": "TODO: use DirectUrl.equivalent when",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/build_env.py",
+    "line": 201,
+    "text": "FIXME: Consider direct URL?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/configuration.py",
+    "line": 326,
+    "text": "XXX: This is patched in the tests.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/configuration.py",
+    "line": 376,
+    "text": "XXX: This is patched in the tests.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/vcs/subversion.py",
+    "line": 59,
+    "text": "FIXME: should we warn?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/vcs/versioncontrol.py",
+    "line": 45,
+    "text": "TODO: Remove `if TYPE_CHECKING` when dropping support for Python 3.7.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/network/lazy_wheel.py",
+    "line": 174,
+    "text": "TODO: Get range requests to be correctly cached",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/models/installation_report.py",
+    "line": 50,
+    "text": "TODO: currently, the resolver uses the default environment to evaluate",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/commands/inspect.py",
+    "line": 60,
+    "text": "TODO tags? scheme?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/constructors.py",
+    "line": 290,
+    "text": "TODO: The is_installable_dir test here might not be necessary",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_set.py",
+    "line": 78,
+    "text": "TODO remove this property together with the legacy resolver, since the new",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_install.py",
+    "line": 287,
+    "text": "TODO: Remove these two variants when packaging is upgraded to",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_install.py",
+    "line": 375,
+    "text": "FIXME: Is there a better place to create the build_dir? (hg and bzr",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_uninstall.py",
+    "line": 490,
+    "text": "FIXME: need a test for this elif block",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_file.py",
+    "line": 247,
+    "text": "FIXME: it would be nice to keep track of the source",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/req/req_file.py",
+    "line": 491,
+    "text": "TODO: handle space after '\\'.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/utils/subprocess.py",
+    "line": 26,
+    "text": "TODO: Remove `if TYPE_CHECKING` when dropping support for Python 3.7.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/utils/unpacking.py",
+    "line": 248,
+    "text": "FIXME: handle?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/utils/unpacking.py",
+    "line": 249,
+    "text": "FIXME: magic signatures?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/locations/base.py",
+    "line": 15,
+    "text": "FIXME doesn't account for venv linked to global site-packages",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/locations/base.py",
+    "line": 59,
+    "text": "FIXME: keep src in cwd for now (it is not a temporary folder)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/locations/_distutils.py",
+    "line": 151,
+    "text": "XXX: In old virtualenv versions, sys.prefix can contain '..' components,",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/index/collector.py",
+    "line": 356,
+    "text": "TODO: In the future, it would be nice if pip supported PEP 691",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py",
+    "line": 37,
+    "text": "TODO: Move definition here.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py",
+    "line": 174,
+    "text": "TODO: this property is relatively costly to compute, memoize it ?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/metadata/base.py",
+    "line": 184,
+    "text": "TODO: get project location from second line of egg_link file",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/cli/base_command.py",
+    "line": 145,
+    "text": "TODO: Try to get these passing down from the command?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/operations/prepare.py",
+    "line": 550,
+    "text": "TODO: separate this part out from RequirementPreparer when the v1",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/operations/prepare.py",
+    "line": 624,
+    "text": "FIXME: https://github.com/pypa/pip/issues/11943",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/factory.py",
+    "line": 196,
+    "text": "TODO: Check already installed candidate, and use it if the link and",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/factory.py",
+    "line": 611,
+    "text": "TODO: Are there more cases this needs to return True? Editable?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/found_candidates.py",
+    "line": 33,
+    "text": "TODO: Remove this block after dropping Python 3.8 support.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/candidates.py",
+    "line": 346,
+    "text": "TODO: Supply reason based on force_reinstall and upgrade_strategy.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/resolution/resolvelib/candidates.py",
+    "line": 442,
+    "text": "TODO: Remove this attribute when packaging is upgraded to support the",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_internal/operations/install/wheel.py",
+    "line": 98,
+    "text": "XXX RECORD hashes will need to be updated",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexer.py",
+    "line": 426,
+    "text": "XXX: cache that somehow",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexer.py",
+    "line": 438,
+    "text": "XXX: cache that somehow",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexer.py",
+    "line": 843,
+    "text": "TODO: clean up the code here.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py",
+    "line": 554,
+    "text": "TODO should we eliminate the recursion?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py",
+    "line": 558,
+    "text": "TODO check whether we need to call `list_hook`",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py",
+    "line": 566,
+    "text": "TODO is the interaction between `list_hook` and `use_list` ok?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/msgpack/fallback.py",
+    "line": 571,
+    "text": "TODO check whether we need to call hooks",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/packaging/tags.py",
+    "line": 326,
+    "text": "TODO: Need to care about 32-bit PPC for ppc64 through 10.2?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/packaging/requirements.py",
+    "line": 95,
+    "text": "TODO: Can we test whether something is contained within a requirement?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/packaging/requirements.py",
+    "line": 98,
+    "text": "TODO: Can we normalize the name and extra name?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/universaldetector.py",
+    "line": 194,
+    "text": "TODO: This encoding is not supported by Python. Should remove?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/universaldetector.py",
+    "line": 202,
+    "text": "TODO: This encoding is not supported by Python. Should remove?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcharsetprober.py",
+    "line": 95,
+    "text": "TODO: Make filter_international_words keep things in self.alphabet",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcharsetprober.py",
+    "line": 106,
+    "text": "XXX: This was SYMBOL_CAT_ORDER before, with a value of 250, but",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/resultdict.py",
+    "line": 6,
+    "text": "TODO: Remove the else block and TYPE_CHECKING check when dropping support",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/codingstatemachinedict.py",
+    "line": 6,
+    "text": "TODO: Remove the else block and TYPE_CHECKING check when dropping support",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py",
+    "line": 57,
+    "text": "TODO: See if using ISO-8859-8 Hebrew model works better here, since",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py",
+    "line": 63,
+    "text": "TODO: ORDER MATTERS HERE. I changed the order vs what was in master",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/sbcsgroupprober.py",
+    "line": 78,
+    "text": "TODO: Restore Hungarian encodings (iso-8859-2 and windows-1250)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/manifest.py",
+    "line": 274,
+    "text": "XXX docstring lying about what the special chars are?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/wheel.py",
+    "line": 852,
+    "text": "TODO version verification",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 413,
+    "text": "TODO check k, v for valid values",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1155,
+    "text": "todo = []",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1157,
+    "text": "todo.append(final)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1158,
+    "text": "todo:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1159,
+    "text": "todo.pop(0)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1173,
+    "text": "todo.extend(preds)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1962,
+    "text": "XXX what about the architecture? NT is Intel or Alpha,",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/util.py",
+    "line": 1978,
+    "text": "XXX what about Alpha, SPARC, etc?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 255,
+    "text": "TODO document the mapping API and UNKNOWN default key",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 464,
+    "text": "FIXME this rejects UNKNOWN, is that right?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 514,
+    "text": "XXX should check the versions (if the file was loaded)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 529,
+    "text": "XXX needs to check 1.1, 1.0)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 585,
+    "text": "TODO could add iter* variants",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/metadata.py",
+    "line": 1018,
+    "text": "TODO: any other fields wanted",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/compat.py",
+    "line": 169,
+    "text": "XXX according to RFC 2818, the most specific Common Name",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/scripts.py",
+    "line": 218,
+    "text": "xxx cookie. The shebang has to be the",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/scripts.py",
+    "line": 219,
+    "text": "xxx cookie cannot be",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/scripts.py",
+    "line": 228,
+    "text": "xxx cookie), the shebang has to be decodable from",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/resources.py",
+    "line": 190,
+    "text": "todo = [resource]",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/resources.py",
+    "line": 191,
+    "text": "todo:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/resources.py",
+    "line": 192,
+    "text": "todo.pop(0)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/resources.py",
+    "line": 203,
+    "text": "todo.append(child)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 766,
+    "text": "XXX TODO Note: this cache is never actually cleared. It's assumed that",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 931,
+    "text": "TODO SHA256 digest",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 1126,
+    "text": "XXX compat-mode if cannot read the version",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 1243,
+    "text": "todo = set([dist])",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 1245,
+    "text": "todo:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 1246,
+    "text": "todo.pop()",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/locators.py",
+    "line": 1280,
+    "text": "todo.add(provider)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 432,
+    "text": "XXX compat-mode if cannot read the version",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 827,
+    "text": "XXX use relpath, add tests",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 853,
+    "text": "XXX add separator or use real relpath algo",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 955,
+    "text": "FIXME handle the case where zipfile is not available",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1270,
+    "text": "XXX compat-mode if cannot read the version",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1308,
+    "text": "todo = graph.reverse_list[dist]  # list of nodes we should inspect",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1310,
+    "text": "todo:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1311,
+    "text": "todo.pop()",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1315,
+    "text": "todo.append(succ)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1335,
+    "text": "todo = graph.adjacency_list[dist]  # list of nodes we should inspect",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1336,
+    "text": "todo)  # already added to todo",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1338,
+    "text": "todo:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1339,
+    "text": "todo.pop()[0]",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/database.py",
+    "line": 1346,
+    "text": "todo.append(pred)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/version.py",
+    "line": 267,
+    "text": "TODO: fill this out",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/distlib/version.py",
+    "line": 516,
+    "text": "TODO: unintended side-effect on, e.g., \"2003.05.09\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 433,
+    "text": "XXX Currently this is the same as ``distutils.util.get_platform()``, but it",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 457,
+    "text": "XXX backward compat",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 466,
+    "text": "XXX Needs compatibility checks for Linux and other unixy OSes.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 506,
+    "text": "XXX Linux and other platforms' special cases should go here",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 698,
+    "text": "XXX add more info",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 1175,
+    "text": "XXX backward compatibility",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 1370,
+    "text": "XXX",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 1866,
+    "text": "FIXME: 'ZipProvider._extract_resource' is too complex (12)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pkg_resources/__init__.py",
+    "line": 2949,
+    "text": "FIXME: 'Distribution.insert_on' is too complex (13)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py",
+    "line": 441,
+    "text": "FIXME: Ideally we'd like to include the url in the ReadTimeoutError but",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py",
+    "line": 446,
+    "text": "FIXME: Is there a better way to differentiate between SSLErrors?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/response.py",
+    "line": 798,
+    "text": "FIXME: Rewrite this method and make it a class with a better structured logic.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/connection.py",
+    "line": 199,
+    "text": "TODO: Fix tunnel so it doesn't depend on self.sock state.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/exceptions.py",
+    "line": 289,
+    "text": "TODO(t-8ch): Stop inheriting from AssertionError in v2.0.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/connectionpool.py",
+    "line": 521,
+    "text": "TODO: Add optional support for socket.gethostbyname checking.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/resolvelib/structs.py",
+    "line": 88,
+    "text": "XXX: Python 2.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/resolvelib/structs.py",
+    "line": 132,
+    "text": "XXX: Python 2.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/resolvelib/structs.py",
+    "line": 158,
+    "text": "XXX: Python 2.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/truststore/_macos.py",
+    "line": 482,
+    "text": "TODO: Not sure if we need the SecTrustResultType for anything?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/cachecontrol/filewrapper.py",
+    "line": 67,
+    "text": "TODO: Add some logging here...",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/cachecontrol/controller.py",
+    "line": 220,
+    "text": "TODO: There is an assumption that the result will be a",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/webencodings/labels.py",
+    "line": 13,
+    "text": "XXX Do not edit!",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/webencodings/mklabels.py",
+    "line": 39,
+    "text": "XXX Do not edit!",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/adapters.py",
+    "line": 505,
+    "text": "TODO: Remove this in 3.0.0: see #2811",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/auth.py",
+    "line": 181,
+    "text": "XXX not implemented yet",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/auth.py",
+    "line": 215,
+    "text": "XXX handle auth-int.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/auth.py",
+    "line": 220,
+    "text": "XXX should the partial digests be encoded too?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/hooks.py",
+    "line": 19,
+    "text": "TODO: response is the only one",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/requests/utils.py",
+    "line": 691,
+    "text": "xxx.xxx.xxx.xxx",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/rich/text.py",
+    "line": 542,
+    "text": "TODO: This is a little inefficient, it is only used by full justify",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/rich/cells.py",
+    "line": 122,
+    "text": "TODO: This is inefficient",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/rich/cells.py",
+    "line": 123,
+    "text": "TODO: This might not work with CWJ type characters",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py",
+    "line": 72,
+    "text": "XXX``, ``TODO``, ``FIXME``, ``BUG`` and ``NOTE``.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py",
+    "line": 75,
+    "text": "FIXME`` by default.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/filters/__init__.py",
+    "line": 81,
+    "text": "XXX', 'TODO', 'FIXME', 'BUG', 'NOTE'])",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexers/python.py",
+    "line": 711,
+    "text": "TODO: DelegatingLexer should support this",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/lexers/_mapping.py",
+    "line": 501,
+    "text": "TodotxtLexer': ('pip._vendor.pygments.lexers.textfmts', 'Todotxt', ('todotxt',), ('todo.txt', '*.todotxt'), ('text/x-todo',)),",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/latex.py",
+    "line": 337,
+    "text": "TODO: add support for background colors",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/terminal256.py",
+    "line": 17,
+    "text": "TODO:",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/pygments/formatters/img.py",
+    "line": 511,
+    "text": "TODO: make sure tab expansion happens earlier in the chain.  It",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/chardet/metadata/languages.py",
+    "line": 11,
+    "text": "TODO: Add Ukrainian (KOI8-U)",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py",
+    "line": 660,
+    "text": "TODO: should I do clean shutdown here? Do I have to?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py",
+    "line": 820,
+    "text": "TODO: Well, crap.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/securetransport.py",
+    "line": 830,
+    "text": "TODO: Update in line with above.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/contrib/pyopenssl.py",
+    "line": 371,
+    "text": "FIXME rethrow compatible exceptions should we ever use this",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/response.py",
+    "line": 103,
+    "text": "FIXME: Can we do this somehow without accessing private httplib _method?",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py",
+    "line": 31,
+    "text": "TODO: In v2 we can remove this sentinel and metaclass with deprecated options.",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py",
+    "line": 261,
+    "text": "TODO: Deprecated, remove in v2.0",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py",
+    "line": 323,
+    "text": "TODO: If already given in **kw we use what's given to us",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py",
+    "line": 454,
+    "text": "TODO: For now favor if the Retry implementation sets its own method_whitelist",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/retry.py",
+    "line": 608,
+    "text": "TODO: Remove this deprecated alias in v2.0",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/ssl_match_hostname.py",
+    "line": 143,
+    "text": "XXX according to RFC 2818, the most specific Common Name",
+    "reason": "no_match"
+  },
+  {
+    "file": "venv/lib/python3.12/site-packages/pip/_vendor/urllib3/util/url.py",
+    "line": 402,
+    "text": "TODO: Remove this when we break backwards compatibility.",
+    "reason": "no_match"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 34,
+    "text": "TODO Items Catalogued**: 2,469 items with exact file:line references",
+    "reason": "no_match"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 46,
+    "text": "TODO Consolidation**: Categorized and prioritized all 2,469 TODO items",
+    "reason": "no_match"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 58,
+    "text": "TODO_CONSOLIDATED.md` - Categorized TODO inventory",
+    "reason": "no_match"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 62,
+    "text": "todo_inventory.csv` - All 2,469 TODO items",
+    "reason": "no_match"
+  },
+  {
+    "file": "CHANGELOG.md",
+    "line": 100,
+    "text": "TODO/FIXME extraction",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 41,
+    "text": "TODO placeholders with actual safety logic.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 44,
+    "text": "TODO placeholders",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 57,
+    "text": "TODO(developer): Implement joint position limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 113,
+    "text": "TODO(developer): Implement velocity limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 172,
+    "text": "TODO(developer): Implement temperature monitoring from ODrive feedback",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 242,
+    "text": "TODO(developer): Implement CAN communication timeout checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 345,
+    "text": "TODO placeholders replaced with working implementations",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 472,
+    "text": "TODO comments",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/EXECUTION_PLAN_2025-09-30.md",
+    "line": 500,
+    "text": "TODO",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/PHASE1_1_COMPLETE.md",
+    "line": 60,
+    "text": "TODO markers for Phase 1.2",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/PHASE1_1_COMPLETE.md",
+    "line": 167,
+    "text": "TODO` comments for Phase 1.2:",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/STATUS_REALITY_MATRIX.md",
+    "line": 28,
+    "text": "TODO (`yanthra_move_system.cpp`, lines 70\u2013130). Validation scripts exist but hardware logs pre-date DepthAI pipeline. | `src/yanthra_move/README.md` (2025-10-13) now flags simulation-first status, TODOs, and pending hardware validation; `DOCS_CLEANUP_SUMMARY.md` updated accordingly. | \u26a0\ufe0f Monitoring | Capture next physical bench run + log references, then reassess readiness language across docs and badges.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/STATUS_REALITY_MATRIX.md",
+    "line": 31,
+    "text": "TODOs remain for runtime config (`TODO` markers lines 138, 166, etc.). DepthAI support disabled by default (CMake option). | README + interface spec describe `-DHAS_DEPTHAI=ON` flag, depthai parameter block, and outstanding TODOs. | \u26a0\ufe0f Needs Update | After TODOs cleared + validation runs logged, flip status to \u2705 and remove caveats; until then keep backlog noted in docs.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/STATUS_REALITY_MATRIX.md",
+    "line": 70,
+    "text": "TODO). | Update tracker to reflect diagnostic progress, keep lifecycle node in backlog.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/SAFETY_MONITOR_EXPLANATION.md",
+    "line": 346,
+    "text": "TODO Functions (6-8 hours)",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/DOC_INVENTORY_FOR_AUDIT.md",
+    "line": 19,
+    "text": "TODO inventories |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/PHASE1_2_COMPLETE.md",
+    "line": 113,
+    "text": "xxx, USB Speed: USB 3.0 (5Gbps)\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 1,
+    "text": "TODO Inventory",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 11,
+    "text": "TODO/FIXME/CRITICAL items across 275+ documentation files. This document categorizes them by status and priority to provide actionable guidance.",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 36,
+    "text": "TODO: Test protocol implementation` \u2705 Test nodes created",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 92,
+    "text": "TODO: Optimize ODrive parameters` \u274c Legacy only",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 133,
+    "text": "TODO: Test with actual MG6010 motors` \ud83d\udd27 Hardware needed",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 134,
+    "text": "TODO: Validate CAN communication at 250kbps` \ud83d\udd27 Pending",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 135,
+    "text": "TODO: Test multi-motor coordination` \ud83d\udd27 Awaiting motors",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 136,
+    "text": "TODO: Verify safety limits in real conditions` \ud83d\udd27 Hardware test",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 137,
+    "text": "TODO: Calibrate camera-arm transforms` \ud83d\udd27 Requires setup",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 152,
+    "text": "TODO: Test with real cotton samples` \ud83d\udd27 CRITICAL",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 153,
+    "text": "TODO: Validate detection accuracy` \ud83d\udd27 Need samples",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 154,
+    "text": "TODO: Measure false positive rate` \ud83d\udd27 Requires testing",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 155,
+    "text": "TODO: Optimize detection parameters` \ud83d\udd27 After validation",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 156,
+    "text": "TODO: Test in field conditions` \ud83d\udd27 Deployment phase",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 171,
+    "text": "TODO: Add usage examples to README` \ud83d\udd27 Good to have",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 172,
+    "text": "TODO: Create troubleshooting guide` \ud83d\udd27 Useful",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 173,
+    "text": "TODO: Document parameter effects` \ud83d\udd27 For tuning",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 174,
+    "text": "TODO: Add architecture diagrams` \ud83d\udd27 Visualization",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 175,
+    "text": "TODO: Expand API documentation` \ud83d\udd27 Developer experience",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 190,
+    "text": "TODO: Optimize control loop frequency` \ud83d\udd27 Fine-tuning",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 191,
+    "text": "TODO: Reduce latency in detection pipeline` \ud83d\udd27 Performance",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 192,
+    "text": "TODO: Improve PID parameters` \ud83d\udd27 Tuning needed",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 193,
+    "text": "TODO: Benchmark communication overhead` \ud83d\udd27 Nice to have",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 194,
+    "text": "TODO: Profile CPU usage` \ud83d\udd27 Optimization",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 209,
+    "text": "TODO: Add automatic reconnection` \ud83d\udd27 Robustness",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 210,
+    "text": "TODO: Improve error messages` \ud83d\udd27 User experience",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 211,
+    "text": "TODO: Add recovery strategies` \ud83d\udd27 Reliability",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 212,
+    "text": "TODO: Log error statistics` \ud83d\udd27 Monitoring",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 213,
+    "text": "TODO: Test fault scenarios` \ud83d\udd27 Edge cases",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 228,
+    "text": "TODO: Add unit tests for protocol` \ud83d\udd27 Code coverage",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 229,
+    "text": "TODO: Create integration test suite` \ud83d\udd27 CI/CD",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 230,
+    "text": "TODO: Add stress tests` \ud83d\udd27 Reliability",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 231,
+    "text": "TODO: Mock hardware for testing` \ud83d\udd27 Development",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 232,
+    "text": "TODO: Automated regression tests` \ud83d\udd27 Quality",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 249,
+    "text": "TODO: Implement Phase 2 direct DepthAI` \ud83d\udccb Future",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 250,
+    "text": "TODO: Create Phase 3 pure C++ detection` \ud83d\udccb Future",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 251,
+    "text": "TODO: Add machine learning optimization` \ud83d\udccb Research",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 252,
+    "text": "TODO: Multi-robot coordination` \ud83d\udccb Future",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 253,
+    "text": "TODO: Advanced path planning` \ud83d\udccb Enhancement",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 268,
+    "text": "TODO: Add web dashboard` \ud83d\udccb Nice to have",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 269,
+    "text": "TODO: Remote telemetry` \ud83d\udccb Enhancement",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 270,
+    "text": "TODO: Data logging and analysis` \ud83d\udccb Tools",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 271,
+    "text": "TODO: Simulation improvements` \ud83d\udccb Development",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 272,
+    "text": "TODO: Auto-calibration routines` \ud83d\udccb UX improvement",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 287,
+    "text": "TODO: Explore AI-based control` \ud83d\udccb Research",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 288,
+    "text": "TODO: Investigate vision transformers` \ud83d\udccb ML research",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 289,
+    "text": "TODO: Test alternative sensors` \ud83d\udccb Hardware exploration",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 290,
+    "text": "TODO: Benchmark against competitors` \ud83d\udccb Analysis",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 291,
+    "text": "TODO: Patent disclosure` \ud83d\udccb IP",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 344,
+    "text": "TODO Hygiene:**",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 350,
+    "text": "TODO audit",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 355,
+    "text": "TODO tracking in issue tracker",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 357,
+    "text": "TODO extraction in CI",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 377,
+    "text": "TODO categories to team",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 379,
+    "text": "TODO hygiene guidelines",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 383,
+    "text": "TODO Lists",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 385,
+    "text": "TODO inventory available in:",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 393,
+    "text": "TODO\" src/motor_control_ros2/",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 396,
+    "text": "TODO.*CRITICAL\" .",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 399,
+    "text": "TODO.*hardware\" .",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/TODO_CONSOLIDATED.md",
+    "line": 402,
+    "text": "TODO.*HIGH\" docs/archive/2025-10-audit/2025-10-14/todo_inventory.csv",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/IMPLEMENTATION_FIXES.md",
+    "line": 29,
+    "text": "TODO: Phase 1 - Add subprocess management if needed`",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/INDEX.md",
+    "line": 25,
+    "text": "TODO tracker.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/PHASE0_PYTHON_CRITICAL_FIXES.md",
+    "line": 192,
+    "text": "TODO comment, no implementation \u2192 permanent failure if subprocess crashes",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/OAK_D_LITE_MIGRATION_ANALYSIS.md",
+    "line": 353,
+    "text": "TODO list",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/OAK_D_LITE_MIGRATION_ANALYSIS.md",
+    "line": 540,
+    "text": "TODO list for 19 action items with detailed implementation guidance.",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 17,
+    "text": "TODO items)",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 182,
+    "text": "TODO Items Mapped to Phases",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 225,
+    "text": "TODO #1",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 242,
+    "text": "TODO #2",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 248,
+    "text": "TODO #3",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 254,
+    "text": "TODO #4",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 276,
+    "text": "TODO #5",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 301,
+    "text": "TODO #6",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 363,
+    "text": "TODO #7",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 365,
+    "text": "TODO details)",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 369,
+    "text": "TODO #8",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 397,
+    "text": "TODO #9",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 403,
+    "text": "TODO #10",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 425,
+    "text": "TODO #12",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 452,
+    "text": "TODO #13",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 458,
+    "text": "TODO #14",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 470,
+    "text": "TODO #15",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 487,
+    "text": "TODO #16",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 496,
+    "text": "TODO #17",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 505,
+    "text": "TODO #18",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/MASTER_MIGRATION_STRATEGY.md",
+    "line": 511,
+    "text": "TODO #19",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/cleanup/DELETION_COMPLETE.md",
+    "line": 158,
+    "text": "TODO** \ud83d\udcdd",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/cleanup/ODRIVE_CLEANUP_SUMMARY.md",
+    "line": 93,
+    "text": "TODO(developer) The Odrive Homing Position is Independent of main program",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/cleanup/ODRIVE_CLEANUP_SUMMARY.md",
+    "line": 96,
+    "text": "TODO(developer) The motor controller homing position is independent of main program",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/cleanup/ODRIVE_CLEANUP_PLAN_2025-10-09.md",
+    "line": 72,
+    "text": "Todo List (17 Tasks)",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/cleanup/ODRIVE_CLEANUP_PLAN_2025-10-09.md",
+    "line": 74,
+    "text": "todo list has been created with the following phases:",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/cleanup/ODRIVE_CLEANUP_PLAN_2025-10-09.md",
+    "line": 253,
+    "text": "todo list",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/cleanup/reference_sweep_2025-10-13.md",
+    "line": 14,
+    "text": "TODO inventory | `docs/archive/2025-10-audit/2025-10-14/todo_inventory.csv` | Captures the original file:line references from the October archive for traceability. Entries have been superseded in `docs/_generated/master_status.md` and remain only as a raw data extract. |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/project-management/REORGANIZATION_PROGRESS.md",
+    "line": 86,
+    "text": "TODO/PENDING markers",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/project-management/REORGANIZATION_PROGRESS.md",
+    "line": 109,
+    "text": "TODO/PENDING markers** - Need to address or remove",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/project-management/DOCUMENTATION_REORGANIZATION_PLAN.md",
+    "line": 319,
+    "text": "TODO\" docs/ --include=\"*.md\" | head -20",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/project-management/DOCUMENTATION_REORGANIZATION_PLAN.md",
+    "line": 379,
+    "text": "TODO/PENDING markers:\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/project-management/DOCUMENTATION_REORGANIZATION_PLAN.md",
+    "line": 380,
+    "text": "TODO\\|PENDING\" --include=\"*.md\" . 2>/dev/null | wc -l",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 319,
+    "text": "TODO` - Add calibrated TF transform values",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 323,
+    "text": "TODO` - Verify transform chain",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 327,
+    "text": "TODO` - Implement restart logic",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 337,
+    "text": "TODO` - Optimize detection parameters",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 341,
+    "text": "TODO` - Add error recovery",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 351,
+    "text": "TODO` comments",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 359,
+    "text": "TODO` - Unknown context",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 362,
+    "text": "TODO` - Unknown context",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 371,
+    "text": "TODO(developer)` - Implement safety check placeholders",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/GAPS_AND_ACTION_PLAN.md",
+    "line": 409,
+    "text": "TODO comments but are either:",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/FINAL_FIX_continuous_operation.md",
+    "line": 124,
+    "text": "todo item for details).",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/CLEANUP_AND_MAINTENANCE_PLAN.md",
+    "line": 121,
+    "text": "TODO.md` (empty)",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/CLEANUP_AND_MAINTENANCE_PLAN.md",
+    "line": 296,
+    "text": "TODO items",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 17,
+    "text": "TODO placeholders need completion",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 55,
+    "text": "TODO Placeholder** |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 56,
+    "text": "TODO Placeholder** |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 57,
+    "text": "TODO Placeholder** |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 58,
+    "text": "TODO Placeholder** |",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 120,
+    "text": "TODO(developer): Implement joint position limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 137,
+    "text": "TODO(developer): Implement velocity limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 153,
+    "text": "TODO(developer): Implement temperature monitoring from ODrive feedback",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 170,
+    "text": "TODO(developer): Implement CAN communication timeout checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 577,
+    "text": "TODO Placeholders Causing Warnings",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/SAFETY_MONITOR_INTEGRATION_GUIDE.md",
+    "line": 579,
+    "text": "TODO: Implement...\" messages",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/README_UPDATE_PLAN.md",
+    "line": 283,
+    "text": "TODO tracking",
+    "reason": "no_match"
+  },
+  {
+    "file": "docs/guides/hardware/HARDWARE_TESTING_QUICKSTART.md",
+    "line": 245,
+    "text": "XXX Device XXX: ID 03e7:XXXX Movidius Ltd.\"",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/DOCS_CLEANUP_SUMMARY.md",
+    "line": 78,
+    "text": "TODO completion.",
+    "reason": "no_match"
+  },
+  {
+    "file": "src/yanthra_move/README.md",
+    "line": 55,
+    "text": "TODO stubs with `pragati_hardware` drivers (or GPIO utilities) and document wiring.",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": "src/cotton_detection_ros2/README.md",
+    "line": 65,
+    "text": "TODO (`DepthAIManager` TODO markers).",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 78,
+    "text": "TODO placeholders but doesn't block operation",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 159,
+    "text": "TODO placeholders for all checks | MEDIUM |",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 161,
+    "text": "TODO placeholder | Line 151-160 in safety_monitor.cpp | MEDIUM |",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 162,
+    "text": "TODO placeholder | Line 163-175 in safety_monitor.cpp | MEDIUM |",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 163,
+    "text": "TODO placeholder | Line 178-190 in safety_monitor.cpp | LOW |",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 164,
+    "text": "TODO placeholder | Line 193-200 in safety_monitor.cpp | LOW |",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 253,
+    "text": "TODO(developer): Implement joint position limit checking`",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 258,
+    "text": "TODO(developer): Implement velocity limit checking`",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 263,
+    "text": "TODO(developer): Implement temperature monitoring from ODrive feedback`",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 268,
+    "text": "TODO(developer): Implement CAN communication timeout checking`",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 280,
+    "text": "TODO: Implement keyboard monitoring`",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 312,
+    "text": "TODO placeholders did not block deployment",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 391,
+    "text": "TODO(developer): Implement joint position limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 396,
+    "text": "TODO(developer): Implement velocity limit checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 401,
+    "text": "TODO(developer): Implement temperature monitoring",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 406,
+    "text": "TODO(developer): Implement CAN communication timeout checking",
+    "reason": "keep_pattern_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 428,
+    "text": "TODO placeholders",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 741,
+    "text": "TODO placeholders**",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 861,
+    "text": "TODO Scan Summary",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COMPREHENSIVE_STATUS_REVIEW_2025-09-30.md",
+    "line": 872,
+    "text": "TODO Categories**:",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/discrepancy_log.md",
+    "line": 233,
+    "text": "TODO: Implement restart logic`",
+    "reason": "no_match"
+  },
+  {
+    "file": ".restored/8ac7d2e/COTTON_DETECTION_INTEGRATION_INVENTORY.md",
+    "line": 138,
+    "text": "TODO: Add cotton_detection_ros2 for message types",
+    "reason": "no_match"
+  }
+]

@@ -1,0 +1,38 @@
+# Rosbag2 Recording Profiles
+# Used by dashboard Bag Manager and pragati_complete.launch.py
+# All profiles use MCAP storage with --max-cache-size 100MB
+
+profiles:
+  minimal:
+    description: "Lightweight recording for continuous field operation"
+    topics:
+      - /joint_states
+      - /cotton_detection/results
+      - /safety/emergency_stop
+
+  standard:
+    description: "Recommended for field trials — full motor + detection + control data"
+    topics:
+      - /joint_states
+      - /cotton_detection/results
+      - /safety/emergency_stop
+      - /joint3_position_controller/command
+      - /joint4_position_controller/command
+      - /joint5_position_controller/command
+      - /motor_control/motor_diagnostics
+      - /start_switch/state
+      - /shutdown_switch/state
+
+  debug:
+    description: "Full diagnostic recording including camera debug images — short sessions only"
+    topics:
+      - /joint_states
+      - /cotton_detection/results
+      - /safety/emergency_stop
+      - /joint3_position_controller/command
+      - /joint4_position_controller/command
+      - /joint5_position_controller/command
+      - /motor_control/motor_diagnostics
+      - /start_switch/state
+      - /shutdown_switch/state
+      - /cotton_detection/debug_image/compressed

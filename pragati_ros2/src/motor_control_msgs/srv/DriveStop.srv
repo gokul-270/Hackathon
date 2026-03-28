@@ -1,0 +1,12 @@
+# Drive Stop Service
+# Controls whether drive motors should stop or be allowed to move
+# When activated: motors stop immediately and all queued commands are cleared
+# When deactivated: motors resume and can accept position commands
+
+# Request
+bool activate  # true = stop motors, false = resume/allow movement
+---
+# Response
+bool success
+string message
+int32 commands_cleared  # Number of queued commands that were cleared (only when activating)

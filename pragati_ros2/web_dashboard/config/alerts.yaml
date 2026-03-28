@@ -1,0 +1,306 @@
+# Alert Configuration
+# Define thresholds and actions for system monitoring
+
+alerts:
+  # System Resource Alerts
+  - name: "High CPU Usage"
+    metric: "cpu_percent"
+    threshold: 80
+    comparison: "greater_than"
+    duration_sec: 5
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "System CPU usage above 80% for {{duration_sec}} seconds"
+
+  - name: "Critical CPU Usage"
+    metric: "cpu_percent"
+    threshold: 95
+    comparison: "greater_than"
+    duration_sec: 2
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "CRITICAL: System CPU usage above 95%!"
+
+  - name: "High Memory Usage"
+    metric: "memory_percent"
+    threshold: 85
+    comparison: "greater_than"
+    duration_sec: 10
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "System memory usage above 85%"
+
+  - name: "Critical Memory Usage"
+    metric: "memory_percent"
+    threshold: 95
+    comparison: "greater_than"
+    duration_sec: 5
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "CRITICAL: System memory usage above 95%!"
+
+  # Node-Specific Alerts
+  - name: "Node High CPU"
+    metric: "node_cpu_percent"
+    threshold: 90
+    comparison: "greater_than"
+    duration_sec: 10
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "Node {{node_name}} CPU usage above 90%"
+
+  - name: "Node High Memory"
+    metric: "node_memory_mb"
+    threshold: 200
+    comparison: "greater_than"
+    duration_sec: 10
+    severity: "warning"
+    actions:
+      - log
+    message: "Node {{node_name}} using more than 200MB memory"
+
+  # Battery Alerts
+  - name: "Low Battery"
+    metric: "battery_level"
+    threshold: 20
+    comparison: "less_than"
+    duration_sec: 5
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "Battery level at {{value}}% (warning threshold: 20%)"
+
+  - name: "Critical Battery"
+    metric: "battery_level"
+    threshold: 10
+    comparison: "less_than"
+    duration_sec: 2
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "CRITICAL: Battery level at {{value}}%! Shutdown recommended."
+
+  # Motor Controller Alerts
+  - name: "Motor Temperature Warning"
+    metric: "motor_temperature"
+    threshold: 60
+    comparison: "greater_than"
+    duration_sec: 3
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "Motor {{motor_id}} temperature at {{value}}°C (warning threshold: 60°C)"
+
+  - name: "Motor Temperature Critical"
+    metric: "motor_temperature"
+    threshold: 70
+    comparison: "greater_than"
+    duration_sec: 1
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+      - trigger_safety_stop
+    message: "CRITICAL: Motor {{motor_id}} temperature at {{value}}°C! Triggering safety stop."
+
+  - name: "Motor Current High"
+    metric: "motor_current"
+    threshold: 15000  # mA
+    comparison: "greater_than"
+    duration_sec: 2
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "Motor {{motor_id}} current draw at {{value}}mA"
+
+  - name: "Motor Error State"
+    metric: "motor_error"
+    threshold: 0
+    comparison: "greater_than"
+    duration_sec: 0
+    severity: "error"
+    actions:
+      - log
+      - notify
+    message: "Motor {{motor_id}} reported error: {{error_code}}"
+
+  # CAN Bus Alerts
+  - name: "CAN Bus Errors"
+    metric: "can_bus_error_count"
+    threshold: 10
+    comparison: "greater_than"
+    duration_sec: 5
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "CAN bus error count exceeds 10 in 5 seconds"
+
+  - name: "CAN Bus Timeout"
+    metric: "can_bus_timeout"
+    threshold: 1
+    comparison: "greater_than"
+    duration_sec: 0
+    severity: "error"
+    actions:
+      - log
+      - notify
+    message: "CAN bus communication timeout detected"
+
+  # Cotton Detection Alerts
+  - name: "Detection Rate Drop"
+    metric: "cotton_detection_rate"
+    threshold: 5  # Hz
+    comparison: "less_than"
+    duration_sec: 10
+    severity: "warning"
+    actions:
+      - log
+      - notify
+    message: "Cotton detection rate dropped below 5Hz"
+
+  - name: "Camera Connection Lost"
+    metric: "camera_connected"
+    threshold: 0
+    comparison: "equal_to"
+    duration_sec: 2
+    severity: "error"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "OAK-D Lite camera connection lost!"
+
+  - name: "Detection Processing Lag"
+    metric: "detection_latency_ms"
+    threshold: 200
+    comparison: "greater_than"
+    duration_sec: 5
+    severity: "warning"
+    actions:
+      - log
+    message: "Detection processing latency above 200ms"
+
+  # Safety Monitor Alerts
+  - name: "Safety Violation"
+    metric: "safety_violation"
+    threshold: 0
+    comparison: "greater_than"
+    duration_sec: 0
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "Safety violation detected: {{violation_type}}"
+
+  - name: "E-Stop Activated"
+    metric: "emergency_stop"
+    threshold: 1
+    comparison: "equal_to"
+    duration_sec: 0
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "EMERGENCY STOP ACTIVATED!"
+
+  # Topic Performance Alerts
+  - name: "Topic Rate Drop"
+    metric: "topic_rate_hz"
+    threshold: 0.5  # 50% drop
+    comparison: "rate_drop"
+    duration_sec: 5
+    severity: "warning"
+    actions:
+      - log
+    message: "Topic {{topic_name}} rate dropped by >50%"
+
+  - name: "Topic High Latency"
+    metric: "topic_latency_ms"
+    threshold: 100
+    comparison: "greater_than"
+    duration_sec: 10
+    severity: "warning"
+    actions:
+      - log
+    message: "Topic {{topic_name}} latency above 100ms"
+
+  # Node Health Alerts
+  - name: "Node Crash"
+    metric: "node_alive"
+    threshold: 0
+    comparison: "equal_to"
+    duration_sec: 2
+    severity: "critical"
+    actions:
+      - log
+      - notify
+      - webhook
+    message: "Node {{node_name}} has crashed or become unresponsive!"
+
+  - name: "Node Not Responding"
+    metric: "node_response_time"
+    threshold: 5000  # ms
+    comparison: "greater_than"
+    duration_sec: 0
+    severity: "error"
+    actions:
+      - log
+      - notify
+    message: "Node {{node_name}} not responding (>5s delay)"
+
+# Alert Actions Configuration
+actions:
+  log:
+    enabled: true
+    level: "WARNING"
+
+  notify:
+    enabled: true
+    channels:
+      - websocket  # Send to dashboard
+
+  webhook:
+    enabled: false  # Set to true and configure URL to enable
+    url: null
+    method: "POST"
+    headers:
+      Content-Type: "application/json"
+    timeout_sec: 5
+
+  trigger_safety_stop:
+    enabled: true
+    service_name: "/safety_monitor/emergency_stop"
+
+  email:
+    enabled: false
+    smtp_server: null
+    smtp_port: 587
+    from_addr: null
+    to_addrs: []
+
+# Alert Grouping (prevent spam)
+grouping:
+  enabled: true
+  group_window_sec: 60  # Group similar alerts within 60s
+  max_alerts_per_group: 5

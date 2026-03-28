@@ -1,0 +1,6 @@
+Workers,Run,TotalTime,CommonUtils,RobotDescription,PatternFinder,CottonDetection,MotorControl,VehicleControl,YanthraMove
+2,1,326.641814911,5.67s,7.95s,30.1s,2m45s,2m34s,4.86s,2m27s
+2,2,324.447139434,4.49s,7.46s,33.6s,2m47s,3m0s,4.07s,2m9s
+2,3,336.731557108,4.68s,7.92s,30.8s,3m13s,3m18s,3.87s,2m4s
+2,4,284.094458680,4.46s,6.40s,28.3s,2m40s,2m36s,3.62s,1m51s
+2,5,312.029635071,4.00s,11.6s,31.0s,2m19s,3m20s,4.21s,1m50s

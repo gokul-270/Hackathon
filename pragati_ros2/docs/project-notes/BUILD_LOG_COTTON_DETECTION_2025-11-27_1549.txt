@@ -1,0 +1,3 @@
+[0.915s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.916s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+Starting >>> cotton_detection_ros2

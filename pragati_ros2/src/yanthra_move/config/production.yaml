@@ -1,0 +1,309 @@
+# ROS1-Equivalent YanthraMove Parameters - Direct Migration
+# Based on: /home/uday/Downloads/pragati/src/yanthra_move/yanthra_move_picking.yaml
+# Key fix: continuous_operation should be false for single-run tests
+
+yanthra_move:
+  ros__parameters:
+    # Core Operation Mode - CRITICAL FIX
+    continuous_operation: true  # Keep running and wait for start switch on each cycle
+
+    # Maximum runtime in minutes for safety timeout
+    # 0 = use defaults (1min single-cycle, 30min continuous)
+    # -1 = infinite (no timeout, for testing/development)
+    # >0 = custom timeout in minutes
+    max_runtime_minutes: -1
+
+    # START_SWITCH timeout configuration (seconds)
+    start_switch.timeout_sec: -1.0  # Infinite wait for START_SWITCH (use positive value for timeout)
+    start_switch.enable_wait: true  # Enable waiting for START_SWITCH (false for dev/CI)
+    start_switch.prefer_topic: true  # Prefer topic over GPIO (easier for testing)
+
+    # Vision and Processing Parameters
+    CAPTURE_MODE: 3
+    YanthraDisparityShift: 15
+    UsePostProcessingFilter: true
+    UseThresholdFilter: false
+    UseSpatialFilter: true
+    SpatialFilterHoleFillingMode: 1
+    TemporalFilterPersistenceControl: 7
+    UseTemporalFilter: false
+    PRAGATI_BYPASS_INTERNAL_PROCESSING: false
+
+    # Timeout and Calibration (hardware_timeout set in launch to avoid type conflicts)
+    arm_calibration: false
+    YoloThreshold: 0.55
+    YanthraLabCalibrationTesting: false  # Disabled for field deployment (ArUco marker detection not needed)
+
+    use_preloaded_centroids: false  # If true, load centroid.txt directly instead of running ArUco detection
+    enable_detection_retrigger: false  # Re-trigger detection after each pick (WARNING: can cause hangs)
+    enable_post_cycle_parking: false  # Redundant - retreat already homes all joints (saves ~800ms)
+    position_wait_mode: "service"  # Position wait: "service" (motor-confirmed), "feedback" (poll), "blind_sleep" (estimate)
+    # position_tolerance: loaded from motor_control node per-joint (single source of truth)
+    # Values: J3=0.05 rotations, J4=0.005m, J5=0.005m (see motor_control_ros2/config/production.yaml)
+    feedback_timeout: 8.0  # Increased from 5.0 — CAN bus feedback on RPi 4 can be slow under load
+
+    # L3 Idle Parking Optimization (reduces motor temperature during idle)
+    # When enabled, L3 parks at natural resting position (tilted up) when not picking.
+    # L3 moves to homing (tilted down) before approach to create clearance for J4.
+    # SAFETY: Shutdown sequence ensures J4 only moves when L3 at homing.
+    enable_l3_idle_parking: false  # DISABLED - not working as expected
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # PHI-ANGLE COMPENSATION (for mechanical/kinematic error correction)
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # Problem observed in field:
+    #   - 0-30° phi: Arm goes BELOW cotton (needs positive phi offset to raise)
+    #   - 30-60° phi: Arm reaches cotton correctly (minimal compensation)
+    #   - 60-90° phi: Arm goes ABOVE cotton (needs negative phi offset to lower)
+    #
+    # The error likely comes from:
+    #   - Mechanical: Gravity effects, arm flex at different angles
+    #   - Kinematic: L5 extension adds height contribution that varies with phi
+    #   - Optical: Camera calibration errors at different viewing angles
+    #
+    # Compensation formula per zone:
+    #   base_compensation = slope × (phi_deg / 90) + offset
+    #   final_compensation = base_compensation × (1 + l5_scale × (l5_ext / l5_max))
+    #
+    # Units: slope and offset are in ROTATIONS (1 rotation = 360°)
+    # Example: offset of 0.01 = 3.6° compensation
+    # ═══════════════════════════════════════════════════════════════════════════════
+    phi_compensation/enable: true   # Enabled - compensates for camera pitch angle error
+
+    # Zone boundaries (degrees) - defines the three compensation zones
+    phi_compensation/zone1_max_deg: 50.5   # Zone 1: 0° to 50°
+    phi_compensation/zone2_max_deg: 60.0   # Zone 2: 50° to 60° (reference zone)
+                                            # Zone 3: 60° to 90° (implicit)
+
+    # Zone 1 (0-50°): Arm goes DOWN from cotton, needs UP compensation
+    # Positive offset raises the arm (less negative phi)
+    # Tuned value: 0.014 rotations ≈ 5° compensation
+    phi_compensation/zone1_slope: 0.0     # Rotations per normalized angle
+    phi_compensation/zone1_offset: 0.014  # Base offset in rotations (+5°)
+
+    # Zone 2 (50-60°): Arm reaches correctly, minimal compensation
+    phi_compensation/zone2_slope: 0.0
+    phi_compensation/zone2_offset: 0.0
+
+    # Zone 3 (60-90°): Arm goes UP from cotton, needs DOWN compensation
+    # Negative offset lowers the arm (more negative phi)
+    # Tuned value: -0.014 rotations ≈ -5° compensation
+    phi_compensation/zone3_slope: 0.0
+    phi_compensation/zone3_offset: -0.014 # Base offset in rotations (-5°)
+
+    # L5 extension scaling: compensation increases with arm extension
+    # 0.0 = no L5 scaling (constant compensation regardless of extension)
+    # 0.5 = compensation increases by 50% at full extension
+    # 1.0 = compensation doubles at full extension
+    phi_compensation/l5_scale: 0.5
+
+    # Motor Control
+    global_vaccum_motor: true
+    end_effector_enable: true
+    save_logs: false
+    reverse_endeffector: false
+    jerk_enabled_theta: false
+    jerk_enabled_phi: false
+    parking_on: true
+
+    # ═══════════════════════════════════════════════════════════════════════════════
+    # TIMING PARAMETERS - CONSOLIDATED & OPTIMIZED
+    # All delays are configurable here - no hardcoded values in code
+    # ═══════════════════════════════════════════════════════════════════════════════
+
+    # L2 (height) timing - not used in current flow
+    l2_homing_sleep_time: 6.0
+    l2_step_sleep_time: 5.0
+    l2_idle_sleep_time: 2.0
+
+    # Core motion timing
+    min_sleep_time_formotor_motion: 0.2  # Min wait after sending joint command (CAN latency)
+    inter_joint_delay: 0.3  # Delay between sequential joint movements - REDUCED from 0.5
+    cotton_settle_delay: 0.2  # Wait before compressor burst to let cotton settle - NEW (was using inter_joint_delay)
+
+    # Joint Configuration
+    joint_velocity: 1.0
+    joint_poses: [0.00001, 0.00001, 1.5708]  # Flat array for ROS2 compatibility
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # END EFFECTOR & COMPRESSOR TIMING
+    # ─────────────────────────────────────────────────────────────────────────────
+    delays/picking: 0.35  # Delay between picking operations - aligned with min_sleep_time_formotor_motion
+
+    # Position-based dynamic EE timing (NEW - preferred over time-based)
+    # When use_dynamic_ee_prestart=true, EE timing is controlled by position monitoring:
+    #   - EE starts when J5 is ee_start_distance (m) from cotton target
+    #   - EE stops when J5 retracts ee_stop_distance (m) from cotton position
+    delays/ee_start_distance: 0.150  # Start EE when J5 is 250mm before reaching cotton (even earlier)
+    delays/ee_stop_distance: 0.150   # Stop EE when J5 retracts 150mm from cotton
+
+    # Legacy time-based parameters (kept for compatibility, not used in position-based mode)
+    delays/ee_pre_arrival_time: 0.2  # (legacy) EE starts this many seconds BEFORE L5 reaches target
+    delays/ee_post_retract_time: 0.2  # (legacy) EE stops this many seconds AFTER L5 starts retracting
+
+    delays/use_dynamic_ee_prestart: true  # false=sequential (EE after J5 completes), true=position-based dynamic
+
+    # EE timing during cotton capture
+    delays/EERunTimeDuringL5ForwardMovement: 0.1  # EE dwell time at cotton - REDUCED to 100ms for faster cycle
+    delays/EERunTimeDuringL5BackwardMovement: 0.2  # EE runtime during retraction
+    delays/EERunTimeDuringReverseRotation: 0.2  # Legacy - not currently used
+    delays/ee_post_joint5_delay: 0.3  # Stability delay after J5 reaches position before EE starts - REDUCED from 0.5
+
+    # Compressor timing
+    compressor_burst_duration: 0.5  # How long to run compressor for cotton drop - NEW (was hardcoded 1.0)
+    enable_compressor_eject: false  # Gate compressor activation (M2 roller + gravity is primary eject method)
+
+    # Cotton eject sub-sequence
+    # Hardware verified: M2 enable=BCM 12, M2 direction=BCM 20
+    enable_cotton_eject: true             # Gate for active ejection sequence
+    j3_eject_position: -0.180              # J3 angle during eject (rotations); do not exceed J3 min limit (-0.2)
+    ee_motor2_eject_duration_ms: 300.0   # How long to run M2 in reverse (ms); tune based on cotton type
+    ee_motor2_forward_flush_ms: 200.0    # How long to run M2 forward after eject to clear belt entrance (ms)
+    j3_eject_feedback_timeout_sec: 1.5   # Max wait for J3 CAN position feedback before firing M2 anyway
+
+    # Capture sequence timing (executeCaptureSequence)
+    cotton_capture_detect_wait_time: 0.0  # Additional wait in capture - SET TO 0 (EE already runs in approach)
+
+    # Joint Initialization Parameters (using flat notation for ROS2 compatibility)
+    joint2_init/height_scan_enable: false
+    joint2_init/min: 0.01
+    joint2_init/max: 0.85
+    joint2_init/step: 0.125
+
+    # FIXED: Use flat notation to match C++ declare_parameter calls
+    # NOTE: These homing positions should match motor_control/config/production.yaml homing_positions
+    # TODO: Consider loading these from motor_control node parameters instead of duplicating
+    joint3_init/homing_position: 0.0  # Home/park position (rotations) - horizontal
+    joint3_init/multiple_zero_poses: true
+    joint3_init/zero_poses: [0.261799]  # Original ROS1 value
+
+    joint4_init/homing_position: 0.0  # Home/park position (meters)
+    joint4_init/multiple_zero_poses: false
+    joint4_init/theta_jerk_value: 0.0
+    joint4_init/zero_poses: [0.0]  # Required parameter for consistency
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # JOINT4 MULTI-POSITION SCANNING (FOV enhancement for border cotton recovery)
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Feature: Scan multiple J4 left/right positions to increase camera FOV coverage
+    # Goal: Recover border cotton detections (16 cotton lost in Jan 2026 field trial)
+    # Expected improvement: ~60% more coverage, 10-20% pick success rate increase
+    #
+    # Operation (CYCLE-LEVEL scanning):
+    #   1. Iterate through J4 positions [-100mm, -50mm, 0mm, +50mm, +100mm]
+    #   2. At EACH J4 position:
+    #      a) Move J4 to position (e.g., J4_home + offset = 0 + (-0.1) = -0.1m)
+    #      b) Wait for TF settling (150ms total)
+    #      c) Trigger fresh detection at THIS J4 position
+    #      d) Pick ALL cotton visible at this J4 position
+    #   3. After all positions scanned, return J4 to home (0mm)
+    #   4. Early exit optimization: Skip remaining positions if no cotton at first position
+    #   5. Cycle time: ~4-6s for 5 positions (vs 2.4s baseline), acceptable for 60% more picks
+    #
+    # Safety notes:
+    #   - Positions are OFFSETS from J4 home position (in meters)
+    #   - Final J4 command = joint4_init/homing_position + offset
+    #   - safe_min/safe_max enforce buffer from mechanical limits [-0.175, +0.175]m
+    #   - All positions validated before movement
+    #   - Feature can be disabled via enabled=false without code changes
+    # ═══════════════════════════════════════════════════════════════════════════
+    joint4_multiposition/enabled: true  # Master enable/disable (set true to activate)
+    joint4_multiposition/positions: [-0.150, -0.100, -0.050, 0.000, 0.050, 0.100, 0.150]  # 7-pos ±150mm at 50mm increments — deployed mid-trial Mar 25 to both arms, committed here
+    joint4_multiposition/safe_min: -0.175  # Mechanical limit (meters)
+    joint4_multiposition/safe_max: 0.175   # Mechanical limit (meters)
+    joint4_multiposition/scan_strategy: "left_to_right"  # "left_to_right", "right_to_left", or "as_configured"
+    joint4_multiposition/j4_settling_time: 0.100  # Wait for TF to stabilize after J4 movement (seconds)
+    joint4_multiposition/detection_settling_time: 0.200  # Additional wait for camera fresh frame (seconds, 30fps = 33ms/frame)
+    joint4_multiposition/early_exit_enabled: false  # Always check all positions even if some are empty
+    joint4_multiposition/on_j4_failure: "skip_position"  # "skip_position", "abort_cycle", or "fallback_single"
+    joint4_multiposition/enable_timing_stats: true  # Log per-position timing data
+    joint4_multiposition/enable_position_stats: true  # Track which positions find cotton most often
+    joint4_multiposition/enable_j4_offset_compensation: true  # Apply J4 offset correction to theta (recommended: true)
+
+    joint5_init/homing_position: 0.0  # Home/park position (meters)
+    joint5_init/end_effector_len: 0.085
+    joint5_init/joint5_vel_limit: 2.0  # Higher value = shorter wait = EE starts earlier during J5 motion
+    # NOTE: min_length/max_length removed - limits enforced by motor_control (production.yaml)
+    joint5_init/gear_ratio: 20.943951  # Match C++ declared default
+    joint5_init/phi_jerk_value: 0.0
+    joint5_init/hardware_offset: 0.290  # Physical hardware offset in meters (290mm from motor zero to effective joint origin)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # J5 COLLISION AVOIDANCE (two-arm collision prevention)
+    #
+    # When two arms face each other across a cotton row, J5 extension toward the
+    # opposing arm can cause collision. This feature dynamically limits J5 based
+    # on J3 tilt angle using: J5_limit = clearance / cos(J3)
+    #
+    # At J3=0° (horizontal): J5 limited to clearance value (most restrictive)
+    # At J3=-54° (tilted down): full J5 range available (no restriction)
+    #
+    # clearance = (D/2 - hw_offset - safety_margin) where:
+    #   D = base-to-base arm separation (~1.02m, needs field measurement)
+    #   hw_offset = 0.29m (link5 origin offset from yanthra_link)
+    #   safety_margin = 0.03m (arm width buffer)
+    #
+    # See: docs/plans/2026-03-15-two-arm-collision-avoidance-analysis.md
+    # ═══════════════════════════════════════════════════════════════════════════
+    j5_collision_avoidance/enabled: true    # Enabled — limits J5 based on J3 tilt to prevent two-arm collision
+    j5_collision_avoidance/clearance: 0.20  # Collision clearance in meters
+
+    # Hardware timeouts and thresholds
+    hardware_timeout: 1200000.0
+    # NOTE: cotton_capture_detect_wait_time moved to line 87 (timing section)
+
+    # Field of view parameters
+    fov_theta_max: 0.3926  # 22.5 degrees
+    fov_phi_max: 0.3926    # 22.5 degrees
+
+    # Height scanning
+    height_scan_enable: true
+    height_scan_min: 0.01
+    height_scan_max: 1.0
+    height_scan_step: 0.2
+
+    # Camera and triggering
+    trigger_camera: true
+    continuous_vacuum: true
+
+    # System control parameters (declared in C++ but missing in YAML)
+    EndEffectorDropConveyor: false
+    use_simulation: false
+    enable_gpio: true
+    enable_camera: true
+    simulation_mode: false  # FIXED: Enable hardware mode - allow launch param to override
+
+    # Monitoring parameters
+    enable_network_monitoring: false
+    enable_ros_monitoring: false
+    enable_system_monitoring: false
+    monitoring_rate: 1.0
+    stats_log_interval_sec: 30.0  # Periodic stats logging interval (0 to disable)
+
+    # Additional parameters declared in C++ but missing in YAML
+    PRAGATI_INSTALL_DIR: "./"
+
+    # Error recovery thresholds (D3 escalation ladder)
+    consecutive_failure_safe_mode_threshold: 5  # Increased from 3 — field trials showed false safe-mode entries
+    retry_backoff_base_ms: 500                  # Base delay (ms) for exponential backoff retries
+    # ─────────────────────────────────────────────────────────────────
+    # RECOVERY ARCHITECTURE NOTE
+    # Two independent recovery mechanisms coexist:
+    #   1. Per-joint consecutive failure counter (MotionController::recordMoveResult)
+    #      → Triggers handleOperationalFailure() when threshold exceeded
+    #      → Threshold: consecutive_failure_safe_mode_threshold (above)
+    #   2. handleHardwareError / handleCommunicationError (external callers)
+    #      → Increments error_recovery_state_.consecutive_failures
+    #      → Same threshold triggers enterSafeMode()
+    # Both paths eventually escalate to enterSafeMode() if recovery fails.
+    # ─────────────────────────────────────────────────────────────────
+
+    # Safety watchdog timeouts (D1)
+    ee_watchdog_timeout_sec: 600.0              # Max seconds EE can stay ON (default 10min)
+    compressor_watchdog_timeout_sec: 900.0      # Max seconds compressor can stay ON (default 15min)
+
+    # Pick cycle safety timeout (D6)
+    pick_cycle_timeout_sec: 15.0                # Max seconds for a single pick cycle before abort
+
+    # Detection service resilience (D5)
+    detection_service_timeout_sec: 2.0          # Seconds to wait for detection service availability

@@ -1,0 +1,20 @@
+# Joint status query service definition
+# Get detailed status information for a specific joint
+
+# Input
+int64 joint_id              # Joint ID (1-5) or -1 for all joints
+
+---
+
+# Output
+bool success               # True if status retrieved successfully
+string reason             # Success message or error description
+
+# Joint status arrays (indexed by joint_id-1, or all joints if joint_id=-1)
+int64[] joint_ids         # Joint IDs included in response
+float64[] positions       # Current joint positions
+float64[] velocities      # Current joint velocities
+float64[] efforts         # Current joint efforts/currents
+float64[] temperatures    # Motor temperatures
+int32[] error_counts      # CAN/communication error counts
+string[] status_messages  # Individual status messages per joint

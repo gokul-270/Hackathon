@@ -1,0 +1,386 @@
+[0.722s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.723s] WARNING:colcon.colcon_ros.prefix_path.catkin:The path '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2' in the environment variable CMAKE_PREFIX_PATH doesn't exist
+Starting >>> cotton_detection_ros2
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- ✅ Production optimizations enabled (-O3 -march=native)
+-- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Found rclcpp: 28.1.10 (/opt/ros/jazzy/share/rclcpp/cmake)
+-- Found rosidl_generator_c: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+-- Found rosidl_generator_cpp: 4.6.5 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rmw_implementation_cmake: 7.3.2 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 8.4.2 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+-- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found std_msgs: 5.3.6 (/opt/ros/jazzy/share/std_msgs/cmake)
+-- Found sensor_msgs: 5.3.6 (/opt/ros/jazzy/share/sensor_msgs/cmake)
+-- Found vision_msgs: 4.1.1 (/opt/ros/jazzy/share/vision_msgs/cmake)
+-- Found diagnostic_msgs: 5.3.6 (/opt/ros/jazzy/share/diagnostic_msgs/cmake)
+-- Found diagnostic_updater: 4.2.6 (/opt/ros/jazzy/share/diagnostic_updater/cmake)
+-- Found cv_bridge: 4.1.0 (/opt/ros/jazzy/share/cv_bridge/cmake)
+-- Found image_transport: 5.1.7 (/opt/ros/jazzy/share/image_transport/cmake)
+-- Found tf2_ros: 0.36.12 (/opt/ros/jazzy/share/tf2_ros/cmake)
+-- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+-- Found rosidl_adapter: 4.6.5 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+-- Found std_srvs: 5.3.6 (/opt/ros/jazzy/share/std_srvs/cmake)
+-- Found OpenCV: /usr (found version "4.6.0") 
+-- ✅ DepthAI library found - OAK-D Lite camera support ENABLED
+-- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+-- Found PythonExtra: /usr/bin/python3  
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+-- Found ament_lint_auto: 0.17.2 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+-- Added test 'cppcheck' to perform static code analysis on C / C++ code
+-- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/uday/Downloads/pragati_ros2/src/cotton_detection_ros2/include>;$<BUILD_INTERFACE:/home/uday/Downloads/pragati_ros2/src/cotton_detection_ros2/src>
+-- Configured cppcheck exclude dirs and/or files: 
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Configured 'flake8' exclude dirs and/or files: 
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done (8.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: /home/uday/Downloads/pragati_ros2/build/cotton_detection_ros2
+[  1%] Building CXX object CMakeFiles/depthai_manager.dir/src/depthai_manager.cpp.o
+[  2%] Generating type hashes for ROS interfaces
+[  4%] Building CXX object CMakeFiles/async_image_saver.dir/src/async_image_saver.cpp.o
+[  4%] Built target ament_cmake_python_copy_cotton_detection_ros2
+[  4%] Built target cotton_detection_ros2__rosidl_generator_type_description
+[  5%] Generating C++ code for ROS interfaces
+running egg_info
+creating cotton_detection_ros2.egg-info
+writing cotton_detection_ros2.egg-info/PKG-INFO
+writing dependency_links to cotton_detection_ros2.egg-info/dependency_links.txt
+writing top-level names to cotton_detection_ros2.egg-info/top_level.txt
+writing manifest file 'cotton_detection_ros2.egg-info/SOURCES.txt'
+reading manifest file 'cotton_detection_ros2.egg-info/SOURCES.txt'
+writing manifest file 'cotton_detection_ros2.egg-info/SOURCES.txt'
+[  5%] Built target ament_cmake_python_build_cotton_detection_ros2_egg
+[  7%] Generating C code for ROS interfaces
+[  7%] Built target cotton_detection_ros2__cpp
+[  8%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/srv/detail/cotton_detection__description.c.o
+[  9%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/srv/detail/cotton_detection__functions.c.o
+[ 11%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/srv/detail/cotton_detection__type_support.c.o
+[ 12%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/cotton_position__description.c.o
+[ 14%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/cotton_position__type_support.c.o
+[ 15%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/cotton_position__functions.c.o
+[ 16%] Linking CXX shared library libasync_image_saver.so
+[ 18%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/detection_result__description.c.o
+[ 19%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/detection_result__functions.c.o
+[ 21%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_c.dir/rosidl_generator_c/cotton_detection_ros2/msg/detail/detection_result__type_support.c.o
+[ 21%] Built target async_image_saver
+[ 22%] Linking C shared library libcotton_detection_ros2__rosidl_generator_c.so
+[ 22%] Built target cotton_detection_ros2__rosidl_generator_c
+[ 23%] Generating C++ type support for eProsima Fast-RTPS
+[ 25%] Generating C++ type support dispatch for ROS interfaces
+[ 26%] Generating C type support for eProsima Fast-RTPS
+[ 28%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/cotton_detection_ros2/srv/detail/dds_fastrtps/cotton_detection__type_support.cpp.o
+[ 29%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/cotton_detection_ros2/srv/cotton_detection__type_support.cpp.o
+[ 30%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/cotton_detection_ros2/srv/detail/cotton_detection__type_support_c.cpp.o
+[ 32%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/cotton_detection_ros2/msg/cotton_position__type_support.cpp.o
+[ 33%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/cotton_detection_ros2/msg/detail/dds_fastrtps/cotton_position__type_support.cpp.o
+[ 35%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/cotton_detection_ros2/msg/detail/cotton_position__type_support_c.cpp.o
+[ 36%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/cotton_detection_ros2/msg/detection_result__type_support.cpp.o
+[ 38%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/cotton_detection_ros2/msg/detail/dds_fastrtps/detection_result__type_support.cpp.o
+[ 39%] Linking CXX shared library libcotton_detection_ros2__rosidl_typesupport_cpp.so
+[ 40%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/cotton_detection_ros2/msg/detail/detection_result__type_support_c.cpp.o
+[ 40%] Built target cotton_detection_ros2__rosidl_typesupport_cpp
+[ 42%] Generating C introspection for ROS interfaces
+[ 43%] Linking CXX shared library libcotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.so
+[ 43%] Built target cotton_detection_ros2__rosidl_typesupport_fastrtps_cpp
+[ 45%] Generating C type support dispatch for ROS interfaces
+[ 46%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/cotton_detection_ros2/srv/detail/cotton_detection__type_support.c.o
+[ 47%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/cotton_detection_ros2/msg/detail/cotton_position__type_support.c.o
+[ 49%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/cotton_detection_ros2/srv/cotton_detection__type_support.cpp.o
+[ 50%] Linking CXX shared library libcotton_detection_ros2__rosidl_typesupport_fastrtps_c.so
+[ 52%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/cotton_detection_ros2/msg/detail/detection_result__type_support.c.o
+[ 53%] Linking C shared library libcotton_detection_ros2__rosidl_typesupport_introspection_c.so
+[ 54%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/cotton_detection_ros2/msg/cotton_position__type_support.cpp.o
+[ 54%] Built target cotton_detection_ros2__rosidl_typesupport_fastrtps_c
+[ 56%] Generating C++ introspection for ROS interfaces
+[ 56%] Built target cotton_detection_ros2__rosidl_typesupport_introspection_c
+[ 57%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/cotton_detection_ros2/msg/detection_result__type_support.cpp.o
+[ 59%] Linking CXX shared library libcotton_detection_ros2__rosidl_typesupport_c.so
+[ 59%] Built target cotton_detection_ros2__rosidl_typesupport_c
+[ 60%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/cotton_detection_ros2/srv/detail/cotton_detection__type_support.cpp.o
+[ 61%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/cotton_detection_ros2/msg/detail/cotton_position__type_support.cpp.o
+[ 63%] Building CXX object CMakeFiles/cotton_detection_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/cotton_detection_ros2/msg/detail/detection_result__type_support.cpp.o
+[ 64%] Linking CXX shared library libcotton_detection_ros2__rosidl_typesupport_introspection_cpp.so
+[ 64%] Built target cotton_detection_ros2__rosidl_typesupport_introspection_cpp
+[ 64%] Built target cotton_detection_ros2
+[ 66%] Generating Python code for ROS interfaces
+[ 66%] Built target cotton_detection_ros2__py
+[ 67%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_py.dir/rosidl_generator_py/cotton_detection_ros2/msg/_detection_result_s.c.o
+[ 69%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_py.dir/rosidl_generator_py/cotton_detection_ros2/srv/_cotton_detection_s.c.o
+[ 70%] Building C object CMakeFiles/cotton_detection_ros2__rosidl_generator_py.dir/rosidl_generator_py/cotton_detection_ros2/msg/_cotton_position_s.c.o
+[ 71%] Linking C shared library libcotton_detection_ros2__rosidl_generator_py.so
+[ 71%] Built target cotton_detection_ros2__rosidl_generator_py
+[ 73%] Building C object CMakeFiles/cotton_detection_ros2_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_introspection_c.c.o
+[ 74%] Building C object CMakeFiles/cotton_detection_ros2_s__rosidl_typesupport_c.dir/rosidl_generator_py/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_c.c.o
+[ 76%] Building C object CMakeFiles/cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_fastrtps_c.c.o
+[ 77%] Linking C shared module rosidl_generator_py/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_introspection_c.so
+[ 78%] Linking C shared module rosidl_generator_py/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c.so
+[ 78%] Built target cotton_detection_ros2_s__rosidl_typesupport_introspection_c
+[ 80%] Linking C shared module rosidl_generator_py/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_c.so
+[ 80%] Built target cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c
+[ 80%] Built target cotton_detection_ros2_s__rosidl_typesupport_c
+[ 81%] Linking CXX shared library libdepthai_manager.so
+[ 81%] Built target depthai_manager
+[ 83%] Building CXX object CMakeFiles/cotton_detection_node.dir/cmake_pch.hxx.gch
+[ 84%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_parameters.cpp.o
+[Processing: cotton_detection_ros2]
+[ 85%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node.cpp.o
+[ 87%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_init.cpp.o
+[ 88%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_callbacks.cpp.o
+[ 90%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_services.cpp.o
+[ 91%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_detection.cpp.o
+[ 92%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_publishing.cpp.o
+[ 94%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_depthai.cpp.o
+[Processing: cotton_detection_ros2]
+[ 95%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_utils.cpp.o
+[ 97%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/cotton_detection_node_main.cpp.o
+[ 98%] Building CXX object CMakeFiles/cotton_detection_node.dir/src/performance_monitor.cpp.o
+[100%] Linking CXX executable cotton_detection_node
+[Processing: cotton_detection_ros2]
+[100%] Built target cotton_detection_node
+-- Install configuration: "RelWithDebInfo"
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/ament_index/resource_index/rosidl_interfaces/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/srv/CottonDetection.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/CottonPosition.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/DetectionResult.json
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__functions.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__functions.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__type_support.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__struct.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__description.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__type_support.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__functions.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__functions.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__description.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__struct.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/cotton_position.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detection_result.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/rosidl_generator_c__visibility_control.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__functions.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__type_support.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__struct.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__description.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__functions.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/cotton_detection.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/library_path.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/library_path.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_generator_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_generator_c.so" to ""
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__rosidl_typesupport_fastrtps_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__rosidl_typesupport_fastrtps_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_fastrtps_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_fastrtps_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_fastrtps_c.so" to ""
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__builder.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__struct.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__struct.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__traits.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__type_support.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__type_support.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__builder.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__traits.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/rosidl_generator_cpp__visibility_control.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detection_result.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/cotton_position.hpp
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__type_support.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__builder.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__traits.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__struct.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/cotton_detection.hpp
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/dds_fastrtps
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/dds_fastrtps
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_fastrtps_cpp.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__rosidl_typesupport_introspection_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__rosidl_typesupport_introspection_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_introspection_c.h
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__type_support.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_introspection_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_c.so" to ""
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/cotton_position__type_support.cpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__type_support.cpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/msg/detail/detection_result__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__rosidl_typesupport_introspection_cpp.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_ros2/srv/detail/cotton_detection__type_support.cpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_introspection_cpp.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_cpp.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_typesupport_cpp.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/pythonpath.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/pythonpath.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2-2.0.0-py3.12.egg-info
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2-2.0.0-py3.12.egg-info/top_level.txt
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2-2.0.0-py3.12.egg-info/SOURCES.txt
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2-2.0.0-py3.12.egg-info/PKG-INFO
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2-2.0.0-py3.12.egg-info/dependency_links.txt
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_cotton_position.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_cotton_position_s.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/__init__.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_detection_result.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_detection_result_s.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_c.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/__init__.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_introspection_c.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_introspection_c.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/_cotton_detection_ros2_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv/__init__.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv/_cotton_detection_s.c
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv/_cotton_detection.py
+Listing '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/__init__.py'...
+Listing '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/__init__.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_cotton_position.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/msg/_detection_result.py'...
+Listing '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv/__init__.py'...
+Compiling '/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/srv/_cotton_detection.py'...
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_fastrtps_c.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_introspection_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_c.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/python3.12/site-packages/cotton_detection_ros2/cotton_detection_ros2_s__rosidl_typesupport_c.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_generator_py.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libcotton_detection_ros2__rosidl_generator_py.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/srv/CottonDetection.idl
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/CottonPosition.idl
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/DetectionResult.idl
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/srv/CottonDetection.srv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/CottonPosition.msg
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/msg/DetectionResult.msg
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libdepthai_manager.so
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libdepthai_manager.so" to ""
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/libasync_image_saver.so
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/cotton_detection_ros2/cotton_detection_node
+-- Set non-toolchain portion of runtime path of "/home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/lib/cotton_detection_ros2/cotton_detection_node" to ""
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include
+-- Up-to-date: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/performance_monitor.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/depthai_manager.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/async_image_saver.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/include/cotton_detection_ros2/cotton_detection_node.hpp
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//launch
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//launch/cotton_detection_cpp.launch.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/production.yaml
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/cameras
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/cameras/oak_d_lite
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/cameras/oak_d_lite/export_calibration.py
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/cameras/oak_d_lite/README.md
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2//config/simulation_test.yaml
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/models/yolov8v2.blob
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/models/yolov8.blob
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/models/best_openvino_2022.1_6shave.blob
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/ament_index/resource_index/package_run_dependencies/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/ament_index/resource_index/parent_prefix_path/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/ament_prefix_path.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/ament_prefix_path.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/path.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/environment/path.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/local_setup.bash
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/local_setup.sh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/local_setup.zsh
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/local_setup.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/package.dsv
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/ament_index/resource_index/packages/cotton_detection_ros2
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_generator_cExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_generator_cExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_typesupport_fastrtps_cExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_typesupport_fastrtps_cExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_generator_cppExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_typesupport_fastrtps_cppExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_typesupport_fastrtps_cppExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_introspection_cExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_cExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_cExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_introspection_cppExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_cppExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2__rosidl_typesupport_cppExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_generator_pyExport.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/export_cotton_detection_ros2__rosidl_generator_pyExport-relwithdebinfo.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/rosidl_cmake-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/ament_cmake_export_libraries-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2Config.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/cmake/cotton_detection_ros2Config-version.cmake
+-- Installing: /home/uday/Downloads/pragati_ros2/install/cotton_detection_ros2/share/cotton_detection_ros2/package.xml
+Finished <<< cotton_detection_ros2 [1min 34s]
+
+Summary: 1 package finished [1min 35s]
