@@ -430,3 +430,135 @@ class TestReachableTargetValidation:
         )
         assert resp.status_code == 400
         testing_backend._pick_in_progress = False
+
+
+# ---------------------------------------------------------------------------
+# Multi-cotton backend state tests (Group 4)
+# ---------------------------------------------------------------------------
+class TestMultiCottonState:
+    """Tests for multi-cotton collection management."""
+
+    def _reset_cotton_state(self):
+        """Reset all cotton globals to clean state."""
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+        # Reset multi-cotton collection if it exists
+        if hasattr(testing_backend, "_cottons"):
+            testing_backend._cottons.clear()
+        if hasattr(testing_backend, "_cotton_counter"):
+            testing_backend._cotton_counter = 0
+
+    def test_spawn_multiple_cottons_unique_names(self, client):
+        """Three spawns produce cotton_0, cotton_1, cotton_2."""
+        self._reset_cotton_state()
+        names = []
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            for _ in range(3):
+                resp = client.post(
+                    "/api/cotton/spawn",
+                    json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+                )
+                assert resp.status_code == 200
+                names.append(resp.json()["cotton_name"])
+        assert names == ["cotton_0", "cotton_1", "cotton_2"]
+        self._reset_cotton_state()
+
+    def test_cotton_counter_no_reset_after_remove(self, client):
+        """Counter continues after remove — spawn, remove, spawn gives cotton_0, cotton_1."""
+        self._reset_cotton_state()
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            # Spawn cotton_0
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+            assert resp.json()["cotton_name"] == "cotton_0"
+
+            # Remove it
+            client.post("/api/cotton/remove")
+
+            # Spawn again — should be cotton_1, not cotton_0
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.525, "cam_y": 0.020, "cam_z": 0.008, "arm": "arm1"},
+            )
+            assert resp.json()["cotton_name"] == "cotton_1"
+        self._reset_cotton_state()
+
+    def test_cotton_list_endpoint(self, client):
+        """GET /api/cotton/list returns all cottons with coords and status."""
+        self._reset_cotton_state()
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            # Spawn two cottons
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.525, "cam_y": 0.020, "cam_z": 0.008, "arm": "arm1"},
+            )
+
+        resp = client.get("/api/cotton/list")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "cottons" in body
+        assert len(body["cottons"]) == 2
+        # Each cotton should have name, cam coords, status
+        c0 = body["cottons"][0]
+        assert c0["name"] == "cotton_0"
+        assert "cam_x" in c0
+        assert "status" in c0
+        assert c0["status"] == "spawned"
+        self._reset_cotton_state()
+
+    def test_remove_all_deletes_all_cottons(self, client):
+        """POST /api/cotton/remove-all clears the collection."""
+        self._reset_cotton_state()
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._gz_remove_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            # Spawn two cottons
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": "arm1"},
+            )
+            client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.525, "cam_y": 0.020, "cam_z": 0.008, "arm": "arm1"},
+            )
+
+            # Remove all
+            resp = client.post("/api/cotton/remove-all")
+        assert resp.status_code == 200
+        assert resp.json()["removed"] == 2
+
+        # List should be empty
+        resp = client.get("/api/cotton/list")
+        assert len(resp.json()["cottons"]) == 0
+        self._reset_cotton_state()
+
+    def test_remove_all_blocked_during_pick(self, client):
+        """POST /api/cotton/remove-all returns 400 during active pick."""
+        import testing_backend
+        self._reset_cotton_state()
+        testing_backend._pick_in_progress = True
+
+        resp = client.post("/api/cotton/remove-all")
+        assert resp.status_code == 400
+        assert "pick" in resp.json()["detail"].lower()
+
+        testing_backend._pick_in_progress = False
+        self._reset_cotton_state()

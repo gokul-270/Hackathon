@@ -23,6 +23,7 @@ import subprocess
 import sys
 import threading
 import uuid
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import time
@@ -658,6 +659,20 @@ async def cam_markers_clear():
 # ---------------------------------------------------------------------------
 # Cotton picking state
 # ---------------------------------------------------------------------------
+@dataclass
+class CottonState:
+    """State for a single cotton ball in the collection."""
+    name: str
+    cam_x: float
+    cam_y: float
+    cam_z: float
+    arm: str
+    j4_pos: float = 0.0
+    status: str = "spawned"  # spawned | picked
+
+
+_cottons: dict[str, CottonState] = {}  # name → CottonState
+_cotton_counter: int = 0
 _cotton_spawned: bool = False
 _cotton_name: str = ""
 _last_cotton_cam: tuple | None = None
@@ -738,7 +753,7 @@ class CottonSpawnRequest(BaseModel):
 def cotton_spawn(req: CottonSpawnRequest):
     """Spawn a cotton ball in Gazebo at the camera-frame position."""
     global _cotton_spawned, _cotton_name, _last_cotton_cam
-    global _last_cotton_arm, _last_cotton_j4
+    global _last_cotton_arm, _last_cotton_j4, _cotton_counter
 
     arm_config = ARM_CONFIGS.get(req.arm)
     if arm_config is None:
@@ -780,16 +795,22 @@ def cotton_spawn(req: CottonSpawnRequest):
         arm_config=arm_config,
     )
 
-    # Remove previous cotton if any
-    if _cotton_spawned:
-        world_name = _detect_gz_world_name()
-        _gz_remove_model(_cotton_name, world_name)
-
-    # Spawn new cotton
-    _cotton_name = f"cotton_{uuid.uuid4().hex[:8]}"
+    # Spawn new cotton with sequential name
+    _cotton_name = f"cotton_{_cotton_counter}"
+    _cotton_counter += 1
     sdf = _COTTON_SDF_TEMPLATE.format(name=_cotton_name)
     world_name = _detect_gz_world_name()
     _gz_spawn_model(_cotton_name, sdf, wx, wy, wz, world_name)
+
+    # Add to collection
+    _cottons[_cotton_name] = CottonState(
+        name=_cotton_name,
+        cam_x=req.cam_x,
+        cam_y=req.cam_y,
+        cam_z=req.cam_z,
+        arm=req.arm,
+        j4_pos=req.j4_pos,
+    )
 
     _cotton_spawned = True
     _last_cotton_cam = (req.cam_x, req.cam_y, req.cam_z)
@@ -807,14 +828,59 @@ def cotton_spawn(req: CottonSpawnRequest):
 
 @app.post("/api/cotton/remove")
 def cotton_remove():
-    """Remove the spawned cotton ball from Gazebo."""
+    """Remove the last spawned cotton ball from Gazebo."""
     global _cotton_spawned, _last_cotton_cam
     if _cotton_spawned:
         world_name = _detect_gz_world_name()
         _gz_remove_model(_cotton_name, world_name)
+        # Remove from collection
+        _cottons.pop(_cotton_name, None)
     _cotton_spawned = False
     _last_cotton_cam = None
     return {"status": "ok"}
+
+
+@app.get("/api/cotton/list")
+def cotton_list():
+    """Return all cottons in the collection with coords and status."""
+    return {
+        "cottons": [
+            {
+                "name": c.name,
+                "cam_x": c.cam_x,
+                "cam_y": c.cam_y,
+                "cam_z": c.cam_z,
+                "arm": c.arm,
+                "j4_pos": c.j4_pos,
+                "status": c.status,
+            }
+            for c in _cottons.values()
+        ]
+    }
+
+
+@app.post("/api/cotton/remove-all")
+def cotton_remove_all():
+    """Remove all cottons from Gazebo and clear the collection."""
+    global _cotton_spawned, _last_cotton_cam
+
+    with _pick_lock:
+        if _pick_in_progress:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot remove cottons during pick sequence",
+            )
+
+    count = len(_cottons)
+    if count > 0:
+        world_name = _detect_gz_world_name()
+        for name in list(_cottons.keys()):
+            _gz_remove_model(name, world_name)
+        _cottons.clear()
+
+    _cotton_spawned = False
+    _last_cotton_cam = None
+    return {"status": "ok", "removed": count}
 
 
 class CottonComputeRequest(BaseModel):

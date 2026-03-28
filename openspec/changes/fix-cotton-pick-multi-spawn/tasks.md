@@ -36,13 +36,13 @@
 
 ## 4. Multi-Cotton Backend State [SEQUENTIAL]
 
-- [ ] 4.1 RED: Write test `test_spawn_multiple_cottons_unique_names` — assert 3 spawns produce `cotton_0`, `cotton_1`, `cotton_2`. Capability: `multi-cotton-management`
-- [ ] 4.2 RED: Write test `test_cotton_counter_no_reset_after_remove` — assert counter continues after remove. Capability: `multi-cotton-management`
-- [ ] 4.3 RED: Write test `test_cotton_list_endpoint` — assert `GET /api/cotton/list` returns all cottons with coords and status. Capability: `multi-cotton-management`
-- [ ] 4.4 RED: Write test `test_remove_all_deletes_all_cottons` — assert `POST /api/cotton/remove-all` clears collection. Capability: `multi-cotton-management`
-- [ ] 4.5 RED: Write test `test_remove_all_blocked_during_pick` — assert 400 during active pick sequence. Capability: `multi-cotton-management`
-- [ ] 4.6 GREEN: Refactor `testing_backend.py` — replace singleton globals with `CottonState` dataclass and `_cottons` dict; add `_cotton_counter`; implement `GET /api/cotton/list`, `POST /api/cotton/remove-all`. Design ref: D4, D7
-- [ ] 4.7 REFACTOR: Migrate existing spawn/remove/compute/pick endpoints to use collection; verify all existing + new tests pass
+- [x] 4.1 RED: Write test `test_spawn_multiple_cottons_unique_names` — assert 3 spawns produce `cotton_0`, `cotton_1`, `cotton_2`. Capability: `multi-cotton-management`
+- [x] 4.2 RED: Write test `test_cotton_counter_no_reset_after_remove` — assert counter continues after remove. Capability: `multi-cotton-management`
+- [x] 4.3 RED: Write test `test_cotton_list_endpoint` — assert `GET /api/cotton/list` returns all cottons with coords and status. Capability: `multi-cotton-management`
+- [x] 4.4 RED: Write test `test_remove_all_deletes_all_cottons` — assert `POST /api/cotton/remove-all` clears collection. Capability: `multi-cotton-management`
+- [x] 4.5 RED: Write test `test_remove_all_blocked_during_pick` — assert 400 during active pick sequence. Capability: `multi-cotton-management`
+- [x] 4.6 GREEN: Refactor `testing_backend.py` — replace singleton globals with `CottonState` dataclass and `_cottons` dict; add `_cotton_counter`; implement `GET /api/cotton/list`, `POST /api/cotton/remove-all`. Design ref: D4, D7
+- [x] 4.7 REFACTOR: Migrate existing spawn/remove/compute/pick endpoints to use collection; verify all existing + new tests pass
 
 ## 5. Multi-Cotton Frontend UI [PARALLEL with 4]
 
