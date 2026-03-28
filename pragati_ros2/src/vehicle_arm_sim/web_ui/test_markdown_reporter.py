@@ -159,3 +159,59 @@ def test_markdown_report_raises_value_error_when_run_missing_mode_key():
            "steps_with_collision": 0, "steps_with_motion_blocked": 0}
     with pytest.raises(ValueError):
         reporter.generate([bad, _make_run("baseline_j5_block_skip"), _make_run("geometry_block")])
+
+
+# ---------------------------------------------------------------------------
+# Group 3 (Phase 2): recommendation text names the ACTUAL winning mode
+# ---------------------------------------------------------------------------
+
+
+def test_recommendation_text_names_actual_winning_mode_not_hardcoded_string():
+    """The recommendation section must reference the ACTUAL best mode name, not a
+    hardcoded string like 'geometry-aware strategy'.
+
+    When the winner is 'overlap_zone_wait', the recommendation text must contain
+    'overlap_zone_wait'.  When the winner is 'baseline_j5_block_skip', the
+    recommendation text must contain 'baseline_j5_block_skip'.
+    """
+    reporter = MarkdownReporter()
+    # overlap_zone_wait is the winner: zero collisions with fewest blocked
+    runs = [
+        _make_run("unrestricted", collision=3, near=4, blocked=0),
+        _make_run("baseline_j5_block_skip", collision=1, near=2, blocked=2),
+        _make_run("overlap_zone_wait", collision=0, near=1, blocked=1),
+    ]
+    md = reporter.generate(runs)
+    # Must name the actual winner
+    assert "overlap_zone_wait" in md
+    # Must NOT use a hardcoded label for a mode that didn't win
+    assert "geometry-aware strategy" not in md
+
+
+def test_recommendation_text_names_baseline_mode_when_it_wins():
+    """When baseline_j5_block_skip is the best mode, recommendation must name it."""
+    reporter = MarkdownReporter()
+    runs = [
+        _make_run("unrestricted", collision=3, near=4, blocked=0),
+        _make_run("baseline_j5_block_skip", collision=0, near=2, blocked=2),
+        _make_run("geometry_block", collision=0, near=1, blocked=3),
+    ]
+    md = reporter.generate(runs)
+    # geometry_block has more blocked — baseline wins on success_count
+    assert "baseline_j5_block_skip" in md
+    assert "geometry-aware strategy" not in md
+
+
+def test_recommendation_avoidance_count_names_worst_mode_correctly():
+    """The avoidance count line must reference the actual worst mode, not a
+    hardcoded 'geometry-aware strategy' phrase.
+    """
+    reporter = MarkdownReporter()
+    runs = [
+        _make_run("unrestricted", collision=5, near=6, blocked=0),
+        _make_run("baseline_j5_block_skip", collision=0, near=1, blocked=2),
+        _make_run("geometry_block", collision=0, near=0, blocked=1),
+    ]
+    md = reporter.generate(runs)
+    # geometry_block wins; the avoidance line should NOT say "geometry-aware strategy"
+    assert "geometry-aware strategy" not in md

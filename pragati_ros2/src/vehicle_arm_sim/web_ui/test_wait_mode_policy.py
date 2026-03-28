@@ -161,3 +161,82 @@ def test_wait_mode_policy_turn_advances_after_arm1_wins():
     )
     assert applied["j5"] == 0  # arm1 now blocked (it's arm2's turn)
     assert skipped is False
+
+
+# ---------------------------------------------------------------------------
+# Group 2 (Phase 2): paired-call at the SAME step_id — only one arm wins
+# ---------------------------------------------------------------------------
+
+
+def test_wait_mode_policy_paired_call_only_one_arm_wins_contention():
+    """When both arms are called for the SAME step_id with contention, exactly one arm
+    must win (its j5 unchanged) and the other must be blocked (j5 zeroed).
+
+    This is the real-world paired-execution path: RunController processes arm1 then arm2
+    for step_id=0 in one iteration.  The step-turn lock ensures both arms see the same
+    locked turn value, so the loser cannot inadvertently become the winner.
+    """
+    policy = WaitModePolicy()  # turn=0 → arm1's turn
+
+    # arm1 processed first at step_id=0
+    applied_arm1, skipped_arm1 = policy.apply(
+        step_id=0,
+        arm_id="arm1",
+        own_joints=OWN_IN_OVERLAP,
+        peer_joints=PEER_IN_OVERLAP,
+    )
+    # arm2 processed second, same step_id=0
+    applied_arm2, skipped_arm2 = policy.apply(
+        step_id=0,
+        arm_id="arm2",
+        own_joints=OWN_IN_OVERLAP,
+        peer_joints=PEER_IN_OVERLAP,
+    )
+
+    # Exactly one arm wins (j5 unchanged), one arm is blocked (j5 == 0)
+    arm1_wins = applied_arm1["j5"] == OWN_IN_OVERLAP["j5"] and not skipped_arm1
+    arm2_wins = applied_arm2["j5"] == OWN_IN_OVERLAP["j5"] and not skipped_arm2
+    assert arm1_wins != arm2_wins, (
+        "Exactly one arm must win; got arm1_wins=%s arm2_wins=%s" % (arm1_wins, arm2_wins)
+    )
+
+
+def test_wait_mode_policy_paired_call_winner_arm_is_turn_holder():
+    """With turn=0 (arm1's turn), arm1 must win the contention when both arms are
+    processed at the same step_id.
+    """
+    policy = WaitModePolicy()  # turn=0 → arm1's turn
+
+    applied_arm1, _ = policy.apply(
+        step_id=0, arm_id="arm1",
+        own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP,
+    )
+    applied_arm2, _ = policy.apply(
+        step_id=0, arm_id="arm2",
+        own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP,
+    )
+
+    assert applied_arm1["j5"] == OWN_IN_OVERLAP["j5"], "arm1 should win (it's arm1's turn)"
+    assert applied_arm2["j5"] == 0, "arm2 should be blocked (it's not arm2's turn)"
+
+
+def test_wait_mode_policy_paired_call_turn_advances_after_step():
+    """After a paired step where arm1 wins, the next paired step should give arm2 the turn."""
+    policy = WaitModePolicy()  # turn=0 → arm1's turn
+
+    # Step 0: arm1 wins
+    policy.apply(step_id=0, arm_id="arm1", own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP)
+    policy.apply(step_id=0, arm_id="arm2", own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP)
+
+    # Step 1: turn should have advanced to arm2
+    applied_arm1_step1, _ = policy.apply(
+        step_id=1, arm_id="arm1",
+        own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP,
+    )
+    applied_arm2_step1, _ = policy.apply(
+        step_id=1, arm_id="arm2",
+        own_joints=OWN_IN_OVERLAP, peer_joints=PEER_IN_OVERLAP,
+    )
+
+    assert applied_arm2_step1["j5"] == OWN_IN_OVERLAP["j5"], "arm2 should win step 1"
+    assert applied_arm1_step1["j5"] == 0, "arm1 should be blocked in step 1"

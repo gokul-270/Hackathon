@@ -160,7 +160,7 @@ class MarkdownReporter:
 
         if best["steps_with_collision"] < worst["steps_with_collision"]:
             lines.append(
-                f"The geometry-aware strategy avoids "
+                f"`{best['mode']}` avoids "
                 f"{worst['steps_with_collision'] - best['steps_with_collision']} "
                 f"collision(s) compared to the least safe mode (`{worst['mode']}`)."
             )

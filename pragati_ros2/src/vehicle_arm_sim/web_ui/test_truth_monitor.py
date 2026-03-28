@@ -73,3 +73,29 @@ def test_get_all_records_returns_sorted_by_step_id():
     monitor.observe(step_id=2, j4_arm1=0.7, j4_arm2=0.5)
     records = monitor.get_all_records()
     assert [r.step_id for r in records] == [1, 2, 3]
+
+
+# ---------------------------------------------------------------------------
+# Group 3 (Phase 2): collision-distance also implies near_collision
+# ---------------------------------------------------------------------------
+
+
+def test_observe_collision_distance_also_sets_near_collision_true():
+    """When distance < COLLISION_THRESHOLD, near_collision MUST also be True.
+
+    Since COLLISION_THRESHOLD (0.05) < NEAR_COLLISION_THRESHOLD (0.08), any
+    collision observation is also a near-collision.  Both flags must be True.
+    """
+    monitor = TruthMonitor()
+    assert COLLISION_THRESHOLD < NEAR_COLLISION_THRESHOLD, (
+        "Test precondition: COLLISION_THRESHOLD must be less than NEAR_COLLISION_THRESHOLD"
+    )
+    distance = COLLISION_THRESHOLD - 0.001  # strictly below both thresholds
+    monitor.observe(step_id=1, j4_arm1=0.0, j4_arm2=distance)
+    record = monitor.get_step_record(1)
+    assert record.collision is True
+    assert record.near_collision is True, (
+        "A collision-level distance must also set near_collision=True "
+        f"(distance={distance:.4f}, COLLISION_THRESHOLD={COLLISION_THRESHOLD}, "
+        f"NEAR_COLLISION_THRESHOLD={NEAR_COLLISION_THRESHOLD})"
+    )

@@ -117,3 +117,25 @@ def test_parse_scenario_missing_steps_key_raises_value_error():
     data = {}
     with pytest.raises(ValueError):
         parse_scenario(data)
+
+
+# ---------------------------------------------------------------------------
+# Group 1 (Phase 2): parse_scenario rejects paired-step data (by design)
+# ---------------------------------------------------------------------------
+
+def test_parse_scenario_rejects_paired_step_data_because_duplicate_step_ids():
+    """parse_scenario is a single-arm sequential validator; it MUST reject paired-step
+    data (two entries with the same step_id for different arms) with ValueError.
+
+    This is the documented contract: RunController.load_scenario() constructs steps
+    directly, bypassing this function, precisely because paired steps share a step_id.
+    """
+    parse_scenario = _import_parse()
+    data = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.0, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": 0.0, "cam_z": 0.0},
+        ]
+    }
+    with pytest.raises(ValueError, match="duplicate step_id"):
+        parse_scenario(data)

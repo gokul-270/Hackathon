@@ -283,3 +283,54 @@ def test_e2e_baseline_j5_block_skip_mode_blocks_j5_when_arms_laterally_close():
     summary = rc.run()
     j5_blocked_count = sum(1 for r in summary["step_reports"] if r["j5_blocked"])
     assert j5_blocked_count > 0
+
+
+# ---------------------------------------------------------------------------
+# Group 1 (Phase 2): paired-step contract — both arms share the same step_id
+# ---------------------------------------------------------------------------
+
+
+def test_load_scenario_accepts_paired_step_data_with_duplicate_step_ids():
+    """RunController.load_scenario() MUST accept a scenario where both arm1 and arm2
+    share the same step_id (the paired-step contract).
+
+    parse_scenario() would reject this; load_scenario() bypasses it intentionally.
+    """
+    from run_controller import RunController
+
+    rc = RunController()
+    rc.load_scenario(_make_same_step_paired_scenario())  # must not raise
+
+
+def test_run_paired_step_produces_two_step_reports_for_shared_step_id():
+    """run() on a paired scenario (both arms at step_id=0) MUST produce exactly two
+    step_reports for step_id=0 — one for each arm.
+
+    This verifies the paired-step contract: the controller correctly executes both arms
+    concurrently at the same step and records one report per arm.
+    """
+    from run_controller import RunController
+
+    rc = RunController()
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()
+    reports_step0 = [r for r in summary["step_reports"] if r["step_id"] == 0]
+    assert len(reports_step0) == 2
+    arm_ids = {r["arm_id"] for r in reports_step0}
+    assert arm_ids == {"arm1", "arm2"}
+
+
+def test_run_paired_step_both_arms_receive_truth_monitor_data():
+    """Both step_reports for a shared step_id must have a non-None min_j4_distance.
+
+    When both arms are active at the same step, the truth monitor observes j4 geometry
+    and both reports must carry that shared min_j4_distance value.
+    """
+    from run_controller import RunController
+
+    rc = RunController()
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()
+    reports_step0 = [r for r in summary["step_reports"] if r["step_id"] == 0]
+    assert len(reports_step0) == 2
+    assert all(r["min_j4_distance"] is not None for r in reports_step0)
