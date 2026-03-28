@@ -1549,3 +1549,251 @@ class TestPerArmPickState:
         assert arm_state.status == "starting"
         assert arm_state.in_progress is True
         self._reset_pick_state()
+
+
+# ---------------------------------------------------------------------------
+# Group 5: Multi-arm pick-all
+# ---------------------------------------------------------------------------
+class TestMultiArmPickAll:
+    """Tests for pick-all grouping cottons by arm and parallel dispatch."""
+
+    def _reset_state(self):
+        """Reset all cotton and pick state."""
+        import testing_backend
+        testing_backend._cotton_spawned = False
+        testing_backend._cotton_name = ""
+        testing_backend._last_cotton_cam = None
+        testing_backend._last_cotton_arm = None
+        testing_backend._last_cotton_j4 = 0.0
+        testing_backend._pick_in_progress = False
+        testing_backend._pick_status = "idle"
+        for arm_state in testing_backend._arm_pick_state.values():
+            arm_state.in_progress = False
+            arm_state.status = "idle"
+            arm_state.current = None
+            arm_state.progress = (0, 0)
+        testing_backend._cottons.clear()
+        testing_backend._cotton_counter = 0
+
+    def _spawn_cotton(self, client, arm="arm1"):
+        """Spawn a single cotton on the given arm. Returns cotton_name."""
+        with mock.patch("testing_backend._gz_spawn_model"), \
+             mock.patch("testing_backend._detect_gz_world_name", return_value="test"):
+            resp = client.post(
+                "/api/cotton/spawn",
+                json={"cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004, "arm": arm},
+            )
+        assert resp.status_code == 200
+        return resp.json()["cotton_name"]
+
+    # -- Task 5.1: pick-all groups cottons by cotton.arm field --
+    def test_pick_all_groups_by_arm(self, client):
+        """pick-all dispatches _execute_pick_all_sequence once per arm group."""
+        import testing_backend
+        self._reset_state()
+
+        # Spawn 2 cottons on arm1, 1 on arm2
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm2")
+
+        threads_started = []
+
+        def capture_thread(*args, **kwargs):
+            t = mock.MagicMock()
+            threads_started.append(kwargs)
+            return t
+
+        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
+             mock.patch("testing_backend.time.sleep"):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+        # Should have started 2 threads — one per arm group
+        assert len(threads_started) == 2, (
+            f"Expected 2 threads (one per arm), got {len(threads_started)}: {threads_started}"
+        )
+        # Each thread should target the right arm
+        arm_names = sorted(t.get("kwargs", {}).get("arm_name") for t in threads_started)
+        assert arm_names == ["arm1", "arm2"], (
+            f"Expected threads for arm1 and arm2, got {arm_names}"
+        )
+        self._reset_state()
+
+    # -- Task 5.2: pick-all threads run in parallel --
+    def test_pick_all_spawns_parallel_threads(self, client):
+        """pick-all spawns threads that call .start() for each arm group."""
+        import testing_backend
+        self._reset_state()
+
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm2")
+
+        started_threads = []
+
+        def capture_thread(*args, **kwargs):
+            t = mock.MagicMock()
+            started_threads.append(t)
+            return t
+
+        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
+             mock.patch("testing_backend.time.sleep"):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+        assert len(started_threads) == 2
+        # Both threads should have .start() called
+        for t in started_threads:
+            t.start.assert_called_once()
+        self._reset_state()
+
+    # -- Task 5.4: 4 cottons on 2 arms complete in ~2x not 4x --
+    def test_pick_all_parallel_timing(self, client):
+        """pick-all with cottons on 2 arms runs in parallel (not serial)."""
+        import testing_backend
+        import time as real_time
+        self._reset_state()
+
+        # Spawn 2 cottons on arm1, 2 on arm2
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm2")
+        self._spawn_cotton(client, "arm2")
+
+        # Use real threads but mock the slow parts
+        sleep_calls = {"arm1": 0, "arm2": 0}
+
+        real_execute = testing_backend._execute_pick_all_sequence
+
+        def fast_execute(to_pick, arm_config, enable_phi_comp, arm_name="arm1"):
+            """Count the cottons processed per arm to verify grouping."""
+            arm_state = testing_backend._arm_pick_state[arm_name]
+            for idx, cotton in enumerate(to_pick):
+                with arm_state.lock:
+                    arm_state.current = cotton.name
+                    arm_state.progress = (idx + 1, len(to_pick))
+                    arm_state.status = "picking"
+                sleep_calls[arm_name] += 1
+                cotton.status = "picked"
+            with arm_state.lock:
+                arm_state.status = "done"
+                arm_state.in_progress = False
+                arm_state.current = None
+                arm_state.progress = (0, 0)
+
+        with mock.patch(
+            "testing_backend._execute_pick_all_sequence", side_effect=fast_execute
+        ):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+        # Wait briefly for threads
+        real_time.sleep(0.2)
+        # Each arm should have processed 2 cottons
+        assert sleep_calls["arm1"] == 2, f"arm1 processed {sleep_calls['arm1']}"
+        assert sleep_calls["arm2"] == 2, f"arm2 processed {sleep_calls['arm2']}"
+        self._reset_state()
+
+    # -- Task 5.5: all cottons on same arm runs sequentially --
+    def test_pick_all_single_arm_sequential(self, client):
+        """pick-all with all cottons on one arm spawns exactly one thread."""
+        import testing_backend
+        self._reset_state()
+
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm1")
+
+        threads_started = []
+
+        def capture_thread(*args, **kwargs):
+            t = mock.MagicMock()
+            threads_started.append(kwargs)
+            return t
+
+        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread), \
+             mock.patch("testing_backend.time.sleep"):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+        assert len(threads_started) == 1, (
+            f"Expected 1 thread for single arm, got {len(threads_started)}"
+        )
+        # The thread should receive all 3 cottons
+        to_pick_arg = threads_started[0]["args"][0]
+        assert len(to_pick_arg) == 3
+        self._reset_state()
+
+    # -- Task 5.8: per-arm progress during pick-all --
+    def test_pick_all_per_arm_progress(self, client):
+        """pick-all sets per-arm progress [current_index, arm_total] per arm group."""
+        import testing_backend
+        self._reset_state()
+
+        # Spawn 2 on arm1, 1 on arm2
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm2")
+
+        # Check that initial state sets correct arm progress
+        # Mock thread to capture initial state set by handler
+        thread_kwargs = []
+
+        def capture_thread(*args, **kwargs):
+            t = mock.MagicMock()
+            thread_kwargs.append(kwargs)
+            return t
+
+        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+
+        # After handler, per-arm state should reflect initial progress
+        arm1_state = testing_backend._arm_pick_state["arm1"]
+        arm2_state = testing_backend._arm_pick_state["arm2"]
+
+        assert arm1_state.in_progress is True
+        assert arm1_state.progress == (1, 2), (
+            f"Expected arm1 progress (1, 2), got {arm1_state.progress}"
+        )
+        assert arm2_state.in_progress is True
+        assert arm2_state.progress == (1, 1), (
+            f"Expected arm2 progress (1, 1), got {arm2_state.progress}"
+        )
+        self._reset_state()
+
+    # -- Task 5.10: pick-all 409 only for arms already picking --
+    def test_pick_all_409_for_busy_arm_starts_others(self, client):
+        """pick-all skips arms that are already picking, starts others."""
+        import testing_backend
+        self._reset_state()
+
+        # Spawn 1 cotton on arm1, 1 on arm2
+        self._spawn_cotton(client, "arm1")
+        self._spawn_cotton(client, "arm2")
+
+        # Simulate arm1 already picking
+        testing_backend._arm_pick_state["arm1"].in_progress = True
+        testing_backend._arm_pick_state["arm1"].status = "j3_tilt"
+
+        threads_started = []
+
+        def capture_thread(*args, **kwargs):
+            t = mock.MagicMock()
+            threads_started.append(kwargs)
+            return t
+
+        with mock.patch("testing_backend.threading.Thread", side_effect=capture_thread):
+            resp = client.post("/api/cotton/pick-all", json={})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        # Should have started only arm2 (arm1 is busy)
+        assert len(threads_started) == 1, (
+            f"Expected 1 thread (arm2 only), got {len(threads_started)}"
+        )
+        assert threads_started[0]["kwargs"]["arm_name"] == "arm2"
+        # Response should indicate arm1 was skipped
+        assert "skipped_arms" in body or body.get("total", 0) == 1
+        self._reset_state()

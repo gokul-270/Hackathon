@@ -52,52 +52,52 @@
 
 ## 4. Per-arm pick state [SEQUENTIAL]
 
-- [ ] 4.1 Write Python test: `ArmPickState` dataclass has fields: lock, in_progress, status, current, progress with correct defaults
-- [ ] 4.2 Create `ArmPickState` dataclass in `testing_backend.py`
-- [ ] 4.3 Write Python test: `_arm_pick_state` dict is initialized with entries for all 3 arms from ARM_CONFIGS
-- [ ] 4.4 Replace global `_pick_lock`, `_pick_in_progress`, `_pick_status`, `_pick_current`, `_pick_progress` with `_arm_pick_state` dict
-- [ ] 4.5 Write Python test: `POST /api/cotton/pick` acquires per-arm lock and sets arm-specific state
-- [ ] 4.6 Update `POST /api/cotton/pick` handler to use `_arm_pick_state[arm_name]` instead of globals
-- [ ] 4.7 Write Python test: `POST /api/cotton/pick` returns 409 only when the SAME arm is already picking (not when a different arm is picking)
-- [ ] 4.8 Update pick conflict check to use per-arm `in_progress` instead of global
-- [ ] 4.9 Write Python test: `_execute_pick_sequence` updates per-arm state (status, current) through all animation steps
-- [ ] 4.10 Update `_execute_pick_sequence` to write to `_arm_pick_state[arm_name]` instead of global variables
-- [ ] 4.11 Write Python test: `GET /api/cotton/pick/status` returns `{"arms": {"arm1": {...}, "arm2": {...}, "arm3": {...}}}` shape
-- [ ] 4.12 Update status endpoint to return per-arm state from `_arm_pick_state`
-- [ ] 4.13 Write Python test: status endpoint returns consistent per-arm snapshot under concurrent access
-- [ ] 4.14 Write Python test: per-arm status resets to "idle" at start of new pick on same arm
+- [x] 4.1 Write Python test: `ArmPickState` dataclass has fields: lock, in_progress, status, current, progress with correct defaults
+- [x] 4.2 Create `ArmPickState` dataclass in `testing_backend.py`
+- [x] 4.3 Write Python test: `_arm_pick_state` dict is initialized with entries for all 3 arms from ARM_CONFIGS
+- [x] 4.4 Replace global `_pick_lock`, `_pick_in_progress`, `_pick_status`, `_pick_current`, `_pick_progress` with `_arm_pick_state` dict
+- [x] 4.5 Write Python test: `POST /api/cotton/pick` acquires per-arm lock and sets arm-specific state
+- [x] 4.6 Update `POST /api/cotton/pick` handler to use `_arm_pick_state[arm_name]` instead of globals
+- [x] 4.7 Write Python test: `POST /api/cotton/pick` returns 409 only when the SAME arm is already picking (not when a different arm is picking)
+- [x] 4.8 Update pick conflict check to use per-arm `in_progress` instead of global
+- [x] 4.9 Write Python test: `_execute_pick_sequence` updates per-arm state (status, current) through all animation steps
+- [x] 4.10 Update `_execute_pick_sequence` to write to `_arm_pick_state[arm_name]` instead of global variables
+- [x] 4.11 Write Python test: `GET /api/cotton/pick/status` returns `{"arms": {"arm1": {...}, "arm2": {...}, "arm3": {...}}}` shape
+- [x] 4.12 Update status endpoint to return per-arm state from `_arm_pick_state`
+- [x] 4.13 Write Python test: status endpoint returns consistent per-arm snapshot under concurrent access
+- [x] 4.14 Write Python test: per-arm status resets to "idle" at start of new pick on same arm
 
 ## 5. Multi-arm pick-all [SEQUENTIAL]
 
-- [ ] 5.1 Write Python test: `POST /api/cotton/pick-all` groups cottons by `cotton.arm` field
-- [ ] 5.2 Write Python test: pick-all spawns one thread per arm group, threads run in parallel
-- [ ] 5.3 Update `_execute_pick_all_sequence` to group by arm and spawn parallel threads
-- [ ] 5.4 Write Python test: pick-all with 4 cottons on 2 arms completes in ~2x single-cotton time (not 4x)
-- [ ] 5.5 Write Python test: pick-all with all cottons on same arm runs sequentially (single thread)
-- [ ] 5.6 Write Python test: pick-all returns `{"status": "nothing_to_pick"}` when no spawned cottons
-- [ ] 5.7 Write Python test: pick-all skips cottons with status "picked"
-- [ ] 5.8 Write Python test: pick-all sets per-arm progress correctly (`[current_index, arm_total]`)
-- [ ] 5.9 Update pick-all handler to set per-arm progress as each arm's thread progresses
-- [ ] 5.10 Write Python test: pick-all returns 409 only for arms that are already picking, starts others
-- [ ] 5.11 Write Python test: `POST /api/cotton/remove-all` returns 400 if ANY arm is picking
+- [x] 5.1 Write Python test: `POST /api/cotton/pick-all` groups cottons by `cotton.arm` field
+- [x] 5.2 Write Python test: pick-all spawns one thread per arm group, threads run in parallel
+- [x] 5.3 Update `_execute_pick_all_sequence` to group by arm and spawn parallel threads
+- [x] 5.4 Write Python test: pick-all with 4 cottons on 2 arms completes in ~2x single-cotton time (not 4x)
+- [x] 5.5 Write Python test: pick-all with all cottons on same arm runs sequentially (single thread)
+- [x] 5.6 Write Python test: pick-all returns `{"status": "nothing_to_pick"}` when no spawned cottons (EXISTING)
+- [x] 5.7 Write Python test: pick-all skips cottons with status "picked" (EXISTING)
+- [x] 5.8 Write Python test: pick-all sets per-arm progress correctly (`[current_index, arm_total]`)
+- [x] 5.9 Update pick-all handler to set per-arm progress as each arm's thread progresses
+- [x] 5.10 Write Python test: pick-all returns 409 only for arms that are already picking, starts others
+- [x] 5.11 Write Python test: `POST /api/cotton/remove-all` returns 400 if ANY arm is picking
 
 ## 6. Frontend updates [SEQUENTIAL]
 
-- [ ] 6.1 Write JS test: `pollPickStatus` reads per-arm status from `response.arms[selectedArm]`
-- [ ] 6.2 Update `pollPickStatus` in `testing_ui.js` to parse per-arm status response
-- [ ] 6.3 Write JS test: `pollPickAllStatus` aggregates progress across all arms
-- [ ] 6.4 Update `pollPickAllStatus` to aggregate per-arm progress (sum completed / sum total)
-- [ ] 6.5 Update cotton table status column to reflect per-arm pick progress
-- [ ] 6.6 Write JS test: `camToJoint` displays error in UI status area when returning null (unreachable)
-- [ ] 6.7 Add UI error display in `camToJoint` null path (red status message in cotton panel)
-- [ ] 6.8 Update pick button to use selected arm for 409 conflict check
+- [x] 6.1 Write JS test: `pollPickStatus` reads per-arm status from `response.arms[selectedArm]`
+- [x] 6.2 Update `pollPickStatus` in `testing_ui.js` to parse per-arm status response
+- [x] 6.3 Write JS test: `pollPickAllStatus` aggregates progress across all arms
+- [x] 6.4 Update `pollPickAllStatus` to aggregate per-arm progress (sum completed / sum total)
+- [x] 6.5 Update cotton table status column to reflect per-arm pick progress
+- [x] 6.6 Write JS test: `camToJoint` displays error in UI status area when returning null (unreachable)
+- [x] 6.7 Add UI error display in `camToJoint` null path (red status message in cotton panel)
+- [x] 6.8 Update pick button to use selected arm for 409 conflict check
 
 ## 7. Update existing tests for new API shape [PARALLEL with 6]
 
-- [ ] 7.1 Update Python tests that check `_pick_status` global to use `_arm_pick_state["arm1"].status`
-- [ ] 7.2 Update Python tests for status endpoint to expect `{"arms": {...}}` response shape
-- [ ] 7.3 Update Python tests for pick to expect per-arm 409 behavior (not global)
-- [ ] 7.4 Update Python tests for remove-all-during-pick to check any-arm-picking logic
-- [ ] 7.5 Run full Python test suite: `python3 -m pytest web_ui/test_fk_chain.py web_ui/test_cam_markers_backend.py -v`
-- [ ] 7.6 Run full JS test suite: `node --test web_ui/tests/test_cam_to_joint.js`
-- [ ] 7.7 Verify all tests green, commit
+- [x] 7.1 Update Python tests that check `_pick_status` global to use `_arm_pick_state["arm1"].status`
+- [x] 7.2 Update Python tests for status endpoint to expect `{"arms": {...}}` response shape
+- [x] 7.3 Update Python tests for pick to expect per-arm 409 behavior (not global)
+- [x] 7.4 Update Python tests for remove-all-during-pick to check any-arm-picking logic
+- [x] 7.5 Run full Python test suite: `python3 -m pytest web_ui/test_fk_chain.py web_ui/test_cam_markers_backend.py -v`
+- [x] 7.6 Run full JS test suite: `node --test web_ui/tests/test_cam_to_joint.js`
+- [x] 7.7 Verify all tests green, commit

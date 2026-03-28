@@ -1497,11 +1497,29 @@
             fetch('/api/cotton/pick/status')
             .then(function (r) { return r.json(); })
             .then(function (d) {
-                if (d.progress) {
-                    statusText.textContent = 'Picking ' + d.progress.current +
-                        '/' + d.progress.total + ' (' + (d.current || '') + ')';
+                // Per-arm status: aggregate progress across all arms
+                var arms = d.arms || {};
+                var anyPicking = false;
+                var totalCompleted = 0;
+                var totalCount = 0;
+                var currentNames = [];
+                Object.keys(arms).forEach(function (armName) {
+                    var arm = arms[armName];
+                    if (arm.in_progress) {
+                        anyPicking = true;
+                        if (arm.current) currentNames.push(arm.current);
+                    }
+                    if (arm.progress && arm.progress.length === 2) {
+                        totalCompleted += arm.progress[0];
+                        totalCount += arm.progress[1];
+                    }
+                });
+
+                if (totalCount > 0) {
+                    statusText.textContent = 'Picking ' + totalCompleted +
+                        '/' + totalCount + ' (' + currentNames.join(', ') + ')';
                 }
-                if (!d.in_progress) {
+                if (!anyPicking) {
                     clearInterval(_pickAllPollInterval);
                     _pickAllPollInterval = null;
                     if (pickAllBtn) pickAllBtn.disabled = false;
@@ -1571,7 +1589,11 @@
             }),
         })
         .then(function (r) {
-            if (!r.ok) { throw new Error('HTTP ' + r.status); }
+            if (!r.ok) {
+                return r.json().then(function (err) {
+                    throw new Error(err.detail || ('HTTP ' + r.status));
+                });
+            }
             return r.json();
         })
         .then(function (d) {
@@ -1595,11 +1617,17 @@
             clearInterval(_pickPollInterval);
             _pickPollInterval = null;
         }
+        var selectedArm = (document.getElementById('cotton-arm-select') || {}).value || 'arm1';
         _pickPollInterval = setInterval(function () {
             fetch('/api/cotton/pick/status')
             .then(function (r) { return r.json(); })
             .then(function (d) {
-                if (!d.in_progress) {
+                // Read per-arm status for the selected arm
+                var armData = (d.arms || {})[selectedArm] || {};
+                if (armData.status && armData.status !== 'idle' && armData.status !== 'done') {
+                    statusText.textContent = armData.status + (armData.current ? ' (' + armData.current + ')' : '');
+                }
+                if (!armData.in_progress) {
                     clearInterval(_pickPollInterval);
                     _pickPollInterval = null;
                     pickBtn.disabled = false;
@@ -1742,6 +1770,20 @@
             tr.classList.add('cam-seq-active');
             var statusEl = document.getElementById('cam-seq-status-' + rowIdx);
             if (statusEl) statusEl.textContent = '▶';
+
+            if (!result || !result.valid) {
+                log('Cotton step ' + (i + 1) + ': UNREACHABLE — skipping', 'error');
+                var cottonStatus = document.getElementById('cotton-pick-status');
+                var cottonStatusText = document.getElementById('cotton-pick-status-text');
+                if (cottonStatus && cottonStatusText) {
+                    cottonStatus.style.display = 'block';
+                    cottonStatus.className = 'pick-status error';
+                    cottonStatusText.textContent = 'Unreachable target at step ' + (i + 1);
+                }
+                tr.classList.remove('cam-seq-active');
+                if (statusEl) statusEl.textContent = '❌';
+                continue;
+            }
 
             log('Cotton step ' + (i + 1) + ': J3=' + result.j3.toFixed(3) +
                 ' J4=' + result.j4.toFixed(3) + ' J5=' + result.j5.toFixed(3));

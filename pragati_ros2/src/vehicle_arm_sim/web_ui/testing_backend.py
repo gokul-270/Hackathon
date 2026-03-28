@@ -1278,12 +1278,7 @@ def _execute_pick_all_sequence(
 
 @app.post("/api/cotton/pick-all")
 def cotton_pick_all(req: CottonPickAllRequest):
-    """Pick all spawned (unpicked) cottons sequentially."""
-
-    arm_name = req.arm
-    arm_config = ARM_CONFIGS.get(arm_name)
-    if arm_config is None:
-        raise HTTPException(status_code=400, detail=f"Unknown arm: {arm_name}")
+    """Pick all spawned (unpicked) cottons, grouped by arm with parallel threads."""
 
     # Filter to unpicked cottons in spawn order
     to_pick = [c for c in _cottons.values() if c.status == "spawned"]
@@ -1291,29 +1286,45 @@ def cotton_pick_all(req: CottonPickAllRequest):
     if not to_pick:
         return {"status": "nothing_to_pick", "total": 0}
 
-    arm_state = _arm_pick_state[arm_name]
-    with arm_state.lock:
-        if arm_state.in_progress:
-            raise HTTPException(
-                status_code=409,
-                detail=f"Pick already in progress on {arm_name}",
-            )
-        arm_state.in_progress = True
-        arm_state.status = "starting"
-        arm_state.current = to_pick[0].name
-        arm_state.progress = (1, len(to_pick))
+    # Group cottons by arm
+    arm_groups: dict[str, list[CottonState]] = {}
+    for cotton in to_pick:
+        arm_groups.setdefault(cotton.arm, []).append(cotton)
 
-    t = threading.Thread(
-        target=_execute_pick_all_sequence,
-        args=(to_pick, arm_config, req.enable_phi_compensation),
-        kwargs={"arm_name": arm_name},
-        daemon=True,
-    )
-    t.start()
+    # Set per-arm state and spawn one thread per arm group
+    started_arms = []
+    skipped_arms = []
+    for arm_name, arm_cottons in arm_groups.items():
+        arm_config = ARM_CONFIGS.get(arm_name)
+        if arm_config is None:
+            continue
+
+        arm_state = _arm_pick_state[arm_name]
+        with arm_state.lock:
+            if arm_state.in_progress:
+                skipped_arms.append(arm_name)
+                continue
+            arm_state.in_progress = True
+            arm_state.status = "starting"
+            arm_state.current = arm_cottons[0].name
+            arm_state.progress = (1, len(arm_cottons))
+
+        t = threading.Thread(
+            target=_execute_pick_all_sequence,
+            args=(arm_cottons, arm_config, req.enable_phi_compensation),
+            kwargs={"arm_name": arm_name},
+            daemon=True,
+        )
+        t.start()
+        started_arms.append(arm_name)
+
+    total_started = sum(len(arm_groups[a]) for a in started_arms)
 
     return {
-        "status": "picking",
-        "total": len(to_pick),
+        "status": "picking" if started_arms else "nothing_to_pick",
+        "total": total_started,
+        "started_arms": started_arms,
+        "skipped_arms": skipped_arms,
     }
 
 
