@@ -1099,7 +1099,8 @@
         var ax = arm.x, ay = arm.y, az = arm.z;
 
         var r  = Math.sqrt(ax * ax + az * az);
-        var j3 = (r > 1e-9) ? Math.asin(az / r) : 0.0;
+        if (r < 1e-6) { return null; }
+        var j3 = (r > 1e-6) ? Math.asin(az / r) : 0.0;
         var j4 = ay;
         var j5 = r - CAM_SEQ_J5_OFFSET;
 
@@ -1194,7 +1195,7 @@
     // Pre-computed camera_link -> arm_yanthra_link transform.
     // Based on URDF: camera_joint parent=arm_yanthra_link, child=camera_link
     // origin xyz=(0.016845, 0.100461, -0.077129) rpy=(1.5708, 0.785398, 0)
-    // We compute the INVERSE of this transform for camToJoint.
+    // Forward transform: arm_xyz = R @ cam_xyz + t (matches Python _T_CAM_TO_ARM).
     function initCameraToArmTransform() {
         var tx = 0.016845, ty = 0.100461, tz = -0.077129;
         var roll = 1.5708, pitch = 0.785398, yaw = 0.0;
@@ -1203,22 +1204,18 @@
         var cp = Math.cos(pitch), sp = Math.sin(pitch);
         var cy = Math.cos(yaw), sy = Math.sin(yaw);
 
-        // Forward rotation (yanthra -> camera)
+        // Forward rotation R = Rz(yaw) @ Ry(pitch) @ Rx(roll)
         var r00 = cy*cp, r01 = cy*sp*sr - sy*cr, r02 = cy*sp*cr + sy*sr;
         var r10 = sy*cp, r11 = sy*sp*sr + cy*cr, r12 = sy*sp*cr - cy*sr;
         var r20 = -sp,   r21 = cp*sr,             r22 = cp*cr;
 
-        // Inverse: R^T and -R^T * t
-        var inv_tx = -(r00*tx + r10*ty + r20*tz);
-        var inv_ty = -(r01*tx + r11*ty + r21*tz);
-        var inv_tz = -(r02*tx + r12*ty + r22*tz);
-
+        // Forward transform: arm_xyz = R @ cam_xyz + t
         tfMatrix = {
             apply: function(x, y, z) {
                 return {
-                    x: r00*x + r10*y + r20*z + inv_tx,
-                    y: r01*x + r11*y + r21*z + inv_ty,
-                    z: r02*x + r12*y + r22*z + inv_tz,
+                    x: r00*x + r01*y + r02*z + tx,
+                    y: r10*x + r11*y + r12*z + ty,
+                    z: r20*x + r21*y + r22*z + tz,
                 };
             }
         };

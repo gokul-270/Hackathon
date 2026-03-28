@@ -69,6 +69,102 @@ test('camToJoint returns {valid: false} when J3 is outside limits', () => {
   assert.strictEqual(result.valid, false, 'result.valid must be false when J3 is out of range');
 });
 
+// ─── Degenerate radius guard tests ──────────────────────────────────────────
+
+// ─── Test 1.3 ────────────────────────────────────────────────────────────────
+// camToJoint returns null when r < 1e-6 (degenerate radius, near-origin arm coords)
+test('camToJoint returns null when r < 1e-6 (degenerate radius)', () => {
+  // tf returns arm coords where ax~0, az~0 => r = sqrt(0+0) = 0 < 1e-6
+  var degenerateTf = mockTf(0.0, 0.1, 0.0);
+  var result = camToJoint(degenerateTf, 0, 0, 0);
+  assert.strictEqual(result, null,
+    'camToJoint should return null for degenerate radius (r < 1e-6)');
+});
+
+// ─── Test 1.5 ────────────────────────────────────────────────────────────────
+// camToJoint r threshold for asin uses 1e-6 (not 1e-9): value between 1e-9 and
+// 1e-6 should return null (degenerate), not proceed with asin
+test('camToJoint r threshold uses 1e-6 not 1e-9 for degenerate guard', () => {
+  // r = 5e-7 which is > 1e-9 but < 1e-6 — should be caught by 1e-6 guard
+  var ax = 5e-7, az = 0.0;
+  var tinyTf = mockTf(ax, 0.1, az);
+  var result = camToJoint(tinyTf, 0, 0, 0);
+  assert.strictEqual(result, null,
+    'r=5e-7 is < 1e-6, should return null (would pass old 1e-9 threshold)');
+});
+
+// ─── Transform Tests ────────────────────────────────────────────────────────
+
+const { initCameraToArmTransform } = require('./cam_to_joint_shim.js');
+
+// ─── Test 1.1 ────────────────────────────────────────────────────────────────
+// initCameraToArmTransform produces FORWARD transform matching Python _T_CAM_TO_ARM
+test('initCameraToArmTransform produces forward transform matching Python _T_CAM_TO_ARM', () => {
+  assert.equal(typeof initCameraToArmTransform, 'function',
+    'initCameraToArmTransform must be exported');
+
+  var tf = initCameraToArmTransform();
+  assert.ok(tf && typeof tf.apply === 'function',
+    'must return object with apply(x,y,z) method');
+
+  // Python _T_CAM_TO_ARM forward transform of cam=(0.494, -0.001, 0.004):
+  //   arm = R @ cam + t = (0.365449, 0.096461, -0.427147)
+  // Tolerance 1e-4 for float precision
+  var result = tf.apply(0.494, -0.001, 0.004);
+  assert.ok(Math.abs(result.x - 0.365449) < 1e-4,
+    `x: expected ~0.365449 got ${result.x}`);
+  assert.ok(Math.abs(result.y - 0.096461) < 1e-4,
+    `y: expected ~0.096461 got ${result.y}`);
+  assert.ok(Math.abs(result.z - (-0.427147)) < 1e-4,
+    `z: expected ~-0.427147 got ${result.z}`);
+
+  // Also verify matrix structure: apply(0,0,0) should return translation [tx, ty, tz]
+  var origin = tf.apply(0, 0, 0);
+  assert.ok(Math.abs(origin.x - 0.016845) < 1e-6,
+    `origin.x should be tx=0.016845, got ${origin.x}`);
+  assert.ok(Math.abs(origin.y - 0.100461) < 1e-6,
+    `origin.y should be ty=0.100461, got ${origin.y}`);
+  assert.ok(Math.abs(origin.z - (-0.077129)) < 1e-6,
+    `origin.z should be tz=-0.077129, got ${origin.z}`);
+});
+
+// ─── Test 1.7 ────────────────────────────────────────────────────────────────
+// camToJoint with forward transform matches Python camera_to_arm + polar_decompose
+// for all 5 real arm log data points
+test('camToJoint matches Python output for 5 real arm log data points', () => {
+  var tf = initCameraToArmTransform();
+
+  // Real arm log data: cam coords -> expected Python polar_decompose output
+  // Point 5 has j3=-0.9433 which is out of J3 range [-0.9, 0.0], so valid=false
+  var logData = [
+    { cam: [0.494, -0.001, 0.004], j3: -0.863085, j4: 0.096461, j5: 0.242145, valid: true },
+    { cam: [0.525,  0.020, 0.008], j3: -0.823637, j4: 0.092461, j5: 0.271882, valid: true },
+    { cam: [0.541,  0.014, 0.011], j3: -0.832490, j4: 0.089461, j5: 0.288124, valid: true },
+    { cam: [0.541,  0.033, 0.063], j3: -0.801246, j4: 0.037461, j5: 0.287526, valid: true },
+    { cam: [0.578, -0.060, 0.089], j3: -0.943320, j4: 0.011461, j5: 0.332570, valid: false },
+  ];
+
+  for (var i = 0; i < logData.length; i++) {
+    var d = logData[i];
+    var result = camToJoint(tf, d.cam[0], d.cam[1], d.cam[2]);
+    assert.ok(result !== null, 'point ' + i + ': result should not be null');
+
+    if (d.valid) {
+      assert.strictEqual(result.valid, true,
+        'point ' + i + ': expected valid=true');
+      assert.ok(Math.abs(result.j3 - d.j3) < 1e-3,
+        'point ' + i + ': j3 expected ' + d.j3 + ' got ' + result.j3);
+      assert.ok(Math.abs(result.j4 - d.j4) < 1e-3,
+        'point ' + i + ': j4 expected ' + d.j4 + ' got ' + result.j4);
+      assert.ok(Math.abs(result.j5 - d.j5) < 1e-3,
+        'point ' + i + ': j5 expected ' + d.j5 + ' got ' + result.j5);
+    } else {
+      assert.strictEqual(result.valid, false,
+        'point ' + i + ': expected valid=false (j3 out of range)');
+    }
+  }
+});
+
 // ─── Phi Compensation Tests ─────────────────────────────────────────────────
 
 const { phiCompensation } = require('./cam_to_joint_shim.js');
