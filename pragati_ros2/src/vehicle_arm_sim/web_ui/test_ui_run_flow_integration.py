@@ -11,6 +11,7 @@ Verifies that the backend wires RunController end-to-end:
 
 import json
 import sys
+import threading
 from pathlib import Path
 from unittest.mock import patch
 
@@ -122,3 +123,117 @@ def test_json_report_has_run_summary_with_mode_key():
     data = resp.json()
     assert "summary" in data
     assert "mode" in data["summary"]
+
+
+# ---------------------------------------------------------------------------
+# SSE lifecycle — second-run regression tests
+# ---------------------------------------------------------------------------
+
+def _collect_sse_events(sse_client, path: str, stop_on_run_complete: bool = True) -> list:
+    """Open SSE stream and collect all events until run_complete or stream closes."""
+    events = []
+    try:
+        with sse_client.stream("GET", path) as resp:
+            for line in resp.iter_lines():
+                if line.startswith("data:"):
+                    evt = json.loads(line[len("data:"):].strip())
+                    events.append(evt)
+                    if stop_on_run_complete and evt.get("type") == "run_complete":
+                        break
+    except Exception:
+        pass
+    return events
+
+
+def test_second_run_sse_receives_events():
+    """GET /api/run/events on a closed bus must reset and deliver new events.
+
+    This exercises the fix directly: the SSE endpoint must call reset() before
+    subscribe() so that the subscriber is not returned immediately on a closed bus.
+    """
+    import time as _time
+
+    # Simulate end-of-run-1 state: bus is closed
+    tb._event_bus.close()
+    assert tb._event_bus._closed, "precondition: bus must be closed to exercise the bug"
+
+    run2_events = []
+    sse_connected = threading.Event()
+    sse_done = threading.Event()
+
+    def emit_run2_events():
+        # Wait for SSE to connect (endpoint resets and subscribes)
+        sse_connected.wait(timeout=2.0)
+        _time.sleep(0.05)  # let subscribe() block in the generator
+        tb._event_bus.emit({"type": "step_start", "step_id": 0, "arm_id": "arm1"})
+        tb._event_bus.emit({"type": "run_complete", "run_id": "run2"})
+        tb._event_bus.close()
+
+    emitter = threading.Thread(target=emit_run2_events)
+    emitter.start()
+
+    import json as _json
+    with TestClient(app) as sse_client:
+        with sse_client.stream("GET", "/api/run/events") as resp:
+            sse_connected.set()
+            for line in resp.iter_lines():
+                if line.startswith("data:"):
+                    evt = _json.loads(line[len("data:"):].strip())
+                    run2_events.append(evt)
+                    if evt.get("type") == "run_complete":
+                        break
+
+    sse_done.set()
+    emitter.join(timeout=3.0)
+
+    assert any(e.get("type") == "run_complete" for e in run2_events), (
+        f"Second-run SSE received no run_complete (second-run freeze!); got: {run2_events}"
+    )
+
+
+def test_start_fires_before_sse_opens():
+    """If run/start fires before SSE opens (no reset before subscribe), bus must still work.
+
+    Defensive scenario: /api/run/start calls reset() as a guard. If the SSE handler
+    also calls reset(), the subscriber should still receive events emitted after the
+    SSE opens (even if an earlier reset cleared old queued events).
+    """
+    import time as _time
+
+    # Start from clean state
+    tb._event_bus.reset()
+
+    received = []
+    subscriber_started = threading.Event()
+    subscriber_done = threading.Event()
+
+    def sse_consumer():
+        tb._event_bus.reset()  # SSE handler calls reset() first (the fix)
+        gen = tb._event_bus.subscribe()
+        subscriber_started.set()
+        for evt in gen:
+            received.append(evt)
+        subscriber_done.set()
+
+    # Emit run_complete BEFORE SSE opens (simulates start firing before SSE opens)
+    tb._event_bus.emit({"type": "run_complete", "run_id": "pre-sse"})
+    tb._event_bus.close()
+
+    # Now SSE opens — reset() clears old events, subscriber waits for new ones
+    t = threading.Thread(target=sse_consumer)
+    t.start()
+    subscriber_started.wait(timeout=1.0)
+    _time.sleep(0.02)
+
+    # Emit a new event after SSE opens
+    tb._event_bus.emit({"type": "run_complete", "run_id": "post-sse"})
+    tb._event_bus.close()
+
+    subscriber_done.wait(timeout=2.0)
+    t.join(timeout=2.0)
+
+    # Must not hang, and must receive the post-open event
+    assert not t.is_alive(), "SSE consumer hung when run/start fired before SSE opened"
+    assert any(e.get("run_id") == "post-sse" for e in received), (
+        f"SSE consumer did not receive post-open event; got: {received}"
+    )

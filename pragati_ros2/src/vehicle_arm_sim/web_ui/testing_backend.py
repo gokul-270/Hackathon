@@ -1226,11 +1226,16 @@ def _gz_publish(topic: str, value: float) -> None:
 
 @app.get("/api/run/events")
 async def run_events():
-    """SSE stream of per-step run events. Opens before POST /api/run/start."""
+    """SSE stream of per-step run events.
+
+    Resets the event bus on each connection so that second and subsequent runs
+    receive a live stream even after a previous run closed the bus.
+    """
     async def _generator():
         import json as _json
         import asyncio
         loop = asyncio.get_event_loop()
+        _event_bus.reset()  # Re-arm bus so second (and subsequent) runs work correctly.
         gen = _event_bus.subscribe()
         try:
             while True:
