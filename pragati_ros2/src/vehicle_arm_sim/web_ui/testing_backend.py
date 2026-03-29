@@ -701,7 +701,14 @@ _last_cotton_cam: tuple | None = None
 _last_cotton_arm: str | None = None
 _last_cotton_j4: float = 0.0
 
-# SDF template for cotton ball (white sphere, 0.04m radius)
+# Per-arm cotton colours in RGBA format (r g b a).  Unknown arms fall back to white.
+_ARM_COTTON_COLOURS: dict[str, str] = {
+    "arm1": "1 0 0 1",  # red
+    "arm2": "0 0 1 1",  # blue
+}
+
+# SDF template for cotton ball (coloured sphere, 0.04m radius).
+# {ambient} and {diffuse} are filled with an RGBA string at spawn time.
 _COTTON_SDF_TEMPLATE = (
     "<sdf version='1.7'>"
     "<model name='{name}'>"
@@ -709,7 +716,7 @@ _COTTON_SDF_TEMPLATE = (
     "<link name='link'>"
     "<visual name='visual'>"
     "<geometry><sphere><radius>0.04</radius></sphere></geometry>"
-    "<material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>"
+    "<material><ambient>{ambient}</ambient><diffuse>{diffuse}</diffuse></material>"
     "</visual>"
     "</link>"
     "</model>"
@@ -817,7 +824,7 @@ def cotton_spawn(req: CottonSpawnRequest):
     # Spawn new cotton with sequential name
     _cotton_name = f"cotton_{_cotton_counter}"
     _cotton_counter += 1
-    sdf = _COTTON_SDF_TEMPLATE.format(name=_cotton_name)
+    sdf = _COTTON_SDF_TEMPLATE.format(name=_cotton_name, ambient="1 1 1 1", diffuse="1 1 1 1")
     world_name = _detect_gz_world_name()
     _gz_spawn_model(_cotton_name, sdf, wx, wy, wz, world_name)
 
@@ -984,7 +991,8 @@ def _run_spawn_cotton(
                                       arm_config=arm_config)
     name = f"run_cotton_{arm_id}_{_cotton_counter}"
     _cotton_counter += 1
-    sdf = _COTTON_SDF_TEMPLATE.format(name=name)
+    colour = _ARM_COTTON_COLOURS.get(arm_id, "1 1 1 1")
+    sdf = _COTTON_SDF_TEMPLATE.format(name=name, ambient=colour, diffuse=colour)
     _gz_spawn_model(name, sdf, wx, wy, wz, world_name)
     return name
 
@@ -1123,6 +1131,28 @@ class RunStartRequest(BaseModel):
     arm_pair: list = ["arm1", "arm2"]
 
 
+def _gz_publish(topic: str, value: float) -> None:
+    """Publish a joint command via gz topic (blocking, triple-publish for reliability)."""
+    cmd = [
+        "gz", "topic",
+        "-t", topic,
+        "-m", "gz.msgs.Double",
+        "-p", f"data: {value}",
+    ]
+    for i in range(3):
+        result = subprocess.run(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+        )
+        if result.returncode != 0:
+            stderr_text = result.stderr.decode("utf-8", errors="replace").strip()
+            logger.warning(
+                "gz publish failed on topic %s (attempt %d/3): %s",
+                topic, i + 1, stderr_text or "(no stderr)",
+            )
+        if i < 2:
+            time.sleep(0.050)
+
+
 # ---------------------------------------------------------------------------
 # UI Run Flow — endpoints
 # ---------------------------------------------------------------------------
@@ -1151,27 +1181,6 @@ async def run_start(req: RunStartRequest):
     _run_state = "running"
     _estop_event.clear()
     run_id = str(uuid.uuid4())
-
-    def _gz_publish(topic: str, value: float) -> None:
-        """Publish a joint command via gz topic (blocking, triple-publish for reliability)."""
-        cmd = [
-            "gz", "topic",
-            "-t", topic,
-            "-m", "gz.msgs.Double",
-            "-p", f"data: {value}",
-        ]
-        for i in range(3):
-            result = subprocess.run(
-                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
-            )
-            if result.returncode != 0:
-                stderr_text = result.stderr.decode("utf-8", errors="replace").strip()
-                logger.warning(
-                    "gz publish failed on topic %s (attempt %d/3): %s",
-                    topic, i + 1, stderr_text or "(no stderr)",
-                )
-            if i < 2:
-                time.sleep(0.150)
 
     executor = RunStepExecutor(
         publish_fn=_gz_publish,

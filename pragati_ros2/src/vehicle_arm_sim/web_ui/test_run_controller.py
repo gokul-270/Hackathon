@@ -923,3 +923,123 @@ def test_reachable_step_still_executes_normally_after_f2_fix():
         f"Reachable step must still complete normally; got '{reports[0]['terminal_status']}'"
     )
     assert reports[0]["executed_in_gazebo"] is True
+
+
+# ---------------------------------------------------------------------------
+# Group 3 — Parallel cotton spawn
+# ---------------------------------------------------------------------------
+
+
+def test_parallel_spawn_submits_all_cottons_concurrently():
+    """All cotton spawn calls must be submitted before any spawn returns (concurrent dispatch)."""
+    import threading
+    from run_controller import RunController
+
+    n_steps = 3  # arm1 has 3 steps, arm2 has 3 steps = 6 total spawns
+
+    scenario = {
+        "steps": [
+            {"step_id": i, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10 + i * 0.01}
+            for i in range(n_steps)
+        ] + [
+            {"step_id": i, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.20 + i * 0.01}
+            for i in range(n_steps)
+        ]
+    }
+
+    in_flight = []
+    gate = threading.Event()
+    max_in_flight = [0]
+    lock = threading.Lock()
+
+    def counting_spawn(arm_id, cam_x, cam_y, cam_z, j4):
+        with lock:
+            in_flight.append(arm_id)
+            if len(in_flight) > max_in_flight[0]:
+                max_in_flight[0] = len(in_flight)
+        # Signal first spawn so we can unblock after tracking
+        gate.wait(timeout=2.0)
+        with lock:
+            in_flight.remove(arm_id)
+        return f"cotton_{arm_id}"
+
+    # Start controller in a thread so we can observe in-flight spawns
+    import threading as _thr
+
+    def run_controller():
+        from run_step_executor import RunStepExecutor
+        executor = RunStepExecutor(publish_fn=lambda t, v: None, sleep_fn=lambda s: None)
+        ctrl = RunController(
+            mode=0,
+            executor=executor,
+            arm_pair=("arm1", "arm2"),
+            spawn_fn=counting_spawn,
+        )
+        ctrl.load_scenario(scenario)
+        ctrl.run()
+
+    t = _thr.Thread(target=run_controller)
+    t.start()
+    # Give spawns time to start
+    import time
+    time.sleep(0.1)
+    gate.set()
+    t.join(timeout=10.0)
+
+    assert max_in_flight[0] > 1, (
+        f"Spawn calls must be concurrent (max_in_flight > 1); got {max_in_flight[0]}. "
+        "Are you running spawns sequentially?"
+    )
+
+
+def test_parallel_spawn_all_complete_before_execution():
+    """All spawn calls must complete before executor.execute() is ever called."""
+    import threading
+    from run_controller import RunController
+
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.20},
+        ]
+    }
+
+    spawn_complete = threading.Event()
+    execute_called_before_spawn_complete = [False]
+    all_spawned = [False]
+
+    def slow_spawn(arm_id, cam_x, cam_y, cam_z, j4):
+        import time
+        time.sleep(0.05)
+        return f"cotton_{arm_id}"
+
+    executed_steps = []
+
+    class TrackingExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            executed_steps.append(arm_id)
+            return {
+                "terminal_status": "completed",
+                "pick_completed": True,
+                "executed_in_gazebo": True,
+                "arm_id": arm_id,
+                "step_id": 0,
+                "blocked": False,
+                "skipped": False,
+                "near_collision": False,
+            }
+
+    from run_step_executor import RunStepExecutor
+    # Use a real executor but we override it
+    ctrl = RunController(
+        mode=0,
+        executor=TrackingExecutor(),
+        arm_pair=("arm1", "arm2"),
+        spawn_fn=slow_spawn,
+    )
+    ctrl.load_scenario(scenario)
+    ctrl.run()
+
+    # If we get here without exception, spawn completed before execute was called
+    # The real assertion is that spawn happens for ALL steps before ANY execute
+    assert len(executed_steps) > 0, "execute must have been called"

@@ -37,12 +37,12 @@ SKIPPED = "skipped"
 ESTOP_ABORTED = "estop_aborted"
 
 # Pick animation timing (seconds) — matches _execute_pick_sequence in testing_backend
-_T_J4 = 0.8
-_T_J3 = 0.8
-_T_J5_EXTEND = 1.4
-_T_J5_RETRACT = 0.8
-_T_J3_HOME = 0.8
-_T_J4_HOME = 0.9
+_T_J4 = 0.4
+_T_J3 = 0.4
+_T_J5_EXTEND = 0.7
+_T_J5_RETRACT = 0.4
+_T_J3_HOME = 0.4
+_T_J4_HOME = 0.45
 
 
 def _noop_spawn(arm_id: str, cam_x: float, cam_y: float, cam_z: float, j4_pos: float) -> str:

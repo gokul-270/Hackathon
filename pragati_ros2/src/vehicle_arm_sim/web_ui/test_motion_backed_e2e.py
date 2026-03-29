@@ -308,7 +308,7 @@ class TestTriplePublish:
 
     These tests verify that:
     - subprocess.run is called 3× per joint command (not subprocess.Popen)
-    - time.sleep(0.150) is called between each publish
+    - time.sleep(0.050) is called between each publish
     - subprocess.Popen is NOT used for joint commands
     """
 
@@ -340,8 +340,8 @@ class TestTriplePublish:
             f"expected 18 subprocess.run calls (3 per command × 6 commands), got {len(run_calls)}"
         )
 
-    def test_gz_publish_sleeps_150ms_between_publishes(self):
-        """_gz_publish SHALL sleep 150ms between each of the 3 publish calls (2 gaps per command)."""
+    def test_gz_publish_sleeps_50ms_between_publishes(self):
+        """_gz_publish SHALL sleep 50ms between each of the 3 publish calls (2 gaps per command)."""
         sleep_args = []
 
         def mock_sleep(s):
@@ -364,10 +364,10 @@ class TestTriplePublish:
                 "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
             )
         assert resp.status_code == 200
-        # 1 step × 6 joint commands × 2 inter-publish gaps = 12 sleep(0.150) calls
-        gap_sleeps = [s for s in sleep_args if abs(s - 0.150) < 0.001]
+        # 1 step × 6 joint commands × 2 inter-publish gaps = 12 sleep(0.050) calls
+        gap_sleeps = [s for s in sleep_args if abs(s - 0.050) < 0.001]
         assert len(gap_sleeps) == 12, (
-            f"expected 12 time.sleep(0.150) calls, got {len(gap_sleeps)}; all sleeps: {sleep_args}"
+            f"expected 12 time.sleep(0.050) calls, got {len(gap_sleeps)}; all sleeps: {sleep_args}"
         )
 
     def test_gz_publish_does_not_use_subprocess_popen(self):
@@ -679,3 +679,34 @@ class TestGzPublishStderrLogging:
             f"No logger.warning must be called on successful publish; "
             f"got calls: {mock_logger.warning.call_args_list}"
         )
+
+
+def test_gz_publish_retry_delay_is_50ms():
+    """The inter-attempt sleep in _gz_publish must be 0.05s, not 0.15s."""
+    import testing_backend as tb
+
+    sleep_calls = []
+
+    def recording_sleep(s):
+        sleep_calls.append(s)
+
+    original = tb.time.sleep
+    tb.time.sleep = recording_sleep
+    try:
+        # Call _gz_publish directly with a dummy topic/value
+        # It will call subprocess which we don't care about here —
+        # we only care about the sleep duration
+        import subprocess
+        from unittest.mock import patch
+
+        with patch("testing_backend.subprocess.run") as mock_run:
+            mock_run.return_value = type("CP", (), {"returncode": 0, "stderr": b""})()
+            tb._gz_publish("/test_topic", 1.0)
+    finally:
+        tb.time.sleep = original
+
+    # The function retries 3 times; sleeps between attempts i=0 and i=1, i=1 and i=2
+    # So sleep_calls should have 0.05 (2 calls for i < 2)
+    assert sleep_calls, "time.sleep must be called in _gz_publish retries"
+    for s in sleep_calls:
+        assert s == 0.05, f"Retry sleep must be 0.05s, got {s}"

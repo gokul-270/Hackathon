@@ -14,27 +14,27 @@
 
 ## 1. Faster Pick Animation + Publish Delay [PARALLEL with 2, 3]
 
-- [ ] 1.1 **RED** Write `test_animation_timing_constants_are_halved` in `test_run_step_executor.py` — assert `_T_J4==0.4`, `_T_J3==0.4`, `_T_J5_EXTEND==0.7`, `_T_J5_RETRACT==0.4`, `_T_J3_HOME==0.4`, `_T_J4_HOME==0.45`; confirm test fails
-- [ ] 1.2 **GREEN** Halve all six timing constants in `run_step_executor.py` (lines 40–45); confirm test passes
-- [ ] 1.3 **RED** Write `test_gz_publish_retry_delay_is_50ms` in `test_motion_backed_e2e.py` — patch `time.sleep` and assert it is called with 0.05, not 0.15; confirm test fails
-- [ ] 1.4 **GREEN** Change inter-attempt sleep in `testing_backend.py` `_gz_publish` from `0.150` to `0.050`; confirm test passes
-- [ ] 1.5 **REFACTOR** Run full test suite; commit `fix: halve animation timing and publish retry delay`
+- [x] 1.1 **RED** Write `test_animation_timing_constants_are_halved` in `test_run_step_executor.py` — assert `_T_J4==0.4`, `_T_J3==0.4`, `_T_J5_EXTEND==0.7`, `_T_J5_RETRACT==0.4`, `_T_J3_HOME==0.4`, `_T_J4_HOME==0.45`; confirm test fails
+- [x] 1.2 **GREEN** Halve all six timing constants in `run_step_executor.py` (lines 40–45); confirm test passes
+- [x] 1.3 **RED** Write `test_gz_publish_retry_delay_is_50ms` in `test_motion_backed_e2e.py` — patch `time.sleep` and assert it is called with 0.05, not 0.15; confirm test fails
+- [x] 1.4 **GREEN** Change inter-attempt sleep in `testing_backend.py` `_gz_publish` from `0.150` to `0.050`; confirm test passes
+- [x] 1.5 **REFACTOR** Run full test suite; commit `fix: halve animation timing and publish retry delay`
 
 ## 2. Per-Arm Cotton Colour [PARALLEL with 1, 3]
 
-- [ ] 2.1 **RED** Write `test_arm1_cotton_sdf_is_red` and `test_arm2_cotton_sdf_is_blue` in `test_testing_backend.py` (or `test_run_controller.py`) — assert SDF string contains correct `<ambient>` and `<diffuse>` values per arm_id; confirm tests fail
-- [ ] 2.2 **GREEN** Add `_ARM_COTTON_COLOURS` dict and `{ambient}`/`{diffuse}` placeholders to `_COTTON_SDF_TEMPLATE` in `testing_backend.py`; pass arm-specific colours from `_run_spawn_cotton()`; confirm tests pass
-- [ ] 2.3 **RED** Write `test_arm3_cotton_sdf_fallback_is_white` — assert unknown arm_id gets white colour; confirm fails
-- [ ] 2.4 **GREEN** Add white fallback in `_run_spawn_cotton()`; confirm test passes
-- [ ] 2.5 **REFACTOR** Run full test suite; commit `feat: per-arm cotton colours (arm1=red, arm2=blue)`
+- [x] 2.1 **RED** Write `test_arm1_cotton_sdf_is_red` and `test_arm2_cotton_sdf_is_blue` in `test_testing_backend.py` (or `test_run_controller.py`) — assert SDF string contains correct `<ambient>` and `<diffuse>` values per arm_id; confirm tests fail
+- [x] 2.2 **GREEN** Add `_ARM_COTTON_COLOURS` dict and `{ambient}`/`{diffuse}` placeholders to `_COTTON_SDF_TEMPLATE` in `testing_backend.py`; pass arm-specific colours from `_run_spawn_cotton()`; confirm tests pass
+- [x] 2.3 **RED** Write `test_arm3_cotton_sdf_fallback_is_white` — assert unknown arm_id gets white colour; confirm fails
+- [x] 2.4 **GREEN** Add white fallback in `_run_spawn_cotton()`; confirm test passes
+- [x] 2.5 **REFACTOR** Run full test suite; commit `feat: per-arm cotton colours (arm1=red, arm2=blue)`
 
 ## 3. Parallel Cotton Spawn [PARALLEL with 1, 2]
 
-- [ ] 3.1 **RED** Write `test_parallel_spawn_submits_all_cottons_concurrently` in `test_run_controller.py` — use a mock spawn_fn with a threading.Event and assert all N calls are in-flight before any returns; confirm test fails
-- [ ] 3.2 **GREEN** Replace sequential spawn loop in `RunController.run()` (lines 171–175) with `ThreadPoolExecutor` parallel dispatch; confirm test passes
-- [ ] 3.3 **RED** Write `test_parallel_spawn_all_complete_before_execution` — assert spawn_fn is called for all steps before executor.execute() is ever called; confirm fails
-- [ ] 3.4 **GREEN** Ensure futures are all `.result()`-ed before the arm execution phase; confirm test passes
-- [ ] 3.5 **REFACTOR** Run full test suite; commit `feat: parallel upfront cotton spawn`
+- [x] 3.1 **RED** Write `test_parallel_spawn_submits_all_cottons_concurrently` in `test_run_controller.py` — use a mock spawn_fn with a threading.Event and assert all N calls are in-flight before any returns; confirm test fails
+- [x] 3.2 **GREEN** Replace sequential spawn loop in `RunController.run()` (lines 171–175) with `ThreadPoolExecutor` parallel dispatch; confirm test passes
+- [x] 3.3 **RED** Write `test_parallel_spawn_all_complete_before_execution` — assert spawn_fn is called for all steps before executor.execute() is ever called; confirm fails
+- [x] 3.4 **GREEN** Ensure futures are all `.result()`-ed before the arm execution phase; confirm test passes
+- [x] 3.5 **REFACTOR** Run full test suite; commit `feat: parallel upfront cotton spawn`
 
 ## 4. Thread-Safe Transport and Reporter [SEQUENTIAL after 1]
 

@@ -700,3 +700,20 @@ def test_executor_without_estop_check_completes_normally():
     )
     assert outcome["terminal_status"] == "completed"
     assert outcome["pick_completed"] is True
+
+
+# ---------------------------------------------------------------------------
+# Task 1.1 — Animation timing constants are halved
+# ---------------------------------------------------------------------------
+
+
+def test_animation_timing_constants_are_halved():
+    """Pick animation timing constants must be halved for faster simulation."""
+    import run_step_executor as rse
+
+    assert rse._T_J4 == 0.4, f"_T_J4 must be 0.4, got {rse._T_J4}"
+    assert rse._T_J3 == 0.4, f"_T_J3 must be 0.4, got {rse._T_J3}"
+    assert rse._T_J5_EXTEND == 0.7, f"_T_J5_EXTEND must be 0.7, got {rse._T_J5_EXTEND}"
+    assert rse._T_J5_RETRACT == 0.4, f"_T_J5_RETRACT must be 0.4, got {rse._T_J5_RETRACT}"
+    assert rse._T_J3_HOME == 0.4, f"_T_J3_HOME must be 0.4, got {rse._T_J3_HOME}"
+    assert rse._T_J4_HOME == 0.45, f"_T_J4_HOME must be 0.45, got {rse._T_J4_HOME}"

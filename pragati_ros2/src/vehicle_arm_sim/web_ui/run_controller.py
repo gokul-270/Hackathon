@@ -167,12 +167,25 @@ class RunController:
 
         total_steps = len(step_map)
 
-        # Upfront cotton spawn: spawn once per (step_id, arm_id) before any execution begins.
+        # Upfront cotton spawn: spawn all cottons concurrently before any execution begins.
         cotton_models: dict = {}
-        for step_id, arm_steps in step_map.items():
-            for arm_id, step in arm_steps.items():
-                model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
-                cotton_models[(step_id, arm_id)] = model_name
+        spawn_items = [
+            (step_id, arm_id, step)
+            for step_id, arm_steps in step_map.items()
+            for arm_id, step in arm_steps.items()
+        ]
+
+        def _spawn_one(item):
+            step_id, arm_id, step = item
+            model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
+            return (step_id, arm_id), model_name
+
+        with ThreadPoolExecutor(max_workers=len(spawn_items) or 1) as pool:
+            futures = {pool.submit(_spawn_one, item): item for item in spawn_items}
+            from concurrent.futures import as_completed
+            for future in as_completed(futures):
+                key, model_name = future.result()
+                cotton_models[key] = model_name
 
         # Track "previous applied joints" per arm to use as current_joints
         prev_joints: dict[str, dict] = {
