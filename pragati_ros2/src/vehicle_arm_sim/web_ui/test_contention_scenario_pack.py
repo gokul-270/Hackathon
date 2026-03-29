@@ -174,3 +174,50 @@ def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
         f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
         f"gaps: {[round(abs(_j4_for_contention_step(arms['arm1'])-_j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Group 7 — World-space cotton position spread (>= 5 cm per arm)
+# ---------------------------------------------------------------------------
+
+
+def test_contention_pack_arm1_cotton_positions_are_spread_at_least_5cm_apart(contention_pack):
+    """Each pair of arm1 cotton world positions must be >= 5 cm apart."""
+    import math
+    from fk_chain import camera_to_world_fk, ARM_CONFIGS
+    arm1_steps = [s for s in contention_pack["steps"] if s["arm_id"] == "arm1"]
+    cfg = ARM_CONFIGS["arm1"]
+    positions = [
+        camera_to_world_fk(s["cam_x"], s["cam_y"], s["cam_z"], j3=0.0, j4=0.0, arm_config=cfg)
+        for s in arm1_steps
+    ]
+    for i in range(len(positions)):
+        for j in range(i + 1, len(positions)):
+            wx1, wy1, wz1 = positions[i]
+            wx2, wy2, wz2 = positions[j]
+            dist = math.sqrt((wx1 - wx2) ** 2 + (wy1 - wy2) ** 2 + (wz1 - wz2) ** 2)
+            assert dist >= 0.05, (
+                f"arm1 steps {i} and {j} are only {dist:.4f} m apart "
+                f"(cam_z: {arm1_steps[i]['cam_z']}, {arm1_steps[j]['cam_z']})"
+            )
+
+
+def test_contention_pack_arm2_cotton_positions_are_spread_at_least_5cm_apart(contention_pack):
+    """Each pair of arm2 cotton world positions must be >= 5 cm apart."""
+    import math
+    from fk_chain import camera_to_world_fk, ARM_CONFIGS
+    arm2_steps = [s for s in contention_pack["steps"] if s["arm_id"] == "arm2"]
+    cfg = ARM_CONFIGS["arm2"]
+    positions = [
+        camera_to_world_fk(s["cam_x"], s["cam_y"], s["cam_z"], j3=0.0, j4=0.0, arm_config=cfg)
+        for s in arm2_steps
+    ]
+    for i in range(len(positions)):
+        for j in range(i + 1, len(positions)):
+            wx1, wy1, wz1 = positions[i]
+            wx2, wy2, wz2 = positions[j]
+            dist = math.sqrt((wx1 - wx2) ** 2 + (wy1 - wy2) ** 2 + (wz1 - wz2) ** 2)
+            assert dist >= 0.05, (
+                f"arm2 steps {i} and {j} are only {dist:.4f} m apart "
+                f"(cam_z: {arm2_steps[i]['cam_z']}, {arm2_steps[j]['cam_z']})"
+            )
