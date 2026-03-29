@@ -147,3 +147,74 @@ def test_baselinemode_apply_raises_valueerror_for_unknown_mode_number():
     own = {"j3": 1.0, "j4": 0.3, "j5": 0.5}
     with pytest.raises(ValueError):
         mode.apply(99, own, peer_state=None)
+
+
+# ---------------------------------------------------------------------------
+# Mode 3: SEQUENTIAL_PICK — apply_with_skip returns 4-tuple via delegation
+# ---------------------------------------------------------------------------
+
+def test_baselinemode_sequential_pick_delegates_to_policy():
+    """Mode 3 apply_with_skip must delegate to SequentialPickPolicy and return
+    (applied_joints, skipped) — the BaselineMode adapter unpacks the 4-tuple
+    from the policy into a 2-tuple for backward compat."""
+    mode = BaselineMode()
+    own = {"j3": 0.0, "j4": 0.0, "j5": 1.0}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.0, "j5": 1.0})
+    # Contention: gap 0.0 < 0.10, both j5 > 0
+    applied, skipped = mode.apply_with_skip(
+        BaselineMode.SEQUENTIAL_PICK, own, peer, step_id=0, arm_id="arm1"
+    )
+    assert applied == own
+    assert skipped is False
+
+
+def test_baselinemode_sequential_pick_no_peer_passes_through():
+    """Mode 3 with no peer must pass through unchanged."""
+    mode = BaselineMode()
+    own = {"j3": 0.0, "j4": 0.0, "j5": 1.0}
+    applied, skipped = mode.apply_with_skip(
+        BaselineMode.SEQUENTIAL_PICK, own, None, step_id=0, arm_id="arm1"
+    )
+    assert applied == own
+    assert skipped is False
+
+
+# ---------------------------------------------------------------------------
+# Mode 4: SMART_REORDER — constant and passthrough
+# ---------------------------------------------------------------------------
+
+def test_baselinemode_smart_reorder_constant_equals_four():
+    """BaselineMode.SMART_REORDER must equal 4."""
+    assert BaselineMode.SMART_REORDER == 4
+
+
+def test_baselinemode_smart_reorder_passes_through_unchanged():
+    """Mode 4 apply_with_skip must pass joints through unchanged (reorder is
+    done in RunController before the step loop, not per-step)."""
+    mode = BaselineMode()
+    own = {"j3": 1.0, "j4": 0.3, "j5": 0.5}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.8, "j4": 0.31, "j5": 0.4})
+    applied, skipped = mode.apply_with_skip(
+        BaselineMode.SMART_REORDER, own, peer, step_id=0, arm_id="arm1"
+    )
+    assert applied == own
+    assert skipped is False
+
+
+def test_baselinemode_smart_reorder_no_peer_passes_through():
+    """Mode 4 with no peer must still pass through unchanged."""
+    mode = BaselineMode()
+    own = {"j3": 1.0, "j4": 0.3, "j5": 0.5}
+    applied, skipped = mode.apply_with_skip(
+        BaselineMode.SMART_REORDER, own, None, step_id=0, arm_id="arm1"
+    )
+    assert applied == own
+    assert skipped is False
+
+
+def test_baselinemode_apply_smart_reorder_returns_joints():
+    """Mode 4 apply() (non-skip variant) must also return joints unchanged."""
+    mode = BaselineMode()
+    own = {"j3": 1.0, "j4": 0.3, "j5": 0.5}
+    result = mode.apply(BaselineMode.SMART_REORDER, own, peer_state=None)
+    assert result == own

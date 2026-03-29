@@ -47,10 +47,10 @@ Implement `SmartReorderScheduler` — pure algorithm, no RunController wiring ye
 
 Wire SequentialPickPolicy and SmartReorder passthrough into BaselineMode dispatch.
 
-- [ ] 4.1 Write failing tests in existing `test_baseline_mode.py` or appropriate test file: `apply_with_skip` delegates to sequential pick policy when mode == 3; `apply_with_skip` passes through unchanged when mode == 4 (smart_reorder); mode constant `SMART_REORDER == 4` exists.
-- [ ] 4.2 Run tests — confirm RED.
-- [ ] 4.3 In `baseline_mode.py`: add `SMART_REORDER = 4`. Update `__init__` to create `SequentialPickPolicy` instead of `WaitModePolicy`. Add dispatch branch in `apply_with_skip` for mode 3 → sequential pick, mode 4 → passthrough. Remove old `_apply_overlap_zone_wait` method.
-- [ ] 4.4 Run full test suite — confirm GREEN. Commit.
+- [x] 4.1 Write failing tests in existing `test_baseline_mode.py` or appropriate test file: `apply_with_skip` delegates to sequential pick policy when mode == 3; `apply_with_skip` passes through unchanged when mode == 4 (smart_reorder); mode constant `SMART_REORDER == 4` exists.
+- [x] 4.2 Run tests — confirm RED.
+- [x] 4.3 In `baseline_mode.py`: add `SMART_REORDER = 4`. Update `__init__` to create `SequentialPickPolicy` instead of `WaitModePolicy`. Add dispatch branch in `apply_with_skip` for mode 3 → sequential pick, mode 4 → passthrough. Rename `_apply_overlap_zone_wait` → `_apply_sequential_pick`.
+- [x] 4.4 Run full test suite — confirm GREEN (473 passed). Commit.
 
 ## 5. RunController Orchestration [SEQUENTIAL]
 

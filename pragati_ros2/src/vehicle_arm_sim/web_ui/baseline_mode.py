@@ -14,6 +14,9 @@ Modes
                              at the same step (|j4_gap| < 0.10 m and both extending),
                              the winner arm is dispatched first, waits for completion,
                              then the loser arm is dispatched.
+4  SMART_REORDER          : pre-run reorder.  Before the step loop, a scheduler
+                             rearranges step pairings to maximize the minimum j4 gap.
+                             Per-step dispatch is always parallel (passthrough).
 """
 from __future__ import annotations
 
@@ -34,6 +37,7 @@ class BaselineMode:
     BASELINE_J5_BLOCK_SKIP = 1
     GEOMETRY_BLOCK = 2
     SEQUENTIAL_PICK = 3
+    SMART_REORDER = 4
 
     def __init__(self) -> None:
         self._wait_policy = SequentialPickPolicy()
@@ -48,7 +52,7 @@ class BaselineMode:
 
         Args:
             mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
-                  3=sequential_pick
+                  3=sequential_pick, 4=smart_reorder
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
 
@@ -71,15 +75,16 @@ class BaselineMode:
 
         Args:
             mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
-                  3=sequential_pick
+                  3=sequential_pick, 4=smart_reorder
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
             step_id: current step identifier (used by sequential_pick)
             arm_id: "arm1" or "arm2" (used by sequential_pick)
 
         Returns:
-            (applied_joints, skipped) where skipped is True only when
-            sequential_pick times out and skips a pick.
+            (applied_joints, skipped) where skipped is always False for all
+            current modes. Sequential pick never skips — RunController handles
+            dispatch ordering.
         """
         if mode == self.UNRESTRICTED:
             return own_joints, False
@@ -91,7 +96,12 @@ class BaselineMode:
             return self._apply_geometry_block(own_joints, peer_state), False
 
         if mode == self.SEQUENTIAL_PICK:
-            return self._apply_overlap_zone_wait(own_joints, peer_state, step_id, arm_id)
+            return self._apply_sequential_pick(own_joints, peer_state, step_id, arm_id)
+
+        if mode == self.SMART_REORDER:
+            # Smart reorder is handled at the RunController level (pre-run
+            # step reordering).  Per-step logic is pure passthrough.
+            return own_joints, False
 
         raise ValueError(f"Unknown mode: {mode!r}")
 
@@ -154,17 +164,18 @@ class BaselineMode:
 
         return own_joints
 
-    def _apply_overlap_zone_wait(
+    def _apply_sequential_pick(
         self,
         own_joints: dict,
         peer_state: "PeerStatePacket | None",
         step_id: int,
         arm_id: str,
     ) -> tuple[dict, bool]:
-        """Overlap-zone wait arbitration (Mode 3).
+        """Sequential pick arbitration (Mode 3).
 
-        Delegates to SequentialPickPolicy which tracks turn state.
-        Returns (applied_joints, skipped).
+        Delegates to SequentialPickPolicy which detects contention and
+        determines winner/loser.  Returns (applied_joints, skipped).
+        RunController handles the actual two-phase dispatch ordering.
         """
         peer_joints = None
         if peer_state is not None:
