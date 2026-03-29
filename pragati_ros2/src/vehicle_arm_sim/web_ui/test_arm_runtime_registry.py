@@ -1,11 +1,11 @@
-"""Tests for arm_runtime_registry module — dual-arm launch/runtime manifest."""
+"""Tests for arm_runtime_registry module — multi-arm launch/runtime manifest."""
 
 
 def test_arm_runtime_registry_can_be_imported():
     import arm_runtime_registry  # noqa: F401
 
 
-def test_arm_runtime_ids_is_tuple_with_arm1_and_arm2():
+def test_arm_runtime_ids_is_tuple_with_arm1_arm2_and_arm3():
     from arm_runtime_registry import ARM_RUNTIME_IDS
 
     assert isinstance(ARM_RUNTIME_IDS, tuple)

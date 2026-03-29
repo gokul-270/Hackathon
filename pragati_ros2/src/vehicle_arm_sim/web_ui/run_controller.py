@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Central run controller for the dual-arm cotton-picking simulation.
+"""Central run controller for the cotton-picking simulation.
 
-Coordinates a full replay run across both arm runtimes, applying mode logic,
+Coordinates a full replay run across the selected arm runtimes, applying mode logic,
 recording truth monitor observations, and generating a JSON run summary.
 """
 
@@ -32,7 +32,7 @@ def _noop_publish(topic: str, value: float) -> None:
 
 
 class RunController:
-    """Coordinates a full scenario replay run across both arm runtimes."""
+    """Coordinates a full scenario replay run across the selected arm runtimes."""
 
     def __init__(
         self,
