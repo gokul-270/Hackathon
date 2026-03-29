@@ -385,3 +385,98 @@ def test_run_controller_default_arm_pair_behavior_unchanged():
     summary = rc.run()
     arm_ids_in_reports = {r["arm_id"] for r in summary["step_reports"]}
     assert arm_ids_in_reports == {"arm1", "arm2"}
+
+
+# ---------------------------------------------------------------------------
+# Group 4: upfront cotton spawning in RunController
+# ---------------------------------------------------------------------------
+
+
+def test_run_controller_calls_spawn_fn_for_each_step_before_execution():
+    """RunController calls spawn_fn once per (step_id, arm_id) before any executor calls."""
+    from run_controller import RunController
+
+    spawn_calls = []
+    step_id_tracker = [None]
+
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+        spawn_calls.append((arm_id, step_id_tracker[0]))  # track order
+        return f"cotton_{len(spawn_calls)}"
+
+    # Use a 2-step scenario with both arms
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+        ]
+    }
+
+    rc = RunController(spawn_fn=mock_spawn)
+    rc.load_scenario(scenario)
+    rc.run()
+
+    # spawn must have been called exactly once per step-arm pair
+    assert len(spawn_calls) == 2
+
+
+def test_run_controller_passes_cotton_model_to_executor():
+    """RunController passes pre-spawned cotton model name to executor.execute()."""
+    from run_controller import RunController
+
+    spawned_names = {}
+    executor_cotton_models = []
+
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+        name = f"pre_cotton_{arm_id}"
+        spawned_names[arm_id] = name
+        return name
+
+    class MockExecutor:
+        def execute(self, arm_id, applied_joints, blocked, skipped,
+                    cam_x, cam_y, cam_z, j4_pos, cotton_model=""):
+            executor_cotton_models.append((arm_id, cotton_model))
+            return {"terminal_status": "completed", "pick_completed": True,
+                    "executed_in_gazebo": True}
+
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+        ]
+    }
+
+    rc = RunController(spawn_fn=mock_spawn, executor=MockExecutor())
+    rc.load_scenario(scenario)
+    rc.run()
+
+    # executor should have received the cotton_model name from spawn
+    assert len(executor_cotton_models) == 1
+    assert executor_cotton_models[0][1] == "pre_cotton_arm1"
+
+
+def test_run_controller_upfront_spawn_for_both_arms_in_paired_scenario():
+    """For a paired scenario, spawn_fn is called for both arm1 and arm2 steps."""
+    from run_controller import RunController
+
+    spawned_arm_ids = []
+
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+        spawned_arm_ids.append(arm_id)
+        return f"cotton_{arm_id}"
+
+    rc = RunController(spawn_fn=mock_spawn)
+    rc.load_scenario(_make_same_step_paired_scenario())
+    rc.run()
+
+    assert "arm1" in spawned_arm_ids
+    assert "arm2" in spawned_arm_ids
+    assert len(spawned_arm_ids) == 2  # one per arm at step 0
+
+
+def test_run_controller_default_no_spawn_fn_uses_noop():
+    """Default RunController (no spawn_fn) does not raise and runs normally."""
+    from run_controller import RunController
+
+    rc = RunController()  # no spawn_fn
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()  # must not raise
+    assert summary["total_steps"] == 1

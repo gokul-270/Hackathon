@@ -13,7 +13,7 @@ from arm_runtime import ArmRuntime
 from baseline_mode import BaselineMode
 from json_reporter import JsonReporter, StepReport
 from peer_transport import LocalPeerTransport
-from run_step_executor import RunStepExecutor
+from run_step_executor import _noop_spawn, _noop_remove, RunStepExecutor
 from scenario_json import ScenarioStep
 from truth_monitor import TruthMonitor
 
@@ -39,6 +39,8 @@ class RunController:
         mode: int = BaselineMode.UNRESTRICTED,
         executor: Optional[object] = None,
         arm_pair: tuple = ("arm1", "arm2"),
+        spawn_fn=None,
+        remove_fn=None,
     ) -> None:
         """
         Args:
@@ -50,6 +52,12 @@ class RunController:
             arm_pair: Tuple of (primary_arm_id, secondary_arm_id). Scenario "arm1" slots
                       are loaded onto primary_arm; "arm2" slots onto secondary_arm.
                       Default ("arm1", "arm2") preserves existing behaviour.
+            spawn_fn: Callable(arm_id, cam_x, cam_y, cam_z, j4_pos) -> model_name.
+                      Called upfront for every step before execution begins.
+                      Defaults to _noop_spawn (no-op, backward-compatible).
+            remove_fn: Callable(model_name) -> None.
+                       Passed through to a default executor when no executor is injected.
+                       Defaults to _noop_remove.
         """
         self._mode = mode
         self._primary_id, self._secondary_id = arm_pair
@@ -74,6 +82,8 @@ class RunController:
         self._baseline = BaselineMode()
         self._transport = LocalPeerTransport()
         self._last_summary: dict = {}
+        self._spawn_fn = spawn_fn if spawn_fn is not None else _noop_spawn
+        self._remove_fn = remove_fn if remove_fn is not None else _noop_remove
         if executor is None:
             # No-op executor: no real Gazebo publishing, no real delays.
             self._executor = RunStepExecutor(
@@ -155,6 +165,13 @@ class RunController:
             step_map.setdefault(step.step_id, {})[self._secondary_id] = step
 
         total_steps = len(step_map)
+
+        # Upfront cotton spawn: spawn once per (step_id, arm_id) before any execution begins.
+        cotton_models: dict = {}
+        for step_id, arm_steps in step_map.items():
+            for arm_id, step in arm_steps.items():
+                model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
+                cotton_models[(step_id, arm_id)] = model_name
 
         # Track "previous applied joints" per arm to use as current_joints
         prev_joints: dict[str, dict] = {
@@ -240,6 +257,7 @@ class RunController:
                     cam_y=own_step.cam_y,
                     cam_z=own_step.cam_z,
                     j4_pos=own_applied["j4"],
+                    cotton_model=cotton_models.get((step_id, arm_id), ""),
                 )
 
                 self._reporter.add_step(
