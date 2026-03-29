@@ -105,10 +105,10 @@ Rewrite/update the 16 test files that reference old Mode 3 behavior. Adapt mode 
 
 Full system verification — run all tests and verify the UI in a browser.
 
-- [ ] 9.1 Run full test suite: `python3 -m pytest -k "not test_run_report_markdown"` — all tests green.
-- [ ] 9.2 Start the backend server and open the UI in Playwright.
-- [ ] 9.3 Verify mode dropdown shows 5 options (0-4) with correct labels.
-- [ ] 9.4 Run a scenario in Mode 3 (Sequential Pick) — verify SSE log shows sequential dispatch at contention steps.
-- [ ] 9.5 Run a scenario in Mode 4 (Smart Reorder) — verify SSE log shows reordered steps and parallel dispatch.
-- [ ] 9.6 Take screenshot evidence of five-mode dropdown and run results.
-- [ ] 9.7 Final commit if any Playwright-driven fixes were needed.
+- [x] 9.1 Run full test suite: `python3 -m pytest -k "not test_run_report_markdown"` — all tests green.
+- [x] 9.2 Start the backend server and open the UI in Playwright.
+- [x] 9.3 Verify mode dropdown shows 5 options (0-4) with correct labels.
+- [x] 9.4 Run a scenario in Mode 3 (Sequential Pick) — verify SSE log shows sequential dispatch at contention steps.
+- [x] 9.5 Run a scenario in Mode 4 (Smart Reorder) — verify SSE log shows reordered steps and parallel dispatch.
+- [x] 9.6 Take screenshot evidence of five-mode dropdown and run results.
+- [x] 9.7 Final commit if any Playwright-driven fixes were needed.
