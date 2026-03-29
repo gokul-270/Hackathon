@@ -148,18 +148,20 @@ def test_run_start_triggers_executor_calls_through_controller():
 
     publish_calls = []
 
-    def mock_popen(cmd, **kwargs):
+    def mock_run(cmd, **kwargs):
         if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
             topic = cmd[3]
             val_str = cmd[7].replace("data: ", "")
             publish_calls.append((topic, float(val_str)))
+        return type("CompletedProcess", (), {"returncode": 0})()
 
-    # Patch subprocess.Popen + spawn/sleep so no real Gazebo I/O occurs
+    # Patch subprocess.run + spawn/sleep so no real Gazebo I/O occurs
     with (
-        patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
+        patch("testing_backend.subprocess.run", side_effect=mock_run),
         patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
         patch("testing_backend._run_remove_cotton"),
         patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        patch("testing_backend.time.sleep", side_effect=lambda s: None),
     ):
         fresh_client = TestClient(tb.app)
         resp = fresh_client.post(
@@ -187,11 +189,12 @@ def test_run_start_does_not_publish_for_blocked_steps():
 
     publish_calls = []
 
-    def mock_popen(cmd, **kwargs):
+    def mock_run(cmd, **kwargs):
         if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
             topic = cmd[3]
             val_str = cmd[7].replace("data: ", "")
             publish_calls.append((topic, float(val_str)))
+        return type("CompletedProcess", (), {"returncode": 0})()
 
     # Close j4 scenario under baseline mode → j5 blocked → executor should not publish
     close_j4_blocked_scenario = {
@@ -202,10 +205,11 @@ def test_run_start_does_not_publish_for_blocked_steps():
     }
 
     with (
-        patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
+        patch("testing_backend.subprocess.run", side_effect=mock_run),
         patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
         patch("testing_backend._run_remove_cotton"),
         patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        patch("testing_backend.time.sleep", side_effect=lambda s: None),
     ):
         fresh_client = TestClient(tb.app)
         resp = fresh_client.post(

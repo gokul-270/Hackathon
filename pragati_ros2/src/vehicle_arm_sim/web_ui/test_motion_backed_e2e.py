@@ -399,3 +399,162 @@ class TestTriplePublish:
             f"_gz_publish must use subprocess.run, not Popen; "
             f"got {len(popen_gz_calls)} Popen calls to gz topic"
         )
+
+
+# ---------------------------------------------------------------------------
+# Task 5 — E-STOP integration in testing_backend (tasks 5.1–5.4)
+# ---------------------------------------------------------------------------
+
+_ESTOP_MOCK_PATCHES = dict(
+    subprocess_run=("testing_backend.subprocess.run",
+                    type("CompletedProcess", (), {"returncode": 0})()),
+    subprocess_popen=("testing_backend.subprocess.Popen", None),
+    spawn=("testing_backend._run_spawn_cotton", "mock_cotton"),
+    remove=("testing_backend._run_remove_cotton", None),
+    run_sleep=("testing_backend._run_sleep", None),
+    time_sleep=("testing_backend.time.sleep", None),
+)
+
+
+def _patched_run(scenario, mode=0):
+    """Helper: POST /api/run/start with all Gazebo side-effects patched out."""
+    tb._current_run_result = None
+    with (
+        patch(
+            "testing_backend.subprocess.run",
+            return_value=type("CompletedProcess", (), {"returncode": 0})(),
+        ),
+        patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+        patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+        patch("testing_backend._run_remove_cotton"),
+        patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        patch("testing_backend.time.sleep", side_effect=lambda s: None),
+    ):
+        client = TestClient(app)
+        resp = client.post("/api/run/start", json={"mode": mode, "scenario": scenario})
+    return resp, client
+
+
+class TestEstopIntegration:
+    """RED → GREEN tests for E-STOP wiring in testing_backend (tasks 5.1–5.4)."""
+
+    def test_estop_event_is_cleared_at_start_of_new_run(self):
+        """_estop_event MUST be cleared at the start of /api/run/start so a prior E-STOP
+        does not bleed into the next run."""
+        # Pre-arm the event as if a prior E-STOP fired
+        tb._estop_event.set()  # will AttributeError until _estop_event is added → RED
+        resp, _ = _patched_run(_SOLO_SCENARIO, mode=0)
+        assert resp.status_code == 200
+        # A normal run should complete without estop_aborted steps
+        steps = tb._current_run_result.get("steps", []) if tb._current_run_result else []
+        estop_steps = [s for s in steps if s.get("terminal_status") == "estop_aborted"]
+        assert estop_steps == [], (
+            f"_estop_event was NOT cleared at run start; {len(estop_steps)} steps aborted: {estop_steps}"
+        )
+
+    def test_post_estop_sets_estop_event(self):
+        """POST /api/estop MUST set the module-level _estop_event so RunStepExecutor
+        can observe it via the estop_check callable."""
+        tb._estop_event.clear()  # will AttributeError until _estop_event is added → RED
+        with (
+            patch("testing_backend.estop_node") as mock_node,
+        ):
+            mock_node.execute_estop.return_value = True
+            client = TestClient(app)
+            resp = client.post("/api/estop")
+        assert resp.status_code == 200
+        assert tb._estop_event.is_set(), (
+            "POST /api/estop must call _estop_event.set() so in-flight runs can observe it"
+        )
+
+    def test_post_estop_returns_200_while_run_is_in_progress(self):
+        """POST /api/estop MUST return HTTP 200 even while /api/run/start is blocking.
+        This requires asyncio.to_thread() so the event loop is not blocked."""
+        import threading
+
+        # We need _estop_event to exist to be able to signal across threads
+        assert hasattr(tb, "_estop_event"), (
+            "_estop_event not found in testing_backend — add it (task 5.5)"
+        )
+
+        estop_result = {}
+        run_started = threading.Event()
+
+        def slow_sleep(s):
+            """First call signals run has started, then blocks briefly."""
+            run_started.set()
+
+        tb._current_run_result = None
+        tb._estop_event.clear()
+
+        def do_run():
+            with (
+                patch(
+                    "testing_backend.subprocess.run",
+                    return_value=type("CompletedProcess", (), {"returncode": 0})(),
+                ),
+                patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+                patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+                patch("testing_backend._run_remove_cotton"),
+                patch("testing_backend._run_sleep", side_effect=slow_sleep),
+                patch("testing_backend.time.sleep", side_effect=lambda s: None),
+            ):
+                client = TestClient(app)
+                client.post("/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO})
+
+        run_thread = threading.Thread(target=do_run)
+        run_thread.start()
+        run_started.wait(timeout=5.0)
+
+        # While the run is in progress, POST /api/estop must not block
+        with patch("testing_backend.estop_node") as mock_node:
+            mock_node.execute_estop.return_value = True
+            client2 = TestClient(app)
+            resp = client2.post("/api/estop")
+
+        estop_result["status"] = resp.status_code
+        run_thread.join(timeout=10.0)
+
+        assert estop_result["status"] == 200, (
+            f"POST /api/estop returned {estop_result['status']} — "
+            "event loop is blocked (asyncio.to_thread not used in run_start)"
+        )
+
+    def test_preset_estop_event_causes_estop_aborted_step(self):
+        """If _estop_event is set while a run is in progress (after run start clears it),
+        at least one step MUST have terminal_status='estop_aborted'.
+
+        We simulate this by replacing _run_sleep with a callable that sets the event
+        on the first call — mimicking a concurrent /api/estop arriving mid-run.
+        """
+        tb._estop_event.clear()  # ensure clean state at start
+        call_count = [0]
+
+        def sleep_that_fires_estop(s):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                tb._estop_event.set()
+
+        tb._current_run_result = None
+        with (
+            patch(
+                "testing_backend.subprocess.run",
+                return_value=type("CompletedProcess", (), {"returncode": 0})(),
+            ),
+            patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=sleep_that_fires_estop),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        steps = tb._current_run_result.get("steps", []) if tb._current_run_result else []
+        estop_steps = [s for s in steps if s.get("terminal_status") == "estop_aborted"]
+        assert len(estop_steps) >= 1, (
+            f"Expected at least one estop_aborted step when _estop_event fires mid-run; "
+            f"got steps: {steps}"
+        )

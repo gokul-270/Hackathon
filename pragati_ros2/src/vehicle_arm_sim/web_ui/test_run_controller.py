@@ -606,3 +606,54 @@ def test_mode_logic_runs_before_executor_dispatch():
     assert len(execute_events) == 2, (
         f"Expected 2 execute() calls for paired step; got {len(execute_events)}: {events}"
     )
+
+
+def test_completed_steps_retain_status_after_estop_fires_on_later_step():
+    """Steps that already completed before an E-STOP must retain their original
+    terminal_status ('completed'), not be overwritten with 'estop_aborted'.
+
+    Task 5.9: 3 sequential solo steps; E-STOP fires during step 3 only.
+    Steps 1 and 2 must show 'completed'.
+    """
+    from run_controller import RunController
+
+    call_count = [0]
+
+    class _EstopOnThirdCallExecutor:
+        """Returns 'completed' for first 2 execute() calls, 'estop_aborted' for the 3rd."""
+
+        def execute(self, arm_id, applied_joints, **kwargs):
+            call_count[0] += 1
+            if call_count[0] >= 3:
+                return {"terminal_status": "estop_aborted", "pick_completed": False, "executed_in_gazebo": False}
+            return {"terminal_status": "completed", "pick_completed": True, "executed_in_gazebo": True}
+
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+            {"step_id": 2, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+        ]
+    }
+
+    executor = _EstopOnThirdCallExecutor()
+    rc = RunController(executor=executor)
+    rc.load_scenario(scenario)
+    summary = rc.run()
+
+    reports = summary["step_reports"]
+    assert len(reports) == 3, f"Expected 3 step reports, got {len(reports)}: {reports}"
+
+    step0_status = reports[0]["terminal_status"]
+    step1_status = reports[1]["terminal_status"]
+    step2_status = reports[2]["terminal_status"]
+
+    assert step0_status == "completed", (
+        f"Step 0 must retain 'completed' after later E-STOP; got '{step0_status}'"
+    )
+    assert step1_status == "completed", (
+        f"Step 1 must retain 'completed' after later E-STOP; got '{step1_status}'"
+    )
+    assert step2_status == "estop_aborted", (
+        f"Step 2 (where E-STOP fires) must be 'estop_aborted'; got '{step2_status}'"
+    )

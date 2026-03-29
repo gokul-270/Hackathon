@@ -32,7 +32,11 @@ def _no_gz_side_effects():
         patch("testing_backend._run_sleep", side_effect=lambda s: None),
         patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
         patch("testing_backend._run_remove_cotton"),
-        patch("testing_backend.subprocess.Popen"),
+        patch(
+            "testing_backend.subprocess.run",
+            return_value=type("CompletedProcess", (), {"returncode": 0})(),
+        ),
+        patch("testing_backend.time.sleep", side_effect=lambda s: None),
     ):
         yield
 

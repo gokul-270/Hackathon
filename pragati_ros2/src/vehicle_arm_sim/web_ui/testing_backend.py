@@ -15,6 +15,7 @@ Vehicle & arm CONTROL is handled externally via:
 """
 
 import argparse
+import asyncio
 import logging
 import math
 import os
@@ -88,6 +89,7 @@ _TMP_URDF_PATH = Path("/tmp/vehicle_arm_testing.urdf")
 # ---------------------------------------------------------------------------
 _current_run_result: dict | None = None
 _run_state: str = "idle"  # "idle" | "running" | "complete"
+_estop_event: threading.Event = threading.Event()  # set by /api/estop; cleared at run start
 
 
 # ---------------------------------------------------------------------------
@@ -547,6 +549,7 @@ async def emergency_stop():
     Falls back to gz topic CLI if rclpy is unavailable.
     """
     ok = estop_node.execute_estop()
+    _estop_event.set()
     return {
         "status": "ok" if ok else "partial",
         "message": "E-STOP: all commands zeroed" if ok else "E-STOP: fallback used",
@@ -1146,6 +1149,7 @@ async def run_start(req: RunStartRequest):
         raise HTTPException(status_code=422, detail=f"Invalid arm_pair {req.arm_pair}")
 
     _run_state = "running"
+    _estop_event.clear()
     run_id = str(uuid.uuid4())
 
     def _gz_publish(topic: str, value: float) -> None:
@@ -1165,6 +1169,7 @@ async def run_start(req: RunStartRequest):
         publish_fn=_gz_publish,
         remove_fn=_run_remove_cotton,
         sleep_fn=_run_sleep,
+        estop_check=_estop_event.is_set,
     )
     controller = RunController(
         req.mode,
@@ -1174,7 +1179,7 @@ async def run_start(req: RunStartRequest):
         remove_fn=_run_remove_cotton,
     )
     controller.load_scenario(req.scenario)
-    summary = controller.run()
+    summary = await asyncio.to_thread(controller.run)
     json_report_str = controller.get_json_report()
 
     import json as _json
