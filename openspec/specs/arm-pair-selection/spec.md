@@ -1,12 +1,8 @@
-# Spec: Arm Pair Selection
+# arm-pair-selection Specification
 
 ## Purpose
-
-Defines how the operator selects which two arms participate in a collision avoidance
-scenario run, and how the backend validates and applies that selection.
-
+TBD - created by archiving change arm-pair-selector-upfront-cotton. Update Purpose after archive.
 ## Requirements
-
 ### Requirement: Operator selects arm pair before run
 
 The UI SHALL provide a dropdown that lets the operator choose which two arms participate
@@ -77,3 +73,4 @@ the selected secondary arm. Existing scenario files require no modification.
 - **WHEN** the operator starts a run with arm_pair=["arm2", "arm3"]
 - **THEN** arm1 steps are executed by arm2 (remapped to primary)
 - **AND** arm2 steps are executed by arm3 (remapped to secondary)
+
