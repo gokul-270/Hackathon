@@ -34,6 +34,7 @@ from fk_chain import ARM_CONFIGS
 COMPLETED = "completed"
 BLOCKED = "blocked"
 SKIPPED = "skipped"
+ESTOP_ABORTED = "estop_aborted"
 
 # Pick animation timing (seconds) — matches _execute_pick_sequence in testing_backend
 _T_J4 = 0.8
@@ -67,6 +68,7 @@ class RunStepExecutor:
         spawn_fn: Optional[Callable[[str, float, float, float, float], str]] = None,
         remove_fn: Optional[Callable[[str], None]] = None,
         sleep_fn: Optional[Callable[[float], None]] = None,
+        estop_check: Optional[Callable[[], bool]] = None,
     ) -> None:
         """
         Args:
@@ -78,11 +80,15 @@ class RunStepExecutor:
                         Defaults to a no-op.
             sleep_fn:   Callable(seconds) used between animation steps.
                         Defaults to time.sleep; inject a no-op for fast unit tests.
+            estop_check: Optional callable() -> bool. If provided, checked after each
+                        sleep_fn call. When it returns True, zeros are published to all
+                        3 arm topics and execute() returns estop_aborted immediately.
         """
         self._publish_fn = publish_fn
         self._spawn_fn = spawn_fn if spawn_fn is not None else _noop_spawn
         self._remove_fn = remove_fn if remove_fn is not None else _noop_remove
         self._sleep_fn = sleep_fn if sleep_fn is not None else time.sleep
+        self._estop_check = estop_check
 
     def execute(
         self,
@@ -133,6 +139,24 @@ class RunStepExecutor:
         j4_topic = arm_cfg["j4_topic"]
         j5_topic = arm_cfg["j5_topic"]
 
+        def _estop_abort_result():
+            """Publish zeros to all 3 arm topics and return estop_aborted outcome."""
+            self._publish_fn(j3_topic, 0.0)
+            self._publish_fn(j4_topic, 0.0)
+            self._publish_fn(j5_topic, 0.0)
+            return {
+                "terminal_status": ESTOP_ABORTED,
+                "pick_completed": False,
+                "executed_in_gazebo": False,
+            }
+
+        def _sleep_and_check(duration: float):
+            """Sleep and return estop abort dict if E-STOP fired, else None."""
+            self._sleep_fn(duration)
+            if self._estop_check is not None and self._estop_check():
+                return _estop_abort_result()
+            return None
+
         # 1. Spawn cotton at the cam position (or use pre-spawned model)
         if cotton_model:
             model_name = cotton_model
@@ -141,22 +165,34 @@ class RunStepExecutor:
 
         # 2. Run timed pick animation: j4 → j3 → j5 → retract → home
         self._publish_fn(j4_topic, applied_joints["j4"])
-        self._sleep_fn(_T_J4)
+        result = _sleep_and_check(_T_J4)
+        if result is not None:
+            return result
 
         self._publish_fn(j3_topic, applied_joints["j3"])
-        self._sleep_fn(_T_J3)
+        result = _sleep_and_check(_T_J3)
+        if result is not None:
+            return result
 
         self._publish_fn(j5_topic, applied_joints["j5"])
-        self._sleep_fn(_T_J5_EXTEND)
+        result = _sleep_and_check(_T_J5_EXTEND)
+        if result is not None:
+            return result
 
         self._publish_fn(j5_topic, 0.0)
-        self._sleep_fn(_T_J5_RETRACT)
+        result = _sleep_and_check(_T_J5_RETRACT)
+        if result is not None:
+            return result
 
         self._publish_fn(j3_topic, 0.0)
-        self._sleep_fn(_T_J3_HOME)
+        result = _sleep_and_check(_T_J3_HOME)
+        if result is not None:
+            return result
 
         self._publish_fn(j4_topic, 0.0)
-        self._sleep_fn(_T_J4_HOME)
+        result = _sleep_and_check(_T_J4_HOME)
+        if result is not None:
+            return result
 
         # 3. Remove cotton after animation completes
         self._remove_fn(model_name)

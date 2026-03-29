@@ -591,3 +591,112 @@ def test_executor_with_cotton_model_and_blocked_does_not_call_remove():
     )
 
     assert remove_calls == []
+
+
+# ---------------------------------------------------------------------------
+# Task 3 — E-STOP support (estop_check param)
+# ---------------------------------------------------------------------------
+
+
+def test_executor_estop_check_always_true_returns_estop_aborted():
+    """RunStepExecutor with estop_check=lambda: True SHALL return estop_aborted immediately."""
+    from run_step_executor import RunStepExecutor
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: None,
+        sleep_fn=lambda s: None,
+        estop_check=lambda: True,
+    )
+    outcome = executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+    )
+    assert outcome["terminal_status"] == "estop_aborted"
+    assert outcome["pick_completed"] is False
+    assert outcome["executed_in_gazebo"] is False
+
+
+@pytest.mark.parametrize("fire_after_sleep_n", [1, 2, 3, 4, 5, 6])
+def test_executor_estop_fires_at_nth_sleep_returns_estop_aborted(fire_after_sleep_n):
+    """E-STOP check after the Nth sleep must return estop_aborted for all 6 phase boundaries."""
+    from run_step_executor import RunStepExecutor
+
+    sleep_count = [0]
+
+    def counting_sleep(s):
+        sleep_count[0] += 1
+
+    def estop_check():
+        return sleep_count[0] >= fire_after_sleep_n
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: None,
+        sleep_fn=counting_sleep,
+        estop_check=estop_check,
+    )
+    outcome = executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+    )
+    assert outcome["terminal_status"] == "estop_aborted", (
+        f"Expected estop_aborted when E-STOP fires after sleep {fire_after_sleep_n}, "
+        f"got {outcome['terminal_status']}"
+    )
+    assert outcome["pick_completed"] is False
+    assert outcome["executed_in_gazebo"] is False
+
+
+def test_executor_estop_publishes_zeros_to_arm2_topics_on_abort():
+    """When E-STOP fires mid-animation on arm2, zeros must be published to all 3 arm2 topics."""
+    from run_step_executor import RunStepExecutor
+
+    published = []
+    sleep_count = [0]
+
+    def counting_sleep(s):
+        sleep_count[0] += 1
+
+    def estop_check():
+        return sleep_count[0] >= 2  # fire after 2nd sleep (mid-animation)
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: published.append((t, v)),
+        sleep_fn=counting_sleep,
+        estop_check=estop_check,
+    )
+    executor.execute(
+        arm_id="arm2",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+    )
+
+    arm2_zero_publishes = [
+        (t, v) for t, v in published
+        if t in ("/joint3_copy_cmd", "/joint4_copy_cmd", "/joint5_copy_cmd") and v == 0.0
+    ]
+    published_zero_topics = {t for t, v in arm2_zero_publishes}
+    assert "/joint3_copy_cmd" in published_zero_topics, (
+        f"Expected zero publish to /joint3_copy_cmd on E-STOP abort; got {published}"
+    )
+    assert "/joint4_copy_cmd" in published_zero_topics, (
+        f"Expected zero publish to /joint4_copy_cmd on E-STOP abort; got {published}"
+    )
+    assert "/joint5_copy_cmd" in published_zero_topics, (
+        f"Expected zero publish to /joint5_copy_cmd on E-STOP abort; got {published}"
+    )
+
+
+def test_executor_without_estop_check_completes_normally():
+    """RunStepExecutor without estop_check must complete normally (backward compat)."""
+    from run_step_executor import RunStepExecutor
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: None,
+        sleep_fn=lambda s: None,
+        # no estop_check
+    )
+    outcome = executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+    )
+    assert outcome["terminal_status"] == "completed"
+    assert outcome["pick_completed"] is True

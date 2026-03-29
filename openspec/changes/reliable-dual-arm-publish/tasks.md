@@ -28,12 +28,12 @@
 
 ## 3. RunStepExecutor E-STOP support [PARALLEL with 4]
 
-- [ ] 3.1 **RED** — In `test_run_step_executor.py`, write a test that constructs `RunStepExecutor` with `estop_check=lambda: True` and verifies `execute()` returns `terminal_status="estop_aborted"` with `pick_completed=False`; confirm it fails
-- [ ] 3.2 **RED** — Write a parametrized test covering all 6 phase boundaries (after each sleep): set `estop_check` to fire after the Nth sleep and assert `estop_aborted` is returned; confirm all 6 cases fail
-- [ ] 3.3 **RED** — Write a test that when E-STOP fires mid-animation on arm2, zeros are published to `/joint3_copy_cmd`, `/joint4_copy_cmd`, `/joint5_copy_cmd` (the arm2 topics); confirm it fails
-- [ ] 3.4 **RED** — Write a test that constructing `RunStepExecutor` without `estop_check` defaults to never aborting (run completes normally); confirm it fails only if param is missing
-- [ ] 3.5 **GREEN** — Add `estop_check: Optional[Callable[[], bool]] = None` param to `RunStepExecutor.__init__`; store as `self._estop_check`; after each `self._sleep_fn()` call in `execute()`, check `self._estop_check()` and if True, publish zeros to all 3 arm topics and return `{"terminal_status": "estop_aborted", "pick_completed": False, "executed_in_gazebo": False}`
-- [ ] 3.6 **REFACTOR** — Run `pytest test_run_step_executor.py -x`; confirm all new + existing tests pass; commit: `feat: add estop_check to RunStepExecutor with estop_aborted outcome`
+- [x] 3.1 **RED** — In `test_run_step_executor.py`, write a test that constructs `RunStepExecutor` with `estop_check=lambda: True` and verifies `execute()` returns `terminal_status="estop_aborted"` with `pick_completed=False`; confirm it fails
+- [x] 3.2 **RED** — Write a parametrized test covering all 6 phase boundaries (after each sleep): set `estop_check` to fire after the Nth sleep and assert `estop_aborted` is returned; confirm all 6 cases fail
+- [x] 3.3 **RED** — Write a test that when E-STOP fires mid-animation on arm2, zeros are published to `/joint3_copy_cmd`, `/joint4_copy_cmd`, `/joint5_copy_cmd` (the arm2 topics); confirm it fails
+- [x] 3.4 **RED** — Write a test that constructing `RunStepExecutor` without `estop_check` defaults to never aborting (run completes normally); confirm it fails only if param is missing
+- [x] 3.5 **GREEN** — Add `estop_check: Optional[Callable[[], bool]] = None` param to `RunStepExecutor.__init__`; store as `self._estop_check`; after each `self._sleep_fn()` call in `execute()`, check `self._estop_check()` and if True, publish zeros to all 3 arm topics and return `{"terminal_status": "estop_aborted", "pick_completed": False, "executed_in_gazebo": False}`
+- [x] 3.6 **REFACTOR** — Run `pytest test_run_step_executor.py -x`; confirm all new + existing tests pass; commit: `feat: add estop_check to RunStepExecutor with estop_aborted outcome`
 
 ## 4. RunController parallel animation [PARALLEL with 3]
 
