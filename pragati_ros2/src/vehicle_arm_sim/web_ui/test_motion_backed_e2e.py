@@ -405,17 +405,6 @@ class TestTriplePublish:
 # Task 5 — E-STOP integration in testing_backend (tasks 5.1–5.4)
 # ---------------------------------------------------------------------------
 
-_ESTOP_MOCK_PATCHES = dict(
-    subprocess_run=("testing_backend.subprocess.run",
-                    type("CompletedProcess", (), {"returncode": 0})()),
-    subprocess_popen=("testing_backend.subprocess.Popen", None),
-    spawn=("testing_backend._run_spawn_cotton", "mock_cotton"),
-    remove=("testing_backend._run_remove_cotton", None),
-    run_sleep=("testing_backend._run_sleep", None),
-    time_sleep=("testing_backend.time.sleep", None),
-)
-
-
 def _patched_run(scenario, mode=0):
     """Helper: POST /api/run/start with all Gazebo side-effects patched out."""
     tb._current_run_result = None
@@ -557,4 +546,51 @@ class TestEstopIntegration:
         assert len(estop_steps) >= 1, (
             f"Expected at least one estop_aborted step when _estop_event fires mid-run; "
             f"got steps: {steps}"
+        )
+
+    def test_run_status_returns_200_while_run_is_in_progress(self):
+        """GET /api/run/status MUST return HTTP 200 while /api/run/start is executing.
+        With asyncio.to_thread, the event loop is unblocked for status requests mid-run."""
+        import threading
+
+        assert hasattr(tb, "_estop_event"), "_estop_event not in testing_backend"
+
+        run_started = threading.Event()
+
+        def slow_sleep(s):
+            run_started.set()
+
+        tb._current_run_result = None
+        tb._estop_event.clear()
+
+        status_result = {}
+
+        def do_run():
+            with (
+                patch(
+                    "testing_backend.subprocess.run",
+                    return_value=type("CompletedProcess", (), {"returncode": 0})(),
+                ),
+                patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+                patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+                patch("testing_backend._run_remove_cotton"),
+                patch("testing_backend._run_sleep", side_effect=slow_sleep),
+                patch("testing_backend.time.sleep", side_effect=lambda s: None),
+            ):
+                client = TestClient(app)
+                client.post("/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO})
+
+        run_thread = threading.Thread(target=do_run)
+        run_thread.start()
+        run_started.wait(timeout=5.0)
+
+        client2 = TestClient(app)
+        resp = client2.get("/api/run/status")
+        status_result["status"] = resp.status_code
+
+        run_thread.join(timeout=10.0)
+
+        assert status_result["status"] == 200, (
+            f"GET /api/run/status returned {status_result['status']} while run in progress — "
+            "event loop may be blocked (asyncio.to_thread not working)"
         )

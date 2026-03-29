@@ -46,18 +46,18 @@
 
 ## 5. testing_backend.py integration [SEQUENTIAL]
 
-- [ ] 5.1 **RED** — In `test_motion_backed_e2e.py`, write a test via `TestClient` that POSTing `/api/run/start` twice in a row results in a cleared E-STOP flag at the start of the second run (i.e., a prior E-STOP does not bleed into the next run); confirm it fails
-- [ ] 5.2 **RED** — Write a test that POSTing `/api/estop` sets `_estop_event` (inspect via a test endpoint or monkeypatch); confirm it fails
-- [ ] 5.3 **RED** — Write a test that when a run is in progress, a concurrent POST to `/api/estop` receives an HTTP 200 response (i.e., the event loop is not blocked); use `asyncio.to_thread` + `asyncio.gather` in the test to exercise concurrency; confirm it fails
-- [ ] 5.4 **RED** — Write a test that when `_estop_event` is pre-set before `/api/run/start`, the run report includes at least one step with `terminal_status="estop_aborted"`; confirm it fails
-- [ ] 5.9 **RED** — Write a test (in `test_run_controller.py`) that when E-STOP fires at step 3 of a 3-step run, step reports for steps 1 and 2 retain their original `terminal_status` values (`completed`, `blocked`, etc.); confirm it fails
-- [ ] 5.5 **GREEN** — Add `_estop_event = threading.Event()` at module level in `testing_backend.py`
-- [ ] 5.6 **GREEN** — In `/api/estop` handler, add `_estop_event.set()` after `estop_node.execute_estop()`
-- [ ] 5.7 **GREEN** — In `/api/run/start`: (a) call `_estop_event.clear()` before creating executor; (b) pass `estop_check=_estop_event.is_set` to `RunStepExecutor`; (c) change `summary = controller.run()` to `summary = await asyncio.to_thread(controller.run)`
-- [ ] 5.8 **REFACTOR** — Run `pytest test_motion_backed_e2e.py -x -k "not test_run_report_markdown"`; confirm all new + existing tests pass; commit: `feat: wire E-STOP threading.Event and asyncio.to_thread in testing_backend`
+- [x] 5.1 **RED** — In `test_motion_backed_e2e.py`, write a test via `TestClient` that POSTing `/api/run/start` twice in a row results in a cleared E-STOP flag at the start of the second run (i.e., a prior E-STOP does not bleed into the next run); confirm it fails
+- [x] 5.2 **RED** — Write a test that POSTing `/api/estop` sets `_estop_event` (inspect via a test endpoint or monkeypatch); confirm it fails
+- [x] 5.3 **RED** — Write a test that when a run is in progress, a concurrent POST to `/api/estop` receives an HTTP 200 response (i.e., the event loop is not blocked); use `asyncio.to_thread` + `asyncio.gather` in the test to exercise concurrency; confirm it fails
+- [x] 5.4 **RED** — Write a test that when `_estop_event` is pre-set before `/api/run/start`, the run report includes at least one step with `terminal_status="estop_aborted"`; confirm it fails
+- [x] 5.9 **RED** — Write a test (in `test_run_controller.py`) that when E-STOP fires at step 3 of a 3-step run, step reports for steps 1 and 2 retain their original `terminal_status` values (`completed`, `blocked`, etc.); confirm it fails
+- [x] 5.5 **GREEN** — Add `_estop_event = threading.Event()` at module level in `testing_backend.py`
+- [x] 5.6 **GREEN** — In `/api/estop` handler, add `_estop_event.set()` after `estop_node.execute_estop()`
+- [x] 5.7 **GREEN** — In `/api/run/start`: (a) call `_estop_event.clear()` before creating executor; (b) pass `estop_check=_estop_event.is_set` to `RunStepExecutor`; (c) change `summary = controller.run()` to `summary = await asyncio.to_thread(controller.run)`
+- [x] 5.8 **REFACTOR** — Run `pytest test_motion_backed_e2e.py -x -k "not test_run_report_markdown"`; confirm all new + existing tests pass; commit: `feat: wire E-STOP threading.Event and asyncio.to_thread in testing_backend`
 
 ## 6. Final verification [SEQUENTIAL]
 
-- [ ] 6.1 Run full test suite: `pytest pragati_ros2/src/vehicle_arm_sim/web_ui/ -k "not test_run_report_markdown" -q`; confirm no regressions
-- [ ] 6.2 Verify test count is at baseline + new tests (baseline: 378 passed)
-- [ ] 6.3 Dispatch `openspec-verify-change` subagent; fix any CRITICAL issues found
+- [x] 6.1 Run full test suite: `pytest pragati_ros2/src/vehicle_arm_sim/web_ui/ -k "not test_run_report_markdown" -q`; confirm no regressions
+- [x] 6.2 Verify test count is at baseline + new tests (baseline: 378 passed)
+- [x] 6.3 Dispatch `openspec-verify-change` subagent; fix any CRITICAL issues found
