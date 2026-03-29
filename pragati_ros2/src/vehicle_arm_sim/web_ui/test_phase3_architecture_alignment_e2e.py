@@ -6,7 +6,7 @@ Covers:
   - Peer transport: state flows through LocalPeerTransport between arms.
   - Launch registry: get_runtime_manifest() is coherent with ARM_RUNTIME_IDS and
     HACKATHON_BACKEND_PORT.
-  - Full flow: RunController orchestrates all 4 modes and produces step reports.
+  - Full flow: RunController orchestrates all 5 modes and produces step reports.
 """
 
 import pytest
@@ -217,12 +217,13 @@ def test_e2e_runtime_manifest_port_matches_backend_constant():
 
 
 def test_e2e_full_architecture_run_produces_reports_for_all_modes():
-    """Running a paired scenario through all 4 modes produces non-empty step reports."""
+    """Running a paired scenario through all 5 modes produces non-empty step reports."""
     modes = [
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
         BaselineMode.SEQUENTIAL_PICK,
+        BaselineMode.SMART_REORDER,
     ]
 
     for mode in modes:

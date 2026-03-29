@@ -194,3 +194,34 @@ def test_run_report_not_found_before_run():
     fresh = TC(tb.app)
     resp = fresh.get("/api/run/report/json")
     assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Group 7 – Backend mode validation for modes 0-4
+# ---------------------------------------------------------------------------
+
+def test_run_start_accepts_mode_4():
+    """POST /api/run/start with mode=4 returns 200 (not 422)."""
+    payload = {
+        "mode": 4,
+        "scenario": {
+            "steps": [
+                {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10},
+                {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.20},
+            ]
+        },
+    }
+    resp = client.post("/api/run/start", json=payload)
+    assert resp.status_code == 200, f"Mode 4 should be accepted, got {resp.status_code}"
+
+
+def test_run_start_rejects_mode_99_with_message():
+    """POST /api/run/start with mode=99 returns 422 with 'must be 0-4' message."""
+    payload = {
+        "mode": 99,
+        "scenario": {"steps": []},
+    }
+    resp = client.post("/api/run/start", json=payload)
+    assert resp.status_code == 422
+    detail = resp.json().get("detail", "")
+    assert "must be 0-4" in detail, f"Expected 'must be 0-4' in detail, got: '{detail}'"

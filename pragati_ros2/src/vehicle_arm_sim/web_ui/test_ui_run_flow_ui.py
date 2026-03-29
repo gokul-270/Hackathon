@@ -76,3 +76,93 @@ def test_html_has_report_download_area():
 def test_html_has_run_status_element():
     """HTML has a status/progress display for the run."""
     assert 'id="run-status-text"' in _HTML
+
+
+# ---------------------------------------------------------------------------
+# Group 7 – Mode dropdown: five options, correct labels
+# ---------------------------------------------------------------------------
+
+def test_html_mode_select_has_five_options():
+    """Mode selector contains exactly 5 <option> elements (modes 0-4)."""
+    from html.parser import HTMLParser
+
+    class _OptionCounter(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self._in_select = False
+            self.count = 0
+
+        def handle_starttag(self, tag, attrs):
+            attrs_d = dict(attrs)
+            if tag == "select" and attrs_d.get("id") == "run-mode-select":
+                self._in_select = True
+            if tag == "option" and self._in_select:
+                self.count += 1
+
+        def handle_endtag(self, tag):
+            if tag == "select" and self._in_select:
+                self._in_select = False
+
+    counter = _OptionCounter()
+    counter.feed(_HTML)
+    assert counter.count == 5, f"Expected 5 mode options, found {counter.count}"
+
+
+def test_html_mode_3_labeled_sequential_pick():
+    """Mode 3 option text contains 'Sequential Pick'."""
+    from html.parser import HTMLParser
+
+    class _LabelFinder(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self._capture = False
+            self.label = ""
+
+        def handle_starttag(self, tag, attrs):
+            attrs_d = dict(attrs)
+            if tag == "option" and attrs_d.get("value") == "3":
+                self._capture = True
+
+        def handle_data(self, data):
+            if self._capture:
+                self.label += data
+
+        def handle_endtag(self, tag):
+            if tag == "option" and self._capture:
+                self._capture = False
+
+    finder = _LabelFinder()
+    finder.feed(_HTML)
+    assert "Sequential Pick" in finder.label, (
+        f"Mode 3 label should contain 'Sequential Pick', got: '{finder.label}'"
+    )
+
+
+def test_html_mode_4_labeled_smart_reorder():
+    """Mode 4 option text contains 'Smart Reorder'."""
+    from html.parser import HTMLParser
+
+    class _LabelFinder(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self._capture = False
+            self.label = ""
+
+        def handle_starttag(self, tag, attrs):
+            attrs_d = dict(attrs)
+            if tag == "option" and attrs_d.get("value") == "4":
+                self._capture = True
+
+        def handle_data(self, data):
+            if self._capture:
+                self.label += data
+
+        def handle_endtag(self, tag):
+            if tag == "option" and self._capture:
+                self._capture = False
+
+    finder = _LabelFinder()
+    finder.feed(_HTML)
+    assert "Smart Reorder" in finder.label, (
+        f"Mode 4 label should contain 'Smart Reorder', got: '{finder.label}'"
+    )

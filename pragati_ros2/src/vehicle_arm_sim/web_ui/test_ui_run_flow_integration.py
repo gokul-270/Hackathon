@@ -76,6 +76,7 @@ def test_json_report_mode_name_matches_requested_mode():
         1: "baseline_j5_block_skip",
         2: "geometry_block",
         3: "sequential_pick",
+        4: "smart_reorder",
     }
     for mode, expected_name in mode_names.items():
         _run(mode)

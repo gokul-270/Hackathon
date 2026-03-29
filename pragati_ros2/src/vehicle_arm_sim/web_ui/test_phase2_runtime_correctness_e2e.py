@@ -192,7 +192,10 @@ def test_e2e_four_mode_comparison_recommendation_names_actual_winner():
     rec_idx = md.find("### Recommendation")
     assert rec_idx != -1
     rec_text = md[rec_idx:]
-    mode_names = {"unrestricted", "baseline_j5_block_skip", "geometry_block", "sequential_pick"}
+    mode_names = {
+        "unrestricted", "baseline_j5_block_skip", "geometry_block",
+        "sequential_pick", "smart_reorder",
+    }
     assert any(name in rec_text for name in mode_names), (
         f"Recommendation section must name one of {mode_names}; got:\n{rec_text}"
     )
@@ -227,7 +230,7 @@ def test_e2e_four_mode_report_recommendation_names_best_mode_explicitly():
 
 
 def test_e2e_run_results_are_trustworthy_truth_monitor_data_present():
-    """For every paired step in all four modes, step_reports must carry non-None
+    """For every paired step in all five modes, step_reports must carry non-None
     min_j4_distance values (truth monitor must have observed the step).
 
     This verifies that truth monitoring is wired and reporting faithfully.
@@ -237,6 +240,7 @@ def test_e2e_run_results_are_trustworthy_truth_monitor_data_present():
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
         BaselineMode.SEQUENTIAL_PICK,
+        BaselineMode.SMART_REORDER,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -264,6 +268,7 @@ def test_e2e_run_summary_counts_are_internally_consistent():
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
         BaselineMode.SEQUENTIAL_PICK,
+        BaselineMode.SMART_REORDER,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -290,6 +295,7 @@ def test_e2e_unrestricted_mode_has_most_collisions_when_arms_contend():
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
         BaselineMode.SEQUENTIAL_PICK,
+        BaselineMode.SMART_REORDER,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -300,6 +306,7 @@ def test_e2e_unrestricted_mode_has_most_collisions_when_arms_contend():
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
         BaselineMode.SEQUENTIAL_PICK,
+        BaselineMode.SMART_REORDER,
     ]:
         blocking_collisions = summaries_by_mode[mode]["steps_with_collision"]
         assert unrestricted_collisions >= blocking_collisions, (

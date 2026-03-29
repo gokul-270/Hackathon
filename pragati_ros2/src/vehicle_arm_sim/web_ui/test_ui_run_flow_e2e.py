@@ -87,9 +87,9 @@ def test_e2e_markdown_report_accessible_after_run():
     assert "#" in text
 
 
-def test_e2e_all_four_modes_complete_successfully():
-    """All four modes can be run end-to-end without error."""
-    for mode in range(4):
+def test_e2e_all_five_modes_complete_successfully():
+    """All five modes can be run end-to-end without error."""
+    for mode in range(5):
         resp = client.post("/api/run/start", json={"mode": mode, "scenario": _SCENARIO})
         assert resp.status_code == 200, f"mode={mode} failed"
         status = client.get("/api/run/status").json()

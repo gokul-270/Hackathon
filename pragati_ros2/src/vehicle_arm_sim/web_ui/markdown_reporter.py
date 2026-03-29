@@ -1,11 +1,12 @@
 """
-markdown_reporter.py — three- and four-mode Markdown comparison report generator.
+markdown_reporter.py — three-, four-, and five-mode Markdown comparison report generator.
 
 Produces a Markdown document comparing the results of replay modes:
   - unrestricted
   - baseline_j5_block_skip
   - geometry_block
   - sequential_pick     (Release 3, replaces overlap_zone_wait)
+  - smart_reorder       (Release 4)
 
 Usage
 -----
@@ -22,13 +23,13 @@ _REQUIRED_KEYS = {"mode", "total_steps", "steps_with_near_collision",
 
 
 class MarkdownReporter:
-    """Generates a three- or four-mode Markdown comparison report."""
+    """Generates a three-, four-, or five-mode Markdown comparison report."""
 
     def generate(self, runs: list[dict]) -> str:
-        """Produce a Markdown comparison report from three or four run summaries.
+        """Produce a Markdown comparison report from three, four, or five run summaries.
 
         Args:
-            runs: List of 3 or 4 run-summary dicts.  Each dict must contain:
+            runs: List of 3+ run-summary dicts.  Each dict must contain:
                   "mode", "total_steps", "steps_with_near_collision",
                   "steps_with_collision", "steps_with_motion_blocked".
                   Optional: "steps_with_blocked_or_skipped" (for four-mode reports).
@@ -51,16 +52,19 @@ class MarkdownReporter:
                 )
 
         four_mode = len(runs) >= 4
+        five_mode = len(runs) >= 5
 
         lines: list[str] = []
 
-        if four_mode:
+        if five_mode:
+            lines.append("## Five-Mode Collision Comparison Report")
+        elif four_mode:
             lines.append("## Four-Mode Collision Comparison Report")
         else:
             lines.append("## Three-Mode Collision Comparison Report")
         lines.append("")
 
-        if four_mode:
+        if four_mode or five_mode:
             lines.append(
                 "| Mode | Total Steps | Near-Collision Steps | Collision Steps"
                 " | Blocked Steps | Blocked+Skipped |"
@@ -81,7 +85,7 @@ class MarkdownReporter:
                 "steps_with_blocked_or_skipped",
                 run["steps_with_motion_blocked"],
             )
-            if four_mode:
+            if four_mode or five_mode:
                 lines.append(
                     f"| {run['mode']} "
                     f"| {run['total_steps']} "

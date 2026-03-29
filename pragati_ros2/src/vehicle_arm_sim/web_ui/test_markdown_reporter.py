@@ -215,3 +215,77 @@ def test_recommendation_avoidance_count_names_worst_mode_correctly():
     md = reporter.generate(runs)
     # geometry_block wins; the avoidance line should NOT say "geometry-aware strategy"
     assert "geometry-aware strategy" not in md
+
+
+# ---------------------------------------------------------------------------
+# Group 6: Five-mode report support
+# ---------------------------------------------------------------------------
+
+_FIVE_MODES = [
+    "unrestricted",
+    "baseline_j5_block_skip",
+    "geometry_block",
+    "sequential_pick",
+    "smart_reorder",
+]
+
+
+def _make_run_with_blocked_or_skipped(
+    mode, total_steps=5, near=0, collision=0, blocked=0, blocked_or_skipped=0
+):
+    return {
+        "mode": mode,
+        "total_steps": total_steps,
+        "steps_with_near_collision": near,
+        "steps_with_collision": collision,
+        "steps_with_motion_blocked": blocked,
+        "steps_with_blocked_or_skipped": blocked_or_skipped,
+    }
+
+
+def test_five_mode_heading_when_five_runs():
+    """Report with 5 runs must include 'Five-Mode' in heading."""
+    reporter = MarkdownReporter()
+    runs = [_make_run(mode) for mode in _FIVE_MODES]
+    md = reporter.generate(runs)
+    assert "## Five-Mode Collision Comparison Report" in md
+
+
+def test_four_mode_heading_still_works_with_four_runs():
+    """Report with exactly 4 runs must still produce 'Four-Mode' heading."""
+    reporter = MarkdownReporter()
+    runs = [_make_run(mode) for mode in _FIVE_MODES[:4]]
+    md = reporter.generate(runs)
+    assert "## Four-Mode Collision Comparison Report" in md
+
+
+def test_five_mode_table_has_blocked_skipped_column():
+    """Five-mode table must include a 'Blocked+Skipped' column header."""
+    reporter = MarkdownReporter()
+    runs = [_make_run(mode) for mode in _FIVE_MODES]
+    md = reporter.generate(runs)
+    assert "Blocked+Skipped" in md
+
+
+def test_five_mode_all_mode_names_appear():
+    """All 5 mode names must appear in the generated report."""
+    reporter = MarkdownReporter()
+    runs = [_make_run(mode) for mode in _FIVE_MODES]
+    md = reporter.generate(runs)
+    for mode in _FIVE_MODES:
+        assert mode in md, f"Mode '{mode}' not found in report"
+
+
+def test_five_mode_recommendation_works():
+    """Five-mode report must contain a Recommendation section picking the best mode."""
+    reporter = MarkdownReporter()
+    runs = [
+        _make_run_with_blocked_or_skipped("unrestricted", collision=5, near=6, blocked=0, blocked_or_skipped=0),
+        _make_run_with_blocked_or_skipped("baseline_j5_block_skip", collision=2, near=3, blocked=1, blocked_or_skipped=1),
+        _make_run_with_blocked_or_skipped("geometry_block", collision=1, near=2, blocked=2, blocked_or_skipped=2),
+        _make_run_with_blocked_or_skipped("sequential_pick", collision=0, near=1, blocked=1, blocked_or_skipped=1),
+        _make_run_with_blocked_or_skipped("smart_reorder", collision=0, near=0, blocked=0, blocked_or_skipped=0),
+    ]
+    md = reporter.generate(runs)
+    assert "Recommendation" in md
+    assert "smart_reorder" in md

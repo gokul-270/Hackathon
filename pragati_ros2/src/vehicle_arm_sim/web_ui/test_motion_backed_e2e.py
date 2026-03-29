@@ -145,8 +145,8 @@ class TestMotionBackedE2E:
         assert "Completed picks" in md or "completed pick" in md.lower()
 
     def test_e2e_all_modes_include_completed_picks_in_summary(self):
-        """All four modes must include completed_picks in the JSON summary."""
-        for mode in range(4):
+        """All five modes must include completed_picks in the JSON summary."""
+        for mode in range(5):
             resp, _, client = self._run(_PAIRED_SCENARIO, mode=mode)
             assert resp.status_code == 200, f"mode={mode} failed"
             data = client.get("/api/run/report/json").json()
