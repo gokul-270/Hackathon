@@ -399,7 +399,7 @@ def test_run_controller_calls_spawn_fn_for_each_step_before_execution():
     spawn_calls = []
     step_id_tracker = [None]
 
-    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=-1):
         spawn_calls.append((arm_id, step_id_tracker[0]))  # track order
         return f"cotton_{len(spawn_calls)}"
 
@@ -426,7 +426,7 @@ def test_run_controller_passes_cotton_model_to_executor():
     spawned_names = {}
     executor_cotton_models = []
 
-    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=-1):
         name = f"pre_cotton_{arm_id}"
         spawned_names[arm_id] = name
         return name
@@ -459,7 +459,7 @@ def test_run_controller_upfront_spawn_for_both_arms_in_paired_scenario():
 
     spawned_arm_ids = []
 
-    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+    def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=-1):
         spawned_arm_ids.append(arm_id)
         return f"cotton_{arm_id}"
 
@@ -952,7 +952,7 @@ def test_parallel_spawn_submits_all_cottons_concurrently():
     max_in_flight = [0]
     lock = threading.Lock()
 
-    def counting_spawn(arm_id, cam_x, cam_y, cam_z, j4):
+    def counting_spawn(arm_id, cam_x, cam_y, cam_z, j4, step_id=-1):
         with lock:
             in_flight.append(arm_id)
             if len(in_flight) > max_in_flight[0]:
@@ -1008,7 +1008,7 @@ def test_parallel_spawn_all_complete_before_execution():
     execute_called_before_spawn_complete = [False]
     all_spawned = [False]
 
-    def slow_spawn(arm_id, cam_x, cam_y, cam_z, j4):
+    def slow_spawn(arm_id, cam_x, cam_y, cam_z, j4, step_id=-1):
         import time
         time.sleep(0.05)
         return f"cotton_{arm_id}"
@@ -1269,7 +1269,7 @@ def test_parallel_spawn_exception_does_not_block_others():
 
     spawned = []
 
-    def selective_spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+    def selective_spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=-1):
         if arm_id == "arm1" and cam_z == 0.200:
             raise RuntimeError("simulated Gazebo timeout for arm1 step 0")
         model_name = f"{arm_id}_cotton_{cam_z}"
@@ -1342,3 +1342,43 @@ def test_run_controller_step_reports_include_cam_coords():
     assert reports[0]["cam_x"] == 0.65
     assert reports[0]["cam_y"] == -0.001
     assert reports[0]["cam_z"] == 0.150
+
+
+def test_run_controller_emits_step_start_and_complete_events():
+    """RunController must emit step_start and step_complete events per arm per step."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    bus = RunEventBus()
+    ctrl = RunController(mode=0, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    events = list(bus._queue)
+    types = [e["type"] for e in events]
+    assert "step_start" in types
+    assert "step_complete" in types
+
+    step_starts = [e for e in events if e["type"] == "step_start"]
+    assert len(step_starts) == 2  # one per arm
+    arm_ids_started = {e["arm_id"] for e in step_starts}
+    assert "arm1" in arm_ids_started
+    assert "arm2" in arm_ids_started
+
+
+def test_run_controller_emits_no_events_when_no_event_bus():
+    """RunController with no event_bus must not raise — events are silently dropped."""
+    from run_controller import RunController
+    ctrl = RunController(mode=0)  # no event_bus
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+        ]
+    })
+    summary = ctrl.run()  # must not raise
+    assert "total_steps" in summary

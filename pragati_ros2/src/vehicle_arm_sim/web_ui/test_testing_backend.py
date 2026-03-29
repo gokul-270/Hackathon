@@ -66,3 +66,25 @@ def test_arm1_all_three_cotton_spawns_are_red():
             f"arm1 cotton spawn {i} SDF must contain red diffuse; got fragment: "
             f"{sdf[sdf.find('<diffuse>'):][:60]!r}"
         )
+
+
+def test_run_events_endpoint_returns_event_stream_content_type():
+    """GET /api/run/events must return text/event-stream content type."""
+    import threading
+    from fastapi.testclient import TestClient
+    import testing_backend as tb
+    # Reset event bus to clean state so subscribe() starts fresh
+    tb._event_bus.reset()
+
+    def _emit_and_close():
+        import time
+        time.sleep(0.05)
+        tb._event_bus.emit({"type": "run_complete"})
+
+    timer = threading.Thread(target=_emit_and_close)
+    timer.start()
+    with TestClient(tb.app) as client:
+        with client.stream("GET", "/api/run/events") as resp:
+            assert resp.status_code == 200
+            assert "text/event-stream" in resp.headers.get("content-type", "")
+    timer.join(timeout=2.0)

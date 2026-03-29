@@ -168,7 +168,7 @@ class TestMotionBackedE2EWithSpawn:
                 publish_calls.append((topic, float(val_str)))
             return type("CompletedProcess", (), {"returncode": 0})()
 
-        def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+        def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=-1):
             model_name = f"cotton_{len(spawn_calls)}"
             spawn_calls.append((arm_id, cam_x, cam_y, cam_z, j4_pos))
             return model_name

@@ -1524,6 +1524,34 @@
             const armPairSelect = document.getElementById('run-arm-pair-select');
             const armPair = armPairSelect ? armPairSelect.value.split(',') : ['arm1', 'arm2'];
 
+            // Open SSE stream BEFORE starting the run so we capture all events
+            var evtSource = new EventSource('/api/run/events');
+            evtSource.onmessage = function (e) {
+                try {
+                    var evt = JSON.parse(e.data);
+                    var t = evt.type || 'unknown';
+                    if (t === 'cotton_spawn') {
+                        log('Cotton spawned: step ' + evt.step_id +
+                            ' ' + evt.arm_id +
+                            ' cam_z=' + evt.cam_z);
+                    } else if (t === 'step_start') {
+                        log('Step ' + evt.step_id + ' starting');
+                    } else if (t === 'step_complete') {
+                        var cls = evt.collision ? 'warn' : 'success';
+                        log('Step ' + evt.step_id + ' complete' +
+                            (evt.collision ? ' (COLLISION)' : ''), cls);
+                    } else if (t === 'run_complete') {
+                        log('Run complete: ' + evt.run_id, 'success');
+                        evtSource.close();
+                    }
+                } catch (err) {
+                    log('SSE parse error: ' + err.message, 'error');
+                }
+            };
+            evtSource.onerror = function () {
+                evtSource.close();
+            };
+
             try {
                 const resp = await fetch('/api/run/start', {
                     method: 'POST',
@@ -1533,6 +1561,7 @@
                 if (!resp.ok) {
                     const err = await resp.text();
                     statusEl.textContent = `Run failed: ${err}`;
+                    evtSource.close();
                     return;
                 }
                 const data = await resp.json();
@@ -1542,6 +1571,7 @@
                 reportLinks.style.display = '';
             } catch (e) {
                 statusEl.textContent = `Error: ${e.message}`;
+                evtSource.close();
             }
         });
     }

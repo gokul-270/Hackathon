@@ -45,7 +45,7 @@ _T_J3_HOME = 0.4
 _T_J4_HOME = 0.45
 
 
-def _noop_spawn(arm_id: str, cam_x: float, cam_y: float, cam_z: float, j4_pos: float) -> str:
+def _noop_spawn(arm_id: str, cam_x: float, cam_y: float, cam_z: float, j4_pos: float, step_id: int = -1) -> str:
     """No-op spawn used when no spawn_fn is provided (backward-compat)."""
     return ""
 

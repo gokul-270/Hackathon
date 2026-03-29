@@ -42,6 +42,7 @@ class RunController:
         arm_pair: tuple = ("arm1", "arm2"),
         spawn_fn=None,
         remove_fn=None,
+        event_bus=None,
     ) -> None:
         """
         Args:
@@ -59,6 +60,8 @@ class RunController:
             remove_fn: Callable(model_name) -> None.
                        Passed through to a default executor when no executor is injected.
                        Defaults to _noop_remove.
+            event_bus: Optional RunEventBus for emitting per-step observability events.
+                       If None, events are silently dropped.
         """
         self._mode = mode
         self._primary_id, self._secondary_id = arm_pair
@@ -85,6 +88,7 @@ class RunController:
         self._last_summary: dict = {}
         self._spawn_fn = spawn_fn if spawn_fn is not None else _noop_spawn
         self._remove_fn = remove_fn if remove_fn is not None else _noop_remove
+        self._event_bus = event_bus
         if executor is None:
             # No-op executor: no real Gazebo publishing, no real delays.
             self._executor = RunStepExecutor(
@@ -93,6 +97,15 @@ class RunController:
             )
         else:
             self._executor = executor
+
+    # ------------------------------------------------------------------
+    # Event emission helper
+    # ------------------------------------------------------------------
+
+    def _emit(self, event: dict) -> None:
+        """Emit an event to the bus if one is configured. No-op otherwise."""
+        if self._event_bus is not None:
+            self._event_bus.emit(event)
 
     # ------------------------------------------------------------------
     # Public API
@@ -178,7 +191,9 @@ class RunController:
         def _spawn_one(item):
             step_id, arm_id, step = item
             try:
-                model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
+                model_name = self._spawn_fn(
+                    arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0, step_id=step_id
+                )
             except Exception:
                 model_name = ""
             return (step_id, arm_id), model_name
@@ -287,6 +302,19 @@ class RunController:
                     "step": own_step,
                 }
 
+            # Emit step_start event for each active arm
+            for arm_id in sorted(arm_execute_args.keys()):
+                args = arm_execute_args[arm_id]
+                self._emit({
+                    "type": "step_start",
+                    "arm_id": arm_id,
+                    "step_id": step_id,
+                    "target_j3": round(args["applied"]["j3"], 4),
+                    "target_j4": round(args["applied"]["j4"], 4),
+                    "target_j5": round(args["applied"]["j5"], 4),
+                    "mode": mode_name,
+                })
+
             # Dispatch all executor calls in parallel (max 2 workers for a pair of arms)
             outcomes: dict = {}
             with ThreadPoolExecutor(max_workers=2) as pool:
@@ -364,6 +392,20 @@ class RunController:
                         "j4": own_applied["j4"],
                         "j5": own_applied["j5"],
                     }
+
+            # Emit step_complete event for each active arm
+            for arm_id in sorted(arm_execute_args.keys()):
+                outcome = outcomes[arm_id]
+                self._emit({
+                    "type": "step_complete",
+                    "arm_id": arm_id,
+                    "step_id": step_id,
+                    "terminal_status": outcome["terminal_status"],
+                    "pick_completed": outcome["pick_completed"],
+                    "collision": col,
+                    "near_collision": near_col,
+                    "skipped": skipped_flags.get(arm_id, False),
+                })
 
         self._last_summary = self._reporter.build_run_summary(mode_name, total_steps)
         return self._last_summary

@@ -31,7 +31,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from starlette.responses import Response
 from pydantic import BaseModel
 
@@ -90,6 +90,9 @@ _TMP_URDF_PATH = Path("/tmp/vehicle_arm_testing.urdf")
 _current_run_result: dict | None = None
 _run_state: str = "idle"  # "idle" | "running" | "complete"
 _estop_event: threading.Event = threading.Event()  # set by /api/estop; cleared at run start
+
+from run_event_bus import RunEventBus
+_event_bus: RunEventBus = RunEventBus()
 
 
 # ---------------------------------------------------------------------------
@@ -977,6 +980,7 @@ def _run_spawn_cotton(
     cam_y: float,
     cam_z: float,
     j4_pos: float,
+    step_id: int = -1,
 ) -> str:
     """Spawn a cotton model at cam position for a replay run step.
 
@@ -994,6 +998,18 @@ def _run_spawn_cotton(
     colour = _ARM_COTTON_COLOURS.get(arm_id, "1 1 1 1")
     sdf = _COTTON_SDF_TEMPLATE.format(name=name, ambient=colour, diffuse=colour)
     _gz_spawn_model(name, sdf, wx, wy, wz, world_name)
+    _event_bus.emit({
+        "type": "cotton_spawn",
+        "arm_id": arm_id,
+        "step_id": step_id,
+        "cam_x": cam_x,
+        "cam_y": cam_y,
+        "cam_z": cam_z,
+        "world_x": round(wx, 4),
+        "world_y": round(wy, 4),
+        "world_z": round(wz, 4),
+        "model_name": name,
+    })
     return name
 
 
@@ -1157,6 +1173,32 @@ def _gz_publish(topic: str, value: float) -> None:
 # UI Run Flow — endpoints
 # ---------------------------------------------------------------------------
 
+@app.get("/api/run/events")
+async def run_events():
+    """SSE stream of per-step run events. Opens before POST /api/run/start."""
+    async def _generator():
+        import json as _json
+        import asyncio
+        loop = asyncio.get_event_loop()
+        gen = _event_bus.subscribe()
+        try:
+            while True:
+                try:
+                    event = await loop.run_in_executor(None, next, gen)
+                    yield f"data: {_json.dumps(event)}\n\n"
+                    if event.get("type") == "run_complete":
+                        return
+                except StopIteration:
+                    return
+        except asyncio.CancelledError:
+            return
+
+    return StreamingResponse(
+        _generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
 @app.post("/api/run/start")
 async def run_start(req: RunStartRequest):
     """Start a replay run with the given mode and scenario data."""
@@ -1180,6 +1222,7 @@ async def run_start(req: RunStartRequest):
 
     _run_state = "running"
     _estop_event.clear()
+    _event_bus.reset()
     run_id = str(uuid.uuid4())
 
     executor = RunStepExecutor(
@@ -1194,6 +1237,7 @@ async def run_start(req: RunStartRequest):
         arm_pair=tuple(req.arm_pair),
         spawn_fn=_run_spawn_cotton,
         remove_fn=_run_remove_cotton,
+        event_bus=_event_bus,
     )
     controller.load_scenario(req.scenario)
     summary = await asyncio.to_thread(controller.run)
@@ -1228,6 +1272,15 @@ async def run_start(req: RunStartRequest):
         "md_report": md_report,
     }
     _run_state = "complete"
+
+    _event_bus.emit({
+        "type": "run_complete",
+        "run_id": run_id,
+        "total_steps": summary.get("total_steps", 0),
+        "collisions": summary.get("steps_with_collision", 0),
+        "completed_picks": summary.get("completed_picks", 0),
+    })
+    _event_bus.close()
 
     return {"run_id": run_id, "status": "complete"}
 
