@@ -195,3 +195,37 @@ def test_transport_reset_clears_all_packets():
 
     assert transport.receive("arm1") is None
     assert transport.receive("arm2") is None
+
+
+# ---------------------------------------------------------------------------
+# Group 4 — Thread-safety
+# ---------------------------------------------------------------------------
+
+
+def test_peer_transport_is_thread_safe():
+    """Two threads simultaneously publishing 1000 times each must not corrupt data."""
+    import threading
+    from peer_transport import LocalPeerTransport
+
+    transport = LocalPeerTransport()
+    errors = []
+
+    def worker(arm_id):
+        for i in range(1000):
+            try:
+                transport.publish(_make_packet(arm_id, step_id=i))
+                _ = transport.receive(arm_id)
+            except Exception as exc:
+                errors.append(exc)
+
+    t1 = threading.Thread(target=worker, args=("arm1",))
+    t2 = threading.Thread(target=worker, args=("arm2",))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert not errors, f"Thread safety errors in LocalPeerTransport: {errors}"
+    # After all publishes, both arm_ids must have their latest packet
+    assert transport.receive("arm1") is not None
+    assert transport.receive("arm2") is not None

@@ -38,13 +38,13 @@
 
 ## 4. Thread-Safe Transport and Reporter [SEQUENTIAL after 1]
 
-- [ ] 4.1 **RED** Write `test_peer_transport_is_thread_safe` — two threads simultaneously publish 1000 times each, assert no data corruption; confirm test fails (or passes trivially — verify Lock is absent first)
-- [ ] 4.2 **GREEN** Add `threading.Lock` to `LocalPeerTransport.publish()` and `receive()` in `peer_transport.py`; confirm test passes
-- [ ] 4.3 **RED** Write `test_json_reporter_add_step_is_thread_safe` — two threads each add 500 steps concurrently, assert all 1000 appear in final summary; confirm test fails without lock
-- [ ] 4.4 **GREEN** Add `threading.Lock` to `JsonReporter.add_step()` in `json_reporter.py`; confirm test passes
-- [ ] 4.5 **RED** Write `test_truth_monitor_observe_is_thread_safe` — two threads call observe() concurrently, assert no exception and records are intact; confirm test passes/fails appropriately
-- [ ] 4.6 **GREEN** Add `threading.Lock` to `TruthMonitor.observe()` in `truth_monitor.py`; confirm test passes
-- [ ] 4.7 **REFACTOR** Run full test suite; commit `fix: thread-safe peer transport, reporter, and truth monitor`
+- [x] 4.1 **RED** Write `test_peer_transport_is_thread_safe` — two threads simultaneously publish 1000 times each, assert no data corruption; confirm test fails (or passes trivially — verify Lock is absent first)
+- [x] 4.2 **GREEN** Add `threading.Lock` to `LocalPeerTransport.publish()` and `receive()` in `peer_transport.py`; confirm test passes
+- [x] 4.3 **RED** Write `test_json_reporter_add_step_is_thread_safe` — two threads each add 500 steps concurrently, assert all 1000 appear in final summary; confirm test fails without lock
+- [x] 4.4 **GREEN** Add `threading.Lock` to `JsonReporter.add_step()` in `json_reporter.py`; confirm test passes
+- [x] 4.5 **RED** Write `test_truth_monitor_observe_is_thread_safe` — two threads call observe() concurrently, assert no exception and records are intact; confirm test passes/fails appropriately
+- [x] 4.6 **GREEN** Add `threading.Lock` to `TruthMonitor.observe()` in `truth_monitor.py`; confirm test passes
+- [x] 4.7 **REFACTOR** Run full test suite; commit `fix: thread-safe peer transport, reporter, and truth monitor`
 
 ## 5. Independent Arm Loop in RunController [SEQUENTIAL after 2, 3]
 

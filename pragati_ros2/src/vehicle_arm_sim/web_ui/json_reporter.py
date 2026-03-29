@@ -1,5 +1,6 @@
 """JSON reporter for dual-arm simulation run summaries - Group 5."""
 import json
+import threading
 from dataclasses import dataclass, asdict
 from typing import Optional
 
@@ -27,10 +28,12 @@ class JsonReporter:
 
     def __init__(self) -> None:
         self._steps: list[StepReport] = []
+        self._lock = threading.Lock()
 
     def add_step(self, step_report: StepReport) -> None:
         """Record a step result."""
-        self._steps.append(step_report)
+        with self._lock:
+            self._steps.append(step_report)
 
     def build_run_summary(self, mode: str, total_steps: int) -> dict:
         """Build per-run JSON summary dict."""

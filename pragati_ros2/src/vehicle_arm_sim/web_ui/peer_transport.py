@@ -8,6 +8,7 @@ swappable later for MQTT or ROS2 transport.
 
 from __future__ import annotations
 
+import threading
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -23,6 +24,7 @@ class LocalPeerTransport:
 
     def __init__(self) -> None:
         self._mailbox: dict[str, "PeerStatePacket"] = {}
+        self._lock = threading.Lock()
 
     def publish(self, packet: "PeerStatePacket") -> None:
         """Store the packet keyed by its arm_id, replacing any previous packet.
@@ -30,7 +32,8 @@ class LocalPeerTransport:
         Args:
             packet: The PeerStatePacket to store.
         """
-        self._mailbox[packet.arm_id] = packet
+        with self._lock:
+            self._mailbox[packet.arm_id] = packet
 
     def receive(self, arm_id: str) -> "PeerStatePacket | None":
         """Return the latest packet published for the given arm_id, or None.
@@ -42,8 +45,10 @@ class LocalPeerTransport:
             The most recently published PeerStatePacket for that arm, or None if
             no packet has been published yet.
         """
-        return self._mailbox.get(arm_id)
+        with self._lock:
+            return self._mailbox.get(arm_id)
 
     def reset(self) -> None:
         """Clear all stored packets, returning the transport to its initial state."""
-        self._mailbox.clear()
+        with self._lock:
+            self._mailbox.clear()

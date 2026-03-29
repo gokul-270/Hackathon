@@ -99,3 +99,39 @@ def test_observe_collision_distance_also_sets_near_collision_true():
         f"(distance={distance:.4f}, COLLISION_THRESHOLD={COLLISION_THRESHOLD}, "
         f"NEAR_COLLISION_THRESHOLD={NEAR_COLLISION_THRESHOLD})"
     )
+
+
+# ---------------------------------------------------------------------------
+# Group 4 — Thread-safety
+# ---------------------------------------------------------------------------
+
+
+def test_truth_monitor_observe_is_thread_safe():
+    """Two threads calling observe() concurrently must not raise exceptions."""
+    import threading
+    from truth_monitor import TruthMonitor
+
+    monitor = TruthMonitor()
+    errors = []
+
+    def worker(step_start, j4_offset):
+        for i in range(500):
+            try:
+                monitor.observe(
+                    step_id=step_start + i,
+                    j4_arm1=0.10 + j4_offset,
+                    j4_arm2=0.20 + j4_offset,
+                )
+            except Exception as exc:
+                errors.append(exc)
+
+    t1 = threading.Thread(target=worker, args=(0, 0.0))
+    t2 = threading.Thread(target=worker, args=(0, 0.001))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert not errors, f"Thread safety errors in TruthMonitor.observe: {errors}"
+    # At least one record must have been stored
+    assert len(monitor.get_all_records()) > 0

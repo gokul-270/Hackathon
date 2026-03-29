@@ -109,3 +109,37 @@ def test_json_reporter_reset_clears_step_reports():
     reporter.reset()
     summary = reporter.build_run_summary(mode="unrestricted", total_steps=0)
     assert summary["step_reports"] == []
+
+
+# ---------------------------------------------------------------------------
+# Group 4 — Thread-safety
+# ---------------------------------------------------------------------------
+
+
+def test_json_reporter_add_step_is_thread_safe():
+    """Two threads each adding 500 steps concurrently must produce all 1000 in summary."""
+    import threading
+    from json_reporter import JsonReporter
+
+    reporter = JsonReporter()
+    errors = []
+
+    def worker(arm_id):
+        for i in range(500):
+            try:
+                reporter.add_step(make_step(step_id=i, arm_id=arm_id))
+            except Exception as exc:
+                errors.append(exc)
+
+    t1 = threading.Thread(target=worker, args=("arm1",))
+    t2 = threading.Thread(target=worker, args=("arm2",))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert not errors, f"Thread safety errors in JsonReporter.add_step: {errors}"
+    summary = reporter.build_run_summary(mode="unrestricted", total_steps=1000)
+    assert len(summary["step_reports"]) == 1000, (
+        f"All 1000 step reports must be present; got {len(summary['step_reports'])}"
+    )
