@@ -48,18 +48,20 @@ class TestMotionBackedE2E:
     def _run(self, scenario, mode=0):
         publish_calls = []
 
-        def mock_popen(cmd, **kwargs):
+        def mock_run(cmd, **kwargs):
             if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
                 topic = cmd[3]
                 val_str = cmd[7].replace("data: ", "")
                 publish_calls.append((topic, float(val_str)))
+            return type("CompletedProcess", (), {"returncode": 0})()
 
         tb._current_run_result = None
         with (
-            patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
+            patch("testing_backend.subprocess.run", side_effect=mock_run),
             patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
             patch("testing_backend._run_remove_cotton"),
             patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
         ):
             client = TestClient(app)
             resp = client.post("/api/run/start", json={"mode": mode, "scenario": scenario})
@@ -159,11 +161,12 @@ class TestMotionBackedE2EWithSpawn:
         spawn_calls = []
         remove_calls = []
 
-        def mock_popen(cmd, **kwargs):
+        def mock_run(cmd, **kwargs):
             if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
                 topic = cmd[3]
                 val_str = cmd[7].replace("data: ", "")
                 publish_calls.append((topic, float(val_str)))
+            return type("CompletedProcess", (), {"returncode": 0})()
 
         def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
             model_name = f"cotton_{len(spawn_calls)}"
@@ -175,10 +178,11 @@ class TestMotionBackedE2EWithSpawn:
 
         tb._current_run_result = None
         with (
-            patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
+            patch("testing_backend.subprocess.run", side_effect=mock_run),
             patch("testing_backend._run_spawn_cotton", side_effect=mock_spawn),
             patch("testing_backend._run_remove_cotton", side_effect=mock_remove),
             patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
         ):
             client = TestClient(app)
             resp = client.post("/api/run/start", json={"mode": mode, "scenario": scenario})
@@ -228,10 +232,12 @@ class TestArmPairSupport:
         """arm_pair=['arm1','arm3'] → 200 and step reports include arm1 and arm3 (not arm2)."""
         tb._current_run_result = None
         with (
-            patch("testing_backend.subprocess.Popen", side_effect=lambda cmd, **kw: None),
+            patch("testing_backend.subprocess.run",
+                  return_value=type("CompletedProcess", (), {"returncode": 0})()),
             patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
             patch("testing_backend._run_remove_cotton"),
             patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
         ):
             client = TestClient(app)
             resp = client.post("/api/run/start", json={
@@ -271,10 +277,12 @@ class TestArmPairSupport:
         """Omitting arm_pair from request defaults to arm1+arm2 (backward compat)."""
         tb._current_run_result = None
         with (
-            patch("testing_backend.subprocess.Popen", side_effect=lambda cmd, **kw: None),
+            patch("testing_backend.subprocess.run",
+                  return_value=type("CompletedProcess", (), {"returncode": 0})()),
             patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
             patch("testing_backend._run_remove_cotton"),
             patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
         ):
             client = TestClient(app)
             resp = client.post("/api/run/start", json={
@@ -286,3 +294,108 @@ class TestArmPairSupport:
         data = client.get("/api/run/report/json").json()
         arm_ids = {s["arm_id"] for s in data["steps"]}
         assert arm_ids == {"arm1", "arm2"}
+
+
+_SOLO_SCENARIO = {
+    "steps": [
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.10},
+    ]
+}
+
+
+class TestTriplePublish:
+    """RED → GREEN tests for triple-publish behavior in _gz_publish (tasks 2.1–2.3).
+
+    These tests verify that:
+    - subprocess.run is called 3× per joint command (not subprocess.Popen)
+    - time.sleep(0.150) is called between each publish
+    - subprocess.Popen is NOT used for joint commands
+    """
+
+    def test_gz_publish_calls_subprocess_run_three_times_per_command(self):
+        """_gz_publish SHALL call subprocess.run exactly 3 times per joint command."""
+        run_calls = []
+
+        def mock_run(cmd, **kwargs):
+            if cmd and len(cmd) >= 2 and cmd[0] == "gz" and cmd[1] == "topic":
+                run_calls.append(cmd[3])  # capture topic
+            return type("CompletedProcess", (), {"returncode": 0})()
+
+        tb._current_run_result = None
+        with (
+            patch("testing_backend.subprocess.run", side_effect=mock_run),
+            patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        # 1 step × 6 joint commands × 3 publishes = 18 subprocess.run calls
+        assert len(run_calls) == 18, (
+            f"expected 18 subprocess.run calls (3 per command × 6 commands), got {len(run_calls)}"
+        )
+
+    def test_gz_publish_sleeps_150ms_between_publishes(self):
+        """_gz_publish SHALL sleep 150ms between each of the 3 publish calls (2 gaps per command)."""
+        sleep_args = []
+
+        def mock_sleep(s):
+            sleep_args.append(s)
+
+        tb._current_run_result = None
+        with (
+            patch(
+                "testing_backend.subprocess.run",
+                return_value=type("CompletedProcess", (), {"returncode": 0})(),
+            ),
+            patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=mock_sleep),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        # 1 step × 6 joint commands × 2 inter-publish gaps = 12 sleep(0.150) calls
+        gap_sleeps = [s for s in sleep_args if abs(s - 0.150) < 0.001]
+        assert len(gap_sleeps) == 12, (
+            f"expected 12 time.sleep(0.150) calls, got {len(gap_sleeps)}; all sleeps: {sleep_args}"
+        )
+
+    def test_gz_publish_does_not_use_subprocess_popen(self):
+        """_gz_publish SHALL use subprocess.run (blocking), NOT subprocess.Popen."""
+        popen_gz_calls = []
+
+        def track_popen(cmd, **kwargs):
+            if cmd and len(cmd) >= 2 and cmd[0] == "gz" and cmd[1] == "topic":
+                popen_gz_calls.append(cmd)
+
+        tb._current_run_result = None
+        with (
+            patch(
+                "testing_backend.subprocess.run",
+                return_value=type("CompletedProcess", (), {"returncode": 0})(),
+            ),
+            patch("testing_backend.subprocess.Popen", side_effect=track_popen),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        assert len(popen_gz_calls) == 0, (
+            f"_gz_publish must use subprocess.run, not Popen; "
+            f"got {len(popen_gz_calls)} Popen calls to gz topic"
+        )

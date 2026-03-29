@@ -16,15 +16,15 @@
 - [x] 1.1 Write `impact-analysis.md` in the change directory (required by AGENTS.md before artifact commit): Before/After table, Performance Impact, Unchanged Behaviour, Risk Assessment, Blast Radius
 - [x] 1.2 Dispatch cross-artifact review subagent: verify all 4 specs have a corresponding test task, numbers are consistent (150ms gaps, 7.3s timing, 3x publish), every capability in proposal has a matching spec, no missing edge cases
 - [x] 1.3 Fix any CRITICAL issues surfaced by cross-artifact review
-- [ ] 1.4 Commit all change artifacts: `chore: create reliable-dual-arm-publish change artifacts (proposal, specs, design, tasks)`
+- [x] 1.4 Commit all change artifacts: `chore: create reliable-dual-arm-publish change artifacts (proposal, specs, design, tasks)`
 
 ## 2. Triple-publish in `_gz_publish` [SEQUENTIAL]
 
-- [ ] 2.1 **RED** — In `test_motion_backed_e2e.py`, write a test that asserts `subprocess.run` is called exactly 3 times when `_gz_publish` is invoked once; run it and confirm it fails
-- [ ] 2.2 **RED** — Write a test that asserts `time.sleep(0.150)` is called twice between the three `subprocess.run` calls; confirm it fails
-- [ ] 2.3 **RED** — Write a test that asserts no `subprocess.Popen` is used in `_gz_publish` (only `subprocess.run`); confirm it fails
-- [ ] 2.4 **GREEN** — In `testing_backend.py:_gz_publish`, replace `subprocess.Popen(...)` with `subprocess.run(...)` × 3 with `time.sleep(0.150)` between calls
-- [ ] 2.5 **REFACTOR** — Confirm all three tests pass; run `pytest test_motion_backed_e2e.py -k "gz_publish" -x`; commit: `feat: triple-publish in _gz_publish with 150ms gaps`
+- [x] 2.1 **RED** — In `test_motion_backed_e2e.py`, write a test that asserts `subprocess.run` is called exactly 3 times when `_gz_publish` is invoked once; run it and confirm it fails
+- [x] 2.2 **RED** — Write a test that asserts `time.sleep(0.150)` is called twice between the three `subprocess.run` calls; confirm it fails
+- [x] 2.3 **RED** — Write a test that asserts no `subprocess.Popen` is used in `_gz_publish` (only `subprocess.run`); confirm it fails
+- [x] 2.4 **GREEN** — In `testing_backend.py:_gz_publish`, replace `subprocess.Popen(...)` with `subprocess.run(...)` × 3 with `time.sleep(0.150)` between calls
+- [x] 2.5 **REFACTOR** — Confirm all three tests pass; run `pytest test_motion_backed_e2e.py -k "gz_publish" -x`; commit: `feat: triple-publish in _gz_publish with 150ms gaps`
 
 ## 3. RunStepExecutor E-STOP support [PARALLEL with 4]
 

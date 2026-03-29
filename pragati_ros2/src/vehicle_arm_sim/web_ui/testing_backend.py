@@ -1149,17 +1149,17 @@ async def run_start(req: RunStartRequest):
     run_id = str(uuid.uuid4())
 
     def _gz_publish(topic: str, value: float) -> None:
-        """Publish a joint command via gz topic (non-blocking)."""
-        subprocess.Popen(
-            [
-                "gz", "topic",
-                "-t", topic,
-                "-m", "gz.msgs.Double",
-                "-p", f"data: {value}",
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        """Publish a joint command via gz topic (blocking, triple-publish for reliability)."""
+        cmd = [
+            "gz", "topic",
+            "-t", topic,
+            "-m", "gz.msgs.Double",
+            "-p", f"data: {value}",
+        ]
+        for i in range(3):
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            if i < 2:
+                time.sleep(0.150)
 
     executor = RunStepExecutor(
         publish_fn=_gz_publish,
