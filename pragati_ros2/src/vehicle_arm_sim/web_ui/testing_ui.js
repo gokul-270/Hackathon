@@ -1448,6 +1448,12 @@
         // Cotton placement (ported from yanthra_move)
         setupCottonPlacement();
 
+        // Cotton position sequence
+        setupCottonSequence();
+
+        // UI Run Flow
+        setupRunFlow();
+
         // Load data
         loadUrdfList();
         pollStatus();
@@ -1457,6 +1463,87 @@
         setTimeout(connect, 500);
 
         log('Testing UI initialised');
+    }
+
+    // ---------------------------------------------------------------------------
+    // UI Run Flow
+    // ---------------------------------------------------------------------------
+    function setupRunFlow() {
+        const startBtn = document.getElementById('run-start-btn');
+        const statusEl = document.getElementById('run-status-text');
+        const reportLinks = document.getElementById('run-report-links');
+        const jsonLink = document.getElementById('run-report-json-link');
+        const mdLink = document.getElementById('run-report-md-link');
+
+        if (!startBtn) return;
+
+        startBtn.addEventListener('click', async () => {
+            statusEl.textContent = 'Starting run...';
+            reportLinks.style.display = 'none';
+
+            // Resolve scenario data
+            let scenarioData = null;
+
+            // 1. Check file input first
+            const fileInput = document.getElementById('run-scenario-file');
+            if (fileInput && fileInput.files.length > 0) {
+                try {
+                    const text = await fileInput.files[0].text();
+                    scenarioData = JSON.parse(text);
+                } catch (e) {
+                    statusEl.textContent = 'Error: could not parse JSON file.';
+                    return;
+                }
+            }
+
+            // 2. Fall back to preset select
+            if (!scenarioData) {
+                const presetSelect = document.getElementById('run-scenario-select');
+                const preset = presetSelect ? presetSelect.value : '';
+                if (preset) {
+                    const presetMap = {
+                        contention: '/scenarios/contention_pack.json',
+                        geometry: '/scenarios/geometry_pack.json',
+                    };
+                    try {
+                        const resp = await fetch(presetMap[preset]);
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                        scenarioData = await resp.json();
+                    } catch (e) {
+                        statusEl.textContent = `Error: could not load preset scenario.`;
+                        return;
+                    }
+                }
+            }
+
+            if (!scenarioData) {
+                statusEl.textContent = 'Error: no scenario selected.';
+                return;
+            }
+
+            const modeSelect = document.getElementById('run-mode-select');
+            const mode = modeSelect ? parseInt(modeSelect.value, 10) : 0;
+
+            try {
+                const resp = await fetch('/api/run/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, scenario: scenarioData }),
+                });
+                if (!resp.ok) {
+                    const err = await resp.text();
+                    statusEl.textContent = `Run failed: ${err}`;
+                    return;
+                }
+                const data = await resp.json();
+                statusEl.textContent = `Run complete (id: ${data.run_id})`;
+                jsonLink.href = '/api/run/report/json';
+                mdLink.href = '/api/run/report/markdown';
+                reportLinks.style.display = '';
+            } catch (e) {
+                statusEl.textContent = `Error: ${e.message}`;
+            }
+        });
     }
 
     // Start when DOM is ready
