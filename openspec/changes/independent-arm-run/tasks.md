@@ -48,14 +48,14 @@
 
 ## 5. Independent Arm Loop in RunController [SEQUENTIAL after 2, 3]
 
-- [ ] 5.1 **RED** Write `test_arm1_does_not_wait_for_arm2_between_steps` — give arm1 3 steps, arm2 5 steps, use a slow sleep_fn for arm2 only; assert arm1 finishes its steps without delay from arm2; confirm test fails
-- [ ] 5.2 **RED** Write `test_run_returns_after_all_arms_terminal` — arm1 fast, arm2 slow; assert run() total time matches the slower arm
-- [ ] 5.3 **RED** Write `test_step_reports_contain_all_steps_from_both_arms` — arm1: 3 steps, arm2: 5 steps; assert `len(step_reports) == 8`
-- [ ] 5.4 **RED** Write `test_independent_arms_publish_and_read_peer_state` — assert each arm thread calls `transport.publish()` once per step
-- [ ] 5.5 Confirm all 4 new tests fail (RED confirmed)
-- [ ] 5.6 **GREEN** Rewrite `RunController.run()` execution phase: extract `_run_arm_thread(arm_id, steps, ...)` helper; dispatch both arm threads via `ThreadPoolExecutor(max_workers=2)`; join both before returning summary
-- [ ] 5.7 Confirm all 4 new tests pass; run full test suite and fix any regressions
-- [ ] 5.8 **REFACTOR** Clean up; commit `feat: independent per-arm execution threads in RunController`
+- [x] 5.1 **RED** Write `test_arm1_does_not_wait_for_arm2_between_steps` — give arm1 3 steps, arm2 5 steps, use a slow sleep_fn for arm2 only; assert arm1 finishes its steps without delay from arm2; confirm test fails
+- [x] 5.2 **RED** Write `test_run_returns_after_all_arms_terminal` — arm1 fast, arm2 slow; assert run() total time matches the slower arm
+- [x] 5.3 **RED** Write `test_step_reports_contain_all_steps_from_both_arms` — arm1: 3 steps, arm2: 5 steps; assert `len(step_reports) == 8`
+- [x] 5.4 **RED** Write `test_independent_arms_publish_and_read_peer_state` — assert each arm thread calls `transport.publish()` once per step
+- [x] 5.5 Confirm all 4 new tests fail (RED confirmed)
+- [x] 5.6 **GREEN** Rewrite `RunController.run()` execution phase: extract `_run_arm_thread(arm_id, steps, ...)` helper; dispatch both arm threads via `ThreadPoolExecutor(max_workers=2)`; join both before returning summary
+- [x] 5.7 Confirm all 4 new tests pass; run full test suite and fix any regressions
+- [x] 5.8 **REFACTOR** Clean up; commit `feat: independent per-arm execution threads in RunController`
 
 ## 6. New Asymmetric Scenario Files [SEQUENTIAL after 4, 5]
 

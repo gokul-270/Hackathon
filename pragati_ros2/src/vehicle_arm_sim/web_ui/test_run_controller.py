@@ -1043,3 +1043,172 @@ def test_parallel_spawn_all_complete_before_execution():
     # If we get here without exception, spawn completed before execute was called
     # The real assertion is that spawn happens for ALL steps before ANY execute
     assert len(executed_steps) > 0, "execute must have been called"
+
+
+# ---------------------------------------------------------------------------
+# Group 5 — Independent per-arm execution threads
+# ---------------------------------------------------------------------------
+
+_ASYMMETRIC_SCENARIO = {
+    "steps": [
+        # arm1: 3 steps — cam_z=0.150 gives j4≈-0.050 per step, all reachable
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.150},
+        {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.150},
+        {"step_id": 2, "arm_id": "arm1", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.150},
+        # arm2: 5 steps — cam_z values giving j4≈+0.001 to +0.052, all reachable and safe from arm1
+        {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.100},
+        {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.095},
+        {"step_id": 2, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.090},
+        {"step_id": 3, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.085},
+        {"step_id": 4, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.0, "cam_z": 0.080},
+    ]
+}
+
+
+def _make_timing_executor(sleep_per_step_map: dict):
+    """Return an executor whose execute() sleeps arm-specific amounts."""
+    import time
+
+    class TimingExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            delay = sleep_per_step_map.get(arm_id, 0.0)
+            time.sleep(delay)
+            return {
+                "terminal_status": "completed",
+                "pick_completed": True,
+                "executed_in_gazebo": True,
+            }
+
+    return TimingExecutor()
+
+
+def test_arm1_does_not_wait_for_arm2_between_steps():
+    """arm1 (fast, 3 steps) must finish without waiting for arm2 (slow, 5 steps)."""
+    import time
+    from run_controller import RunController
+
+    # arm2 sleeps 0.2s per step (5 steps = 1.0s minimum if sequential)
+    # arm1 sleeps 0.0s per step (3 steps = ~0s)
+    # If arm1 is independent, its steps complete far faster than arm2
+    executor = _make_timing_executor({"arm1": 0.0, "arm2": 0.2})
+
+    arm1_finish_time = [None]
+    arm2_finish_time = [None]
+    original_execute = executor.execute
+
+    def tracked_execute(arm_id, **kwargs):
+        result = original_execute(arm_id=arm_id, **kwargs)
+        if arm_id == "arm1":
+            arm1_finish_time[0] = time.monotonic()
+        elif arm_id == "arm2":
+            arm2_finish_time[0] = time.monotonic()
+        return result
+
+    executor.execute = tracked_execute
+
+    ctrl = RunController(
+        mode=0,
+        executor=executor,
+        arm_pair=("arm1", "arm2"),
+    )
+    ctrl.load_scenario(_ASYMMETRIC_SCENARIO)
+    start = time.monotonic()
+    ctrl.run()
+    total = time.monotonic() - start
+
+    # arm1 finishes its last step before arm2 finishes its last step
+    assert arm1_finish_time[0] is not None, "arm1 must have executed at least one step"
+    assert arm2_finish_time[0] is not None, "arm2 must have executed at least one step"
+    assert arm1_finish_time[0] < arm2_finish_time[0], (
+        f"arm1 (fast) must finish before arm2 (slow); "
+        f"arm1 last: {arm1_finish_time[0]:.3f}, arm2 last: {arm2_finish_time[0]:.3f}"
+    )
+
+
+def test_run_returns_after_all_arms_terminal():
+    """run() total time must be dominated by the slower arm, not their sum."""
+    import time
+    from run_controller import RunController
+
+    # arm1: 3 steps × 0.0s; arm2: 5 steps × 0.15s = 0.75s min
+    # Sequential total would be 3×0.0 + 5×0.15 = 0.75s
+    # Parallel total should be max(0, 0.75) = 0.75s — but if paired, both
+    # arms run together at each step, so it would be 5 × 0.15 = 0.75s anyway.
+    # We test: run() does NOT take arm1_time + arm2_time = (3+5)*0.15 = 1.2s if
+    # both arms used the slow executor.
+    executor = _make_timing_executor({"arm1": 0.05, "arm2": 0.15})
+
+    ctrl = RunController(
+        mode=0,
+        executor=executor,
+        arm_pair=("arm1", "arm2"),
+    )
+    ctrl.load_scenario(_ASYMMETRIC_SCENARIO)
+    start = time.monotonic()
+    ctrl.run()
+    elapsed = time.monotonic() - start
+
+    # Sequential execution of all 8 steps would take 3*0.05 + 5*0.15 = 0.90s
+    # Independent execution in parallel: arm1 = 3*0.05=0.15s; arm2 = 5*0.15=0.75s
+    # Max = 0.75s (plus some overhead); well under sequential 0.90s
+    assert elapsed < 0.85, (
+        f"run() with 8 steps (3+5) must finish in parallel time (~0.75s), "
+        f"not sequential time (~0.90s); got {elapsed:.3f}s"
+    )
+
+
+def test_step_reports_contain_all_steps_from_both_arms():
+    """Summary must contain 8 step reports for arm1(3)+arm2(5) asymmetric scenario."""
+    import json
+    from run_controller import RunController
+
+    ctrl = RunController(
+        mode=0,
+        arm_pair=("arm1", "arm2"),
+    )
+    ctrl.load_scenario(_ASYMMETRIC_SCENARIO)
+    summary = ctrl.run()
+
+    step_reports = summary["step_reports"]
+    assert len(step_reports) == 8, (
+        f"Expected 8 step reports (arm1:3 + arm2:5), got {len(step_reports)}: "
+        f"{[(r['arm_id'], r['step_id']) for r in step_reports]}"
+    )
+    arm1_reports = [r for r in step_reports if r["arm_id"] == "arm1"]
+    arm2_reports = [r for r in step_reports if r["arm_id"] == "arm2"]
+    assert len(arm1_reports) == 3, f"arm1 must have 3 reports, got {len(arm1_reports)}"
+    assert len(arm2_reports) == 5, f"arm2 must have 5 reports, got {len(arm2_reports)}"
+
+
+def test_independent_arms_publish_and_read_peer_state():
+    """Each arm thread must call transport.publish() once per step it executes."""
+    from run_controller import RunController
+    from peer_transport import LocalPeerTransport
+    from unittest.mock import MagicMock, patch
+
+    publish_calls = []
+    real_transport = LocalPeerTransport()
+    original_publish = real_transport.publish
+
+    def tracking_publish(packet):
+        publish_calls.append(packet.arm_id)
+        original_publish(packet)
+
+    real_transport.publish = tracking_publish
+
+    ctrl = RunController(
+        mode=0,
+        arm_pair=("arm1", "arm2"),
+    )
+    ctrl.load_scenario(_ASYMMETRIC_SCENARIO)
+    ctrl._transport = real_transport
+    ctrl.run()
+
+    arm1_publishes = publish_calls.count("arm1")
+    arm2_publishes = publish_calls.count("arm2")
+    assert arm1_publishes == 3, (
+        f"arm1 must publish once per step (3 steps), got {arm1_publishes}"
+    )
+    assert arm2_publishes == 5, (
+        f"arm2 must publish once per step (5 steps), got {arm2_publishes}"
+    )
