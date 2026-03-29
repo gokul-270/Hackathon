@@ -87,6 +87,72 @@ def test_run_event_bus_reset_clears_state_and_allows_new_subscriptions():
     assert received == [{"type": "new"}]
 
 
+def test_subscribe_after_close_returns_immediately():
+    """subscribe() on a closed bus must return immediately without blocking."""
+    from run_event_bus import RunEventBus
+    bus = RunEventBus()
+    bus.close()
+
+    done = threading.Event()
+
+    def consume():
+        list(bus.subscribe())  # must drain and return
+        done.set()
+
+    t = threading.Thread(target=consume)
+    t.start()
+    t.join(timeout=1.0)
+    assert done.is_set(), "subscribe() on a closed bus did not return promptly"
+
+
+def test_subscribe_after_reset_blocks_until_emit():
+    """After close() then reset(), subscribe() must block until an event is emitted."""
+    from run_event_bus import RunEventBus
+    bus = RunEventBus()
+    bus.close()
+    bus.reset()
+
+    received = []
+    subscriber_started = threading.Event()
+
+    def consume():
+        gen = bus.subscribe()
+        subscriber_started.set()
+        received.append(next(gen))
+
+    t = threading.Thread(target=consume)
+    t.start()
+    subscriber_started.wait(timeout=1.0)
+    time.sleep(0.02)  # subscriber should now be blocked (bus is open but empty)
+    assert not received, "subscribe() returned prematurely on a reset bus"
+    bus.emit({"type": "after_reset"})
+    t.join(timeout=1.0)
+    assert received == [{"type": "after_reset"}], (
+        "subscribe() on a reset bus did not receive emitted event"
+    )
+
+
+def test_sse_stream_closes_after_run_complete():
+    """subscribe() must drain and return after emit(run_complete) + close()."""
+    from run_event_bus import RunEventBus
+    bus = RunEventBus()
+
+    events = []
+
+    def consume():
+        for evt in bus.subscribe():
+            events.append(evt)
+
+    t = threading.Thread(target=consume)
+    t.start()
+    time.sleep(0.01)
+    bus.emit({"type": "run_complete", "run_id": "x"})
+    bus.close()
+    t.join(timeout=1.0)
+    assert not t.is_alive(), "subscribe() did not stop after run_complete + close()"
+    assert events[0]["type"] == "run_complete"
+
+
 def test_run_event_bus_is_thread_safe_under_concurrent_emitters():
     """100 concurrent emitters must all deliver without data loss."""
     from run_event_bus import RunEventBus
