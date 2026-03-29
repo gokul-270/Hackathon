@@ -59,16 +59,16 @@
 
 ## 6. New Asymmetric Scenario Files [SEQUENTIAL after 4, 5]
 
-- [ ] 6.1 **RED** Write `test_geometry_pack_has_asymmetric_arm_counts` — load `geometry_pack.json`, assert arm1 has 3 steps and arm2 has 5 steps; confirm test fails (current file has equal counts)
-- [ ] 6.2 **RED** Write `test_geometry_pack_contains_colliding_and_safe_steps` — assert at least 1 step_id has j4 gap < 0.05 m and at least 1 has j4 gap > 0.08 m when both arms are active; confirm fails
-- [ ] 6.3 **GREEN** Replace `geometry_pack.json` with asymmetric scenario: arm1 steps 0–2, arm2 steps 0–4, mixing colliding (cam_z close) and safe (cam_z far) positions; confirm tests pass
-- [ ] 6.4 **RED** Write equivalent tests for `contention_pack.json` (asymmetric counts + collision/safe mix); confirm tests fail
-- [ ] 6.5 **GREEN** Replace `contention_pack.json` with a distinct asymmetric scenario; confirm tests pass
-- [ ] 6.6 **REFACTOR** Run full test suite; commit `chore: replace scenario files with asymmetric independent-arm scenarios`
+- [x] 6.1 **RED** Write `test_geometry_pack_has_asymmetric_arm_counts` — load `geometry_pack.json`, assert arm1 has 3 steps and arm2 has 5 steps; confirm test fails (current file has equal counts)
+- [x] 6.2 **RED** Write `test_geometry_pack_contains_colliding_and_safe_steps` — assert at least 1 step_id has j4 gap < 0.05 m and at least 1 has j4 gap > 0.08 m when both arms are active; confirm fails
+- [x] 6.3 **GREEN** Replace `geometry_pack.json` with asymmetric scenario: arm1 steps 0–2, arm2 steps 0–4, mixing colliding (cam_z close) and safe (cam_z far) positions; confirm tests pass
+- [x] 6.4 **RED** Write equivalent tests for `contention_pack.json` (asymmetric counts + collision/safe mix); confirm tests fail
+- [x] 6.5 **GREEN** Replace `contention_pack.json` with a distinct asymmetric scenario; confirm tests pass
+- [x] 6.6 **REFACTOR** Run full test suite; commit `chore: replace scenario files with asymmetric independent-arm scenarios`
 
 ## 7. Integration + Impact Analysis [SEQUENTIAL after 6]
 
-- [ ] 7.1 Write `impact-analysis.md` in the change directory covering before/after behaviour, performance impact, unchanged behaviour, risk assessment, and blast radius
-- [ ] 7.2 Run full test suite `python3 -m pytest . -q -k "not test_run_report_markdown"` — confirm all tests pass (expected ≥ 408 + new tests)
-- [ ] 7.3 Cross-artifact review: verify every spec scenario in this change has a corresponding test task above; fix any gaps
-- [ ] 7.4 Commit all artifact files: `chore: create independent-arm-run change artifacts`
+- [x] 7.1 Write `impact-analysis.md` in the change directory covering before/after behaviour, performance impact, unchanged behaviour, risk assessment, and blast radius
+- [x] 7.2 Run full test suite `python3 -m pytest . -q -k "not test_run_report_markdown"` — confirm all tests pass (expected ≥ 408 + new tests)
+- [x] 7.3 Cross-artifact review: verify every spec scenario in this change has a corresponding test task above; fix any gaps
+- [x] 7.4 Commit all artifact files: `chore: create independent-arm-run change artifacts`

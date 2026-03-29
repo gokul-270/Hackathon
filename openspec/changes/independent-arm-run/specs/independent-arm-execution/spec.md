@@ -19,7 +19,7 @@ finish its current step before advancing.
 
 #### Scenario: both arms execute step-0 concurrently at run start
 - **WHEN** the run starts and both arms have a step at index 0
-- **THEN** both arm threads start their step-0 animations simultaneously (within ~0.1 s of each other)
+- **THEN** both arm threads start their step-0 animations simultaneously (within ~50 ms of each other)
 
 ### Requirement: Mode logic uses the peer arm's latest published candidate state
 

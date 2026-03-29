@@ -49,3 +49,20 @@ def test_cotton_sdf_template_has_diffuse_placeholder():
     assert "{diffuse}" in tb._COTTON_SDF_TEMPLATE, (
         "_COTTON_SDF_TEMPLATE must contain {diffuse} placeholder"
     )
+
+
+def test_arm1_all_three_cotton_spawns_are_red():
+    """All 3 SDF strings for arm1 spawns must contain the red material definition."""
+    import testing_backend as tb
+
+    for i in range(3):
+        colour = tb._ARM_COTTON_COLOURS.get("arm1", "1 1 1 1")
+        sdf = tb._COTTON_SDF_TEMPLATE.format(name=f"arm1_cotton_{i}", ambient=colour, diffuse=colour)
+        assert "<ambient>1 0 0 1</ambient>" in sdf, (
+            f"arm1 cotton spawn {i} SDF must contain red ambient; got fragment: "
+            f"{sdf[sdf.find('<ambient>'):][:60]!r}"
+        )
+        assert "<diffuse>1 0 0 1</diffuse>" in sdf, (
+            f"arm1 cotton spawn {i} SDF must contain red diffuse; got fragment: "
+            f"{sdf[sdf.find('<diffuse>'):][:60]!r}"
+        )

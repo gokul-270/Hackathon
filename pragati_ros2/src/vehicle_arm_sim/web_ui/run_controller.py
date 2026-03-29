@@ -177,7 +177,10 @@ class RunController:
 
         def _spawn_one(item):
             step_id, arm_id, step = item
-            model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
+            try:
+                model_name = self._spawn_fn(arm_id, step.cam_x, step.cam_y, step.cam_z, 0.0)
+            except Exception:
+                model_name = ""
             return (step_id, arm_id), model_name
 
         with ThreadPoolExecutor(max_workers=len(spawn_items) or 1) as pool:

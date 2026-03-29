@@ -1212,3 +1212,116 @@ def test_independent_arms_publish_and_read_peer_state():
     assert arm2_publishes == 5, (
         f"arm2 must publish once per step (5 steps), got {arm2_publishes}"
     )
+
+
+# ---------------------------------------------------------------------------
+# CRITICAL spec coverage: prev_joints isolation, spawn failure, solo peer_state
+# ---------------------------------------------------------------------------
+
+_ISOLATION_SCENARIO = {
+    "steps": [
+        # step_id 0: both arms
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.200},
+        {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
+        # step_id 1: arm2 only
+        {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
+    ]
+}
+
+
+def test_arm1_prev_joints_update_does_not_affect_arm2():
+    """arm2 candidate_joints at step 1 must use arm2's own prev_joints, not arm1's."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+    from fk_chain import camera_to_arm, polar_decompose
+
+    ctrl = RunController(mode=BaselineMode.UNRESTRICTED, arm_pair=("arm1", "arm2"))
+    ctrl.load_scenario(_ISOLATION_SCENARIO)
+    summary = ctrl.run()
+
+    reports = summary["step_reports"]
+    arm2_step1 = next(
+        (r for r in reports if r["arm_id"] == "arm2" and r["step_id"] == 1), None
+    )
+    assert arm2_step1 is not None, "arm2 step 1 report must exist"
+
+    # arm2 step 0 applied j4: computed from cam_z=0.050, j4_pos=0
+    j_arm2_step0 = polar_decompose(*camera_to_arm(0.65, -0.001, 0.050, j4_pos=0.0))
+    arm2_step0_j4 = j_arm2_step0["j4"]  # ≈ 0.0505
+
+    # arm2 step 1 expected candidate j4: computed from cam_z=0.050, j4_pos=arm2_step0_j4
+    expected = polar_decompose(*camera_to_arm(0.65, -0.001, 0.050, j4_pos=arm2_step0_j4))
+    expected_j4 = expected["j4"]  # ≈ 0.1009
+
+    # If contaminated by arm1's prev_joints (j4≈-0.0995), candidate j4 would be ≈-0.0491
+    # The two outcomes differ by 0.15 m — easily distinguishable
+    actual_j4 = arm2_step1["candidate_joints"]["j4"]
+    assert abs(actual_j4 - expected_j4) < 0.005, (
+        f"arm2 step 1 candidate j4={actual_j4:.4f} does not match expected {expected_j4:.4f}; "
+        f"arm2 may have used arm1's prev_joints (would give ≈-0.0491)"
+    )
+
+
+def test_parallel_spawn_exception_does_not_block_others():
+    """A failing spawn_fn must not prevent other cottons from being spawned."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    spawned = []
+
+    def selective_spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos):
+        if arm_id == "arm1" and cam_z == 0.200:
+            raise RuntimeError("simulated Gazebo timeout for arm1 step 0")
+        model_name = f"{arm_id}_cotton_{cam_z}"
+        spawned.append(model_name)
+        return model_name
+
+    ctrl = RunController(
+        mode=BaselineMode.UNRESTRICTED,
+        arm_pair=("arm1", "arm2"),
+        spawn_fn=selective_spawn_fn,
+    )
+    ctrl.load_scenario(_ISOLATION_SCENARIO)
+
+    # run() must not raise — the exception should be caught and the cotton recorded as ""
+    summary = ctrl.run()
+
+    # arm2's spawns must have completed
+    assert any("arm2" in m for m in spawned), (
+        "arm2 cottons must still be spawned even if arm1 spawn fails"
+    )
+
+    # The failed cotton (arm1 step 0) must be recorded with empty string
+    reports = summary["step_reports"]
+    arm1_step0 = next(
+        (r for r in reports if r["arm_id"] == "arm1" and r["step_id"] == 0), None
+    )
+    assert arm1_step0 is not None, "arm1 step 0 report must still exist"
+
+
+def test_arm2_solo_tail_step_receives_none_peer_state():
+    """apply_with_skip must receive peer_state=None for arm2 solo steps (no arm1 entry)."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+    from unittest.mock import patch
+
+    ctrl = RunController(mode=BaselineMode.UNRESTRICTED, arm_pair=("arm1", "arm2"))
+    ctrl.load_scenario(_ISOLATION_SCENARIO)
+
+    peer_states_solo = []
+    original_apply = ctrl._baseline.apply_with_skip
+
+    def capturing_apply(mode, own_cand, peer_state, step_id, arm_id):
+        if step_id == 1 and arm_id == "arm2":
+            peer_states_solo.append(peer_state)
+        return original_apply(mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id)
+
+    with patch.object(ctrl._baseline, "apply_with_skip", side_effect=capturing_apply):
+        ctrl.run()
+
+    assert len(peer_states_solo) == 1, (
+        f"apply_with_skip must be called once for arm2 step 1 (solo), got {len(peer_states_solo)}"
+    )
+    assert peer_states_solo[0] is None, (
+        f"peer_state for arm2 solo step must be None, got {peer_states_solo[0]!r}"
+    )

@@ -26,8 +26,8 @@ New timing constants:
 ### Requirement: Joint publish retry delay reduced to 50 ms
 
 The inter-attempt sleep between triple-publish retries SHALL be reduced from 150 ms
-to 50 ms, saving ~0.2 s of overhead per joint command (2 gaps × 50 ms = 0.1 s per
-command, down from 0.3 s).
+to 50 ms, saving 0.2 s of overhead per joint command (new: 2 gaps × 50 ms = 0.1 s
+per command; was: 2 gaps × 150 ms = 0.3 s).
 
 #### Scenario: publish retry uses 50 ms gap
 - **WHEN** `_gz_publish` sends a joint command with 3 attempts
