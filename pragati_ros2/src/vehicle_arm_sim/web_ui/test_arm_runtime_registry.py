@@ -13,10 +13,16 @@ def test_arm_runtime_ids_is_tuple_with_arm1_and_arm2():
     assert "arm2" in ARM_RUNTIME_IDS
 
 
-def test_arm_runtime_ids_contains_exactly_two_entries():
+def test_arm_runtime_ids_contains_exactly_three_entries():
     from arm_runtime_registry import ARM_RUNTIME_IDS
 
-    assert len(ARM_RUNTIME_IDS) == 2
+    assert len(ARM_RUNTIME_IDS) == 3
+
+
+def test_arm_runtime_ids_contains_arm3():
+    from arm_runtime_registry import ARM_RUNTIME_IDS
+
+    assert "arm3" in ARM_RUNTIME_IDS
 
 
 def test_hackathon_backend_port_is_8081():
@@ -25,12 +31,20 @@ def test_hackathon_backend_port_is_8081():
     assert HACKATHON_BACKEND_PORT == 8081
 
 
-def test_get_runtime_manifest_returns_list_of_two_descriptors():
+def test_get_runtime_manifest_returns_list_of_three_descriptors():
     from arm_runtime_registry import get_runtime_manifest
 
     manifest = get_runtime_manifest()
     assert isinstance(manifest, list)
-    assert len(manifest) == 2
+    assert len(manifest) == 3
+
+
+def test_manifest_contains_descriptor_for_arm3():
+    from arm_runtime_registry import get_runtime_manifest
+
+    manifest = get_runtime_manifest()
+    arm_ids = [d.arm_id for d in manifest]
+    assert "arm3" in arm_ids
 
 
 def test_manifest_contains_descriptor_for_arm1():

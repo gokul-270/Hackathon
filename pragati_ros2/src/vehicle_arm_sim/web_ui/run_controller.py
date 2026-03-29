@@ -50,6 +50,7 @@ class RunController:
         self._mode = mode
         self._arm1 = ArmRuntime("arm1")
         self._arm2 = ArmRuntime("arm2")
+        self._arm3 = ArmRuntime("arm3")
         self._truth_monitor = TruthMonitor()
         self._reporter = JsonReporter()
         self._baseline = BaselineMode()
@@ -246,6 +247,7 @@ class RunController:
         """Reset all state for a new run."""
         self._arm1 = ArmRuntime("arm1")
         self._arm2 = ArmRuntime("arm2")
+        self._arm3 = ArmRuntime("arm3")
         self._truth_monitor.reset()
         self._reporter.reset()
         self._transport.reset()

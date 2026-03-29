@@ -244,7 +244,7 @@ def test_e2e_architecture_transport_and_registry_coherent():
 
     manifest_count = len(manifest)
     # RunController holds exactly one ArmRuntime per arm in the registry
-    runtime_arm_ids = {rc._arm1._arm_id, rc._arm2._arm_id}
+    runtime_arm_ids = {rc._arm1._arm_id, rc._arm2._arm_id, rc._arm3._arm_id}
 
     assert manifest_count == len(runtime_arm_ids), (
         f"Registry lists {manifest_count} arms but RunController has "

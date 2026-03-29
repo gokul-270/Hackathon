@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import List
 
 
-_VALID_ARM_IDS = {"arm1", "arm2"}
+_VALID_ARM_IDS = {"arm1", "arm2", "arm3"}
 _CAM_FIELDS = ("cam_x", "cam_y", "cam_z")
 
 

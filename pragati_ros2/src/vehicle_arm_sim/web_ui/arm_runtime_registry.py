@@ -1,13 +1,13 @@
 """Arm runtime registry — single source of truth for the dual-arm hackathon system.
 
-This module documents the two arm runtimes and their configuration, making the
+This module documents the three arm runtimes and their configuration, making the
 launched system shape explicit in code. It acts as the runtime manifest for the
 dual-arm architecture (C4: UI/Backend --> Run Controller --> Arm1 + Arm2 runtimes).
 """
 
 from dataclasses import dataclass
 
-ARM_RUNTIME_IDS = ("arm1", "arm2")
+ARM_RUNTIME_IDS = ("arm1", "arm2", "arm3")
 
 HACKATHON_BACKEND_PORT = 8081
 
@@ -32,4 +32,5 @@ def get_runtime_manifest() -> list[ArmRuntimeDescriptor]:
     return [
         ArmRuntimeDescriptor(arm_id="arm1", port=HACKATHON_BACKEND_PORT, role="primary"),
         ArmRuntimeDescriptor(arm_id="arm2", port=HACKATHON_BACKEND_PORT, role="secondary"),
+        ArmRuntimeDescriptor(arm_id="arm3", port=HACKATHON_BACKEND_PORT, role="tertiary"),
     ]

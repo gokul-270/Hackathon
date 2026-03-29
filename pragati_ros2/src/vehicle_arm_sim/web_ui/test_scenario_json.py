@@ -139,3 +139,20 @@ def test_parse_scenario_rejects_paired_step_data_because_duplicate_step_ids():
     }
     with pytest.raises(ValueError, match="duplicate step_id"):
         parse_scenario(data)
+
+
+# ---------------------------------------------------------------------------
+# Group 1: arm3 is a valid arm_id
+# ---------------------------------------------------------------------------
+
+def test_parse_scenario_arm3_is_valid():
+    """parse_scenario accepts arm_id='arm3' without raising."""
+    parse_scenario = _import_parse()
+    data = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm3", "cam_x": 0.1, "cam_y": 0.2, "cam_z": 0.3},
+        ]
+    }
+    steps = parse_scenario(data)
+    assert len(steps) == 1
+    assert steps[0].arm_id == "arm3"
