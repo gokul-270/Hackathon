@@ -41,6 +41,8 @@ class BaselineMode:
 
     def __init__(self) -> None:
         self._wait_policy = SequentialPickPolicy()
+        self.last_is_contention: bool = False
+        self.last_is_winner: bool = False
 
     def apply(
         self,
@@ -180,7 +182,9 @@ class BaselineMode:
         peer_joints = None
         if peer_state is not None:
             peer_joints = peer_state.candidate_joints
-        applied, skipped, _is_contention, _is_winner = self._wait_policy.apply(
+        applied, skipped, is_contention, is_winner = self._wait_policy.apply(
             step_id, arm_id, own_joints, peer_joints
         )
+        self.last_is_contention = is_contention
+        self.last_is_winner = is_winner
         return applied, skipped

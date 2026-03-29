@@ -16,6 +16,7 @@ from json_reporter import JsonReporter, StepReport
 from peer_transport import LocalPeerTransport
 from run_step_executor import _noop_spawn, _noop_remove, RunStepExecutor
 from scenario_json import ScenarioStep
+from smart_reorder_scheduler import SmartReorderScheduler
 from truth_monitor import TruthMonitor
 
 _MODE_NAMES = {
@@ -23,6 +24,7 @@ _MODE_NAMES = {
     BaselineMode.BASELINE_J5_BLOCK_SKIP: "baseline_j5_block_skip",
     BaselineMode.GEOMETRY_BLOCK: "geometry_block",
     BaselineMode.SEQUENTIAL_PICK: "sequential_pick",
+    BaselineMode.SMART_REORDER: "smart_reorder",
 }
 
 _SAFE_HOME = {"j3": 0.0, "j4": 0.0, "j5": 0.0}
@@ -178,6 +180,53 @@ class RunController:
         for step in self._secondary_arm.get_own_steps():
             step_map.setdefault(step.step_id, {})[self._secondary_id] = step
 
+        # Mode 4 (Smart Reorder): rearrange step pairings before the step loop
+        # to maximize the minimum j4 gap across all paired steps.
+        if self._mode == BaselineMode.SMART_REORDER:
+            arm1_step_ids = sorted(
+                sid for sid, arms in step_map.items() if self._primary_id in arms
+            )
+            arm2_step_ids = sorted(
+                sid for sid, arms in step_map.items() if self._secondary_id in arms
+            )
+            # Convert step_map entries to the format SmartReorderScheduler expects:
+            # {step_id: {"arm1": step_obj, "arm2": step_obj}}
+            reorder_input: dict[int, dict[str, object]] = {}
+            for sid, arms in step_map.items():
+                entry: dict[str, object] = {}
+                for arm_id, step in arms.items():
+                    # SmartReorderScheduler needs dict-like objects with cam_z
+                    entry[arm_id] = {
+                        "cam_x": step.cam_x,
+                        "cam_y": step.cam_y,
+                        "cam_z": step.cam_z,
+                        "step_id": step.step_id,
+                        "arm_id": step.arm_id,
+                    }
+                reorder_input[sid] = entry
+
+            scheduler = SmartReorderScheduler()
+            reordered = scheduler.reorder(
+                reorder_input,
+                arm1_step_ids,
+                arm2_step_ids,
+            )
+
+            # Rebuild step_map from reordered result (which has sequential int keys)
+            new_step_map: dict[int, dict[str, object]] = {}
+            for new_sid, arms in reordered.items():
+                new_entry: dict[str, object] = {}
+                for arm_id, data in arms.items():
+                    new_entry[arm_id] = ScenarioStep(
+                        step_id=new_sid,
+                        arm_id=arm_id,
+                        cam_x=data["cam_x"],
+                        cam_y=data["cam_y"],
+                        cam_z=data["cam_z"],
+                    )
+                new_step_map[new_sid] = new_entry
+            step_map = new_step_map
+
         total_steps = len(step_map)
 
         # Upfront cotton spawn: spawn all cottons concurrently before any execution begins.
@@ -233,6 +282,8 @@ class RunController:
             # Apply mode logic and build peer state packets
             applied: dict[str, dict] = {}
             skipped_flags: dict[str, bool] = {}
+            contention_flags: dict[str, bool] = {}  # per-arm contention (Mode 3)
+            winner_flags: dict[str, bool] = {}  # per-arm winner status (Mode 3)
             # Publish every active arm's state to the transport (solo or paired).
             # Solo arms publish so their state is available if queried; the peer's
             # receive() will return None at solo steps — correct "peer not active" result.
@@ -256,12 +307,17 @@ class RunController:
                 if unreachable_flags.get(arm_id, False):
                     applied[arm_id] = own_cand  # pass-through (not used for Gazebo)
                     skipped_flags[arm_id] = True
+                    contention_flags[arm_id] = False
+                    winner_flags[arm_id] = False
                     continue
                 result_joints, skipped = self._baseline.apply_with_skip(
                     self._mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id
                 )
                 applied[arm_id] = result_joints
                 skipped_flags[arm_id] = skipped
+                # Capture contention info from Mode 3 (sequential pick)
+                contention_flags[arm_id] = self._baseline.last_is_contention
+                winner_flags[arm_id] = self._baseline.last_is_winner
 
             # Truth monitor observation (only when both arms active).
             # Feed *candidate* (pre-mode) j4 values so the truth record reflects
@@ -315,13 +371,28 @@ class RunController:
                     "mode": mode_name,
                 })
 
-            # Dispatch all executor calls in parallel (max 2 workers for a pair of arms)
+            # Dispatch executor calls.
+            # Mode 3 (Sequential Pick) contention: dispatch winner first, wait, then loser.
+            # All other cases: dispatch both arms in parallel.
             outcomes: dict = {}
-            with ThreadPoolExecutor(max_workers=2) as pool:
-                futures = {
-                    arm_id: pool.submit(
-                        self._executor.execute,
-                        arm_id=arm_id,
+            step_has_contention = (
+                self._mode == BaselineMode.SEQUENTIAL_PICK
+                and both_active
+                and all(contention_flags.get(a, False) for a in arm_execute_args)
+            )
+
+            if step_has_contention:
+                # Two-phase sequential dispatch: winner arm first, then loser
+                winner_arm = next(
+                    a for a in arm_execute_args if winner_flags.get(a, False)
+                )
+                loser_arm = next(
+                    a for a in arm_execute_args if a != winner_arm
+                )
+                for dispatch_arm in [winner_arm, loser_arm]:
+                    args = arm_execute_args[dispatch_arm]
+                    outcomes[dispatch_arm] = self._executor.execute(
+                        arm_id=dispatch_arm,
                         applied_joints=args["applied"],
                         blocked=args["j5_blocked"],
                         skipped=args["skipped"],
@@ -329,12 +400,28 @@ class RunController:
                         cam_y=args["step"].cam_y,
                         cam_z=args["step"].cam_z,
                         j4_pos=args["applied"]["j4"],
-                        cotton_model=cotton_models.get((step_id, arm_id), ""),
+                        cotton_model=cotton_models.get((step_id, dispatch_arm), ""),
                     )
-                    for arm_id, args in arm_execute_args.items()
-                }
-                for arm_id in futures:
-                    outcomes[arm_id] = futures[arm_id].result()
+            else:
+                # Parallel dispatch (max 2 workers for a pair of arms)
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    futures = {
+                        arm_id: pool.submit(
+                            self._executor.execute,
+                            arm_id=arm_id,
+                            applied_joints=args["applied"],
+                            blocked=args["j5_blocked"],
+                            skipped=args["skipped"],
+                            cam_x=args["step"].cam_x,
+                            cam_y=args["step"].cam_y,
+                            cam_z=args["step"].cam_z,
+                            j4_pos=args["applied"]["j4"],
+                            cotton_model=cotton_models.get((step_id, arm_id), ""),
+                        )
+                        for arm_id, args in arm_execute_args.items()
+                    }
+                    for arm_id in futures:
+                        outcomes[arm_id] = futures[arm_id].result()
 
             # Add step reports in sorted arm_id order
             for arm_id in sorted(arm_execute_args.keys()):

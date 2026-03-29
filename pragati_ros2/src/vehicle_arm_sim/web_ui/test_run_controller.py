@@ -1382,3 +1382,228 @@ def test_run_controller_emits_no_events_when_no_event_bus():
     })
     summary = ctrl.run()  # must not raise
     assert "total_steps" in summary
+
+
+# ---------------------------------------------------------------------------
+# Group 5 — Mode 3 Sequential Pick: two-phase dispatch at contention steps
+# ---------------------------------------------------------------------------
+
+# Contention scenario: both arms at same step_id with j4 gap < 0.10m and j5 > 0.
+# cam_z=0.080 → j4 = 0.1005 - 0.080 = 0.0205
+# cam_z=0.090 → j4 = 0.1005 - 0.090 = 0.0105
+# gap = |0.0205 - 0.0105| = 0.01 < 0.10 → contention
+# cam_y=-0.001 keeps j5 positive (small positive extension)
+_CONTENTION_SCENARIO = {
+    "steps": [
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.080},
+        {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.090},
+    ]
+}
+
+# No-contention scenario: j4 gap >= 0.10m
+# cam_z=0.050 → j4 = 0.1005 - 0.050 = 0.0505
+# cam_z=0.300 → j4 = 0.1005 - 0.300 = -0.1995
+# gap = |0.0505 - (-0.1995)| = 0.25 > 0.10 → no contention
+_NO_CONTENTION_SCENARIO = {
+    "steps": [
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
+        {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+    ]
+}
+
+
+class _SequentialOrderRecordingExecutor:
+    """Records executor call order with timestamps to verify sequential vs parallel dispatch."""
+
+    def __init__(self):
+        self.call_log: list[tuple[str, float, float]] = []  # (arm_id, start_time, end_time)
+
+    def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+        start = _time.monotonic()
+        _time.sleep(0.05)  # Simulate execution time
+        end = _time.monotonic()
+        self.call_log.append((arm_id, start, end))
+        return {
+            "terminal_status": "completed",
+            "pick_completed": True,
+            "executed_in_gazebo": True,
+        }
+
+
+def test_mode3_contention_dispatches_winner_before_loser():
+    """Mode 3 at contention step: winner arm's execute() must complete before
+    loser arm's execute() starts (sequential two-phase dispatch)."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    executor = _SequentialOrderRecordingExecutor()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, executor=executor)
+    ctrl.load_scenario(_CONTENTION_SCENARIO)
+    ctrl.run()
+
+    assert len(executor.call_log) == 2, (
+        f"Expected 2 executor calls for paired step; got {len(executor.call_log)}"
+    )
+    first_arm, first_start, first_end = executor.call_log[0]
+    second_arm, second_start, second_end = executor.call_log[1]
+
+    # Winner must finish before loser starts (sequential dispatch)
+    assert first_end <= second_start + 0.005, (
+        f"Winner ({first_arm}) must finish (end={first_end:.4f}) before loser "
+        f"({second_arm}) starts (start={second_start:.4f}) — two-phase dispatch violated"
+    )
+
+
+def test_mode3_contention_winner_is_arm1_on_first_step():
+    """Mode 3: arm1 wins the first contention (turn starts at 0 = arm1's turn)."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    executor = _SequentialOrderRecordingExecutor()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, executor=executor)
+    ctrl.load_scenario(_CONTENTION_SCENARIO)
+    ctrl.run()
+
+    assert len(executor.call_log) == 2
+    first_arm = executor.call_log[0][0]
+    assert first_arm == "arm1", (
+        f"arm1 must be the winner on first contention; got {first_arm}"
+    )
+
+
+def test_mode3_no_contention_dispatches_both_in_parallel():
+    """Mode 3 at non-contention step: both arms must be dispatched in parallel
+    (start times within 50ms of each other)."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    executor = _SequentialOrderRecordingExecutor()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, executor=executor)
+    ctrl.load_scenario(_NO_CONTENTION_SCENARIO)
+    ctrl.run()
+
+    assert len(executor.call_log) == 2
+    _, start1, _ = executor.call_log[0]
+    _, start2, _ = executor.call_log[1]
+    gap_ms = abs(start1 - start2) * 1000
+    assert gap_ms < 50, (
+        f"Non-contention step must dispatch in parallel (< 50ms gap); got {gap_ms:.1f}ms"
+    )
+
+
+def test_mode3_no_skipped_steps():
+    """Mode 3 must never produce skipped=True in step reports — both arms always execute."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK)
+    ctrl.load_scenario(_CONTENTION_SCENARIO)
+    summary = ctrl.run()
+
+    for report in summary["step_reports"]:
+        assert report["skipped"] is False, (
+            f"Mode 3 must not skip any step; {report['arm_id']} was skipped"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Group 5 — Mode 4 Smart Reorder: pre-run reorder + parallel dispatch
+# ---------------------------------------------------------------------------
+
+# Smart reorder scenario: initially poor pairing, reorder should improve
+# arm1 at cam_z=0.080 (j4=0.0205), arm2 at cam_z=0.085 (j4=0.0155) → gap = 0.005 (bad)
+# arm1 at cam_z=0.250 (j4=-0.1495), arm2 at cam_z=0.050 (j4=0.0505) → gap = 0.2 (good)
+# After reorder: pair arm1(0.080) with arm2(0.050) → gap=0.03, arm1(0.250) with arm2(0.085) → gap=0.165
+# Both gaps improve over the original minimum of 0.005
+_REORDER_SCENARIO = {
+    "steps": [
+        {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.080},
+        {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.085},
+        {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.250},
+        {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
+    ]
+}
+
+
+def test_mode4_calls_reorder_before_step_loop():
+    """Mode 4 must call SmartReorderScheduler.reorder() before executing steps."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+    from unittest.mock import patch, MagicMock
+
+    reorder_called = [False]
+    execute_calls = []
+
+    class _TrackingExecutor:
+        def execute(self, arm_id, applied_joints, **kwargs):
+            execute_calls.append(arm_id)
+            if reorder_called[0] is False:
+                raise AssertionError("executor.execute() called before reorder()")
+            return {
+                "terminal_status": "completed",
+                "pick_completed": True,
+                "executed_in_gazebo": True,
+            }
+
+    from smart_reorder_scheduler import SmartReorderScheduler
+    original_reorder = SmartReorderScheduler.reorder
+
+    def track_reorder(self_inner, step_map, arm1_steps, arm2_steps):
+        reorder_called[0] = True
+        return original_reorder(self_inner, step_map, arm1_steps, arm2_steps)
+
+    with patch.object(
+        SmartReorderScheduler, "reorder", track_reorder
+    ):
+        ctrl = RunController(mode=BaselineMode.SMART_REORDER, executor=_TrackingExecutor())
+        ctrl.load_scenario(_REORDER_SCENARIO)
+        ctrl.run()
+
+    assert reorder_called[0] is True, "SmartReorderScheduler.reorder() must be called for mode 4"
+    assert len(execute_calls) > 0, "executor.execute() must be called after reorder"
+
+
+def test_mode4_dispatches_all_steps_in_parallel():
+    """Mode 4 steps must all dispatch in parallel (no sequential two-phase dispatch)."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    executor = _SequentialOrderRecordingExecutor()
+    ctrl = RunController(mode=BaselineMode.SMART_REORDER, executor=executor)
+    ctrl.load_scenario(_REORDER_SCENARIO)
+    ctrl.run()
+
+    # Group call_log by step. Each paired step should have 2 calls starting close together.
+    # With 2 paired steps, we expect 4 total calls
+    assert len(executor.call_log) == 4, (
+        f"Expected 4 executor calls for 2 paired steps; got {len(executor.call_log)}"
+    )
+
+    # Check that within each step_id's pair, both arms start close together (parallel)
+    # The first two calls are step 0 (paired), the next two are step 1 (paired)
+    # Since steps are sequential, we check pairs: calls 0,1 and calls 2,3
+    for pair_start in range(0, 4, 2):
+        _, start1, _ = executor.call_log[pair_start]
+        _, start2, _ = executor.call_log[pair_start + 1]
+        gap_ms = abs(start1 - start2) * 1000
+        assert gap_ms < 50, (
+            f"Mode 4 paired step dispatch must be parallel (< 50ms gap); "
+            f"got {gap_ms:.1f}ms at pair starting index {pair_start}"
+        )
+
+
+def test_mode4_mode_name_is_smart_reorder():
+    """Mode 4 run summary must use mode name 'smart_reorder'."""
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    ctrl = RunController(mode=BaselineMode.SMART_REORDER)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+        ]
+    })
+    summary = ctrl.run()
+    assert summary["mode"] == "smart_reorder", (
+        f"Expected mode name 'smart_reorder'; got '{summary['mode']}'"
+    )

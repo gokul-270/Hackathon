@@ -56,10 +56,10 @@ Wire SequentialPickPolicy and SmartReorder passthrough into BaselineMode dispatc
 
 Add two-phase dispatch for Mode 3 contention steps and pre-run reorder for Mode 4.
 
-- [ ] 5.1 Write failing tests: Mode 3 contention step dispatches winner arm first then loser arm sequentially (verify call order); Mode 3 non-contention step dispatches both in parallel; Mode 4 calls SmartReorderScheduler.reorder() before step loop; Mode 4 steps run in parallel after reorder.
-- [ ] 5.2 Run tests — confirm RED.
-- [ ] 5.3 In `run_controller.py`: import `SmartReorderScheduler`. Before step loop, if mode == SMART_REORDER, call `scheduler.reorder()` to replace step_map. In dispatch section, if mode == SEQUENTIAL_PICK and contention detected (from policy result), dispatch winner arm `executor.execute()` first, await result, then dispatch loser arm. Else use parallel ThreadPoolExecutor dispatch as before.
-- [ ] 5.4 Run full test suite — confirm GREEN. Refactor. Commit.
+- [x] 5.1 Write failing tests: Mode 3 contention step dispatches winner arm first then loser arm sequentially (verify call order); Mode 3 non-contention step dispatches both in parallel; Mode 4 calls SmartReorderScheduler.reorder() before step loop; Mode 4 steps run in parallel after reorder.
+- [x] 5.2 Run tests — confirm RED.
+- [x] 5.3 In `run_controller.py`: import `SmartReorderScheduler`. Before step loop, if mode == SMART_REORDER, call `scheduler.reorder()` to replace step_map. In dispatch section, if mode == SEQUENTIAL_PICK and contention detected (from policy result), dispatch winner arm `executor.execute()` first, await result, then dispatch loser arm. Else use parallel ThreadPoolExecutor dispatch as before.
+- [x] 5.4 Run full test suite — confirm GREEN (480 passed). Refactor. Commit.
 
 ## 6. Reporting Extensions [PARALLEL with 5, 7]
 
