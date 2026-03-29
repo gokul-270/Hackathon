@@ -183,3 +183,35 @@ def test_run_event_bus_is_thread_safe_under_concurrent_emitters():
     bus.close()
     t.join(timeout=2.0)
     assert len(received) == 100
+
+
+def test_run_active_flag_set_after_reset_and_cleared_after_close():
+    """reset() must mark the bus as active; close() must mark it inactive."""
+    from run_event_bus import RunEventBus
+    bus = RunEventBus()
+
+    assert not bus.run_active, "bus must not be active before first reset()"
+    bus.reset()
+    assert bus.run_active, "bus must be active after reset()"
+    bus.close()
+    assert not bus.run_active, "bus must not be active after close()"
+
+
+def test_reset_while_run_active_does_not_clear_queue():
+    """Calling reset() on an active bus (run in progress) must not wipe queued events."""
+    from run_event_bus import RunEventBus
+    bus = RunEventBus()
+    bus.reset()  # marks active — simulates run_start calling reset()
+    bus.emit({"type": "step_start", "step_id": 0})
+    bus.emit({"type": "cotton_reached", "arm_id": "arm1"})
+
+    # Simulate mid-run SSE reconnect calling reset() — must be a no-op
+    bus.reset()
+
+    # The queue must still have both events
+    events = list(bus._queue)
+    assert len(events) == 2, (
+        f"reset() on active bus wiped the queue; remaining events: {events}"
+    )
+    assert events[0]["type"] == "step_start"
+    assert events[1]["type"] == "cotton_reached"

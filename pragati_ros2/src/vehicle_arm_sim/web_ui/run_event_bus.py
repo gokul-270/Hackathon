@@ -15,6 +15,13 @@ class RunEventBus:
         self._lock = threading.Condition(threading.Lock())
         self._queue: collections.deque = collections.deque()
         self._closed = False
+        self._run_active = False
+
+    @property
+    def run_active(self) -> bool:
+        """True while a run is in progress (between reset() and close())."""
+        with self._lock:
+            return self._run_active
 
     def emit(self, event: dict) -> None:
         """Append an event and notify all waiting subscribers."""
@@ -39,10 +46,19 @@ class RunEventBus:
         """Signal all subscribers to stop. Idempotent."""
         with self._lock:
             self._closed = True
+            self._run_active = False
             self._lock.notify_all()
 
     def reset(self) -> None:
-        """Clear all events and re-arm for the next run."""
+        """Clear all events and re-arm for the next run.
+
+        No-op if the bus is already active (run in progress). This prevents
+        a mid-run SSE reconnect from wiping the event queue of an active run.
+        Only the first caller (POST /api/run/start) transitions idle→active.
+        """
         with self._lock:
+            if self._run_active:
+                return  # mid-run reconnect: do NOT wipe the active queue
             self._queue.clear()
             self._closed = False
+            self._run_active = True
