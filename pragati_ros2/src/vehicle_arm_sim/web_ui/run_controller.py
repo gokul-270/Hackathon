@@ -191,6 +191,14 @@ class RunController:
                 j4_current = prev_joints[arm_id]["j4"]
                 candidates[arm_id] = rt.compute_candidate_joints(step, j4_current=j4_current)
 
+            # Reachability check: arms whose FK yields out-of-limit joints are skipped entirely.
+            # Sending out-of-limit values to Gazebo would cause silent clipping/ignoring and
+            # leave the arm frozen at its last real position with no error indication.
+            unreachable_flags: dict[str, bool] = {
+                arm_id: not candidates[arm_id]["reachable"]
+                for arm_id in candidates
+            }
+
             # Apply mode logic and build peer state packets
             applied: dict[str, dict] = {}
             skipped_flags: dict[str, bool] = {}
@@ -212,6 +220,12 @@ class RunController:
                 peer_state = None
                 if both_active:
                     peer_state = self._transport.receive(peer_id)
+                # Unreachable arms are skipped before mode logic — out-of-limit joints
+                # must not be passed through apply_with_skip or sent to the executor.
+                if unreachable_flags.get(arm_id, False):
+                    applied[arm_id] = own_cand  # pass-through (not used for Gazebo)
+                    skipped_flags[arm_id] = True
+                    continue
                 result_joints, skipped = self._baseline.apply_with_skip(
                     self._mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id
                 )
@@ -287,6 +301,15 @@ class RunController:
                 own_skipped = args["skipped"]
                 j5_blocked = args["j5_blocked"]
 
+                # Override outcome for unreachable steps so the report clearly identifies
+                # them as "unreachable" rather than the generic "skipped".
+                if unreachable_flags.get(arm_id, False):
+                    outcome = {
+                        "terminal_status": "unreachable",
+                        "pick_completed": False,
+                        "executed_in_gazebo": False,
+                    }
+
                 self._reporter.add_step(
                     StepReport(
                         step_id=step_id,
@@ -312,12 +335,15 @@ class RunController:
                         executed_in_gazebo=outcome["executed_in_gazebo"],
                     )
                 )
-                # Update previous joints for this arm
-                prev_joints[arm_id] = {
-                    "j3": own_applied["j3"],
-                    "j4": own_applied["j4"],
-                    "j5": own_applied["j5"],
-                }
+                # Update previous joints only when the step was actually executed in Gazebo.
+                # Blocked/skipped steps must NOT update prev_joints — the arm never moved,
+                # so the next step's FK must compute from the last real position.
+                if outcome["executed_in_gazebo"]:
+                    prev_joints[arm_id] = {
+                        "j3": own_applied["j3"],
+                        "j4": own_applied["j4"],
+                        "j5": own_applied["j5"],
+                    }
 
         self._last_summary = self._reporter.build_run_summary(mode_name, total_steps)
         return self._last_summary

@@ -630,9 +630,9 @@ def test_completed_steps_retain_status_after_estop_fires_on_later_step():
 
     scenario = {
         "steps": [
-            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
-            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
-            {"step_id": 2, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.0},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.0},
+            {"step_id": 2, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.0},
         ]
     }
 
@@ -657,3 +657,269 @@ def test_completed_steps_retain_status_after_estop_fires_on_later_step():
     assert step2_status == "estop_aborted", (
         f"Step 2 (where E-STOP fires) must be 'estop_aborted'; got '{step2_status}'"
     )
+
+
+# ---------------------------------------------------------------------------
+# Fix F1: prev_joints must NOT be updated when step was not executed in Gazebo
+# ---------------------------------------------------------------------------
+
+
+class _BlockFirstStepExecutor:
+    """Returns 'blocked' for the first execute() call, 'completed' for subsequent calls.
+
+    Also records the applied_joints received for each call so tests can verify
+    what j4 value was passed in.
+    """
+
+    def __init__(self):
+        self.call_count = 0
+        self.received_applied_joints: list = []
+
+    def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+        self.call_count += 1
+        self.received_applied_joints.append(dict(applied_joints))
+        if self.call_count == 1:
+            return {
+                "terminal_status": "blocked",
+                "pick_completed": False,
+                "executed_in_gazebo": False,
+            }
+        return {
+            "terminal_status": "completed",
+            "pick_completed": True,
+            "executed_in_gazebo": True,
+        }
+
+
+def test_prev_joints_not_updated_when_step_blocked_so_next_step_sees_home_j4():
+    """When step 0 is blocked (executed_in_gazebo=False), prev_joints must remain at
+    the safe-home position so step 1's FK computation starts from j4=0.0, not from
+    the blocked step's applied j4.
+
+    Bug F1: before this fix, prev_joints was always overwritten with applied_joints,
+    even for blocked/skipped steps where Gazebo never moved. This caused cascading FK
+    drift — each subsequent step used a phantom j4 offset.
+    """
+    from run_controller import RunController
+
+    executor = _BlockFirstStepExecutor()
+
+    # Two sequential arm1-only steps. Step 0 will be blocked by executor.
+    # The cam_z value (0.25) maps to a non-zero j4 (≈-0.150 m).
+    # If prev_joints were polluted after step 0, step 1's candidate would use j4≈-0.150 as
+    # j4_current instead of 0.0 (home). We capture applied_joints to detect this.
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+        ]
+    }
+
+    rc = RunController(executor=executor)
+    rc.load_scenario(scenario)
+    rc.run()
+
+    assert executor.call_count == 2, f"Expected 2 execute() calls; got {executor.call_count}"
+
+    # Step 1's candidate joints must be computed from j4_current=0.0 (home),
+    # NOT from step 0's applied j4.
+    # Both steps use identical cam coords → identical FK. The j4_current offset shifts j4.
+    # If prev_joints was NOT polluted → step 1 j4 == step 0 j4 (both from home j4=0.0).
+    # If prev_joints WAS polluted → step 1 j4 != step 0 j4 (step 1 shifted by step 0 j4).
+    step0_j4 = executor.received_applied_joints[0]["j4"]
+    step1_j4 = executor.received_applied_joints[1]["j4"]
+    assert step0_j4 == step1_j4, (
+        f"Step 1 applied j4 ({step1_j4:.4f}) must equal step 0 applied j4 ({step0_j4:.4f}) "
+        f"when step 0 was blocked and prev_joints was not updated. "
+        f"A mismatch means prev_joints was incorrectly overwritten after the blocked step."
+    )
+
+
+def test_prev_joints_updated_when_step_executed_so_next_step_sees_shifted_j4():
+    """When step 0 completes (executed_in_gazebo=True), prev_joints MUST be updated so
+    step 1's FK computation sees the moved j4, not home.
+
+    This is the regression guard: the fix must not break the normal-execution path.
+    """
+    from run_controller import RunController
+
+    call_count = [0]
+    received_applied_joints: list = []
+
+    class _AlwaysCompleteExecutor:
+        def execute(self, arm_id, applied_joints, **kwargs):
+            call_count[0] += 1
+            received_applied_joints.append(dict(applied_joints))
+            return {
+                "terminal_status": "completed",
+                "pick_completed": True,
+                "executed_in_gazebo": True,
+            }
+
+    executor = _AlwaysCompleteExecutor()
+
+    # Two steps with identical cam coords.
+    # After step 0 executes, prev_joints["arm1"] = applied j4 from step 0.
+    # Step 1 FK uses j4_current = step 0 j4 → the result j4 will differ from step 0.
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.25},
+        ]
+    }
+
+    rc = RunController(executor=executor)
+    rc.load_scenario(scenario)
+    rc.run()
+
+    assert call_count[0] == 2
+
+    step0_j4 = received_applied_joints[0]["j4"]
+    step1_j4 = received_applied_joints[1]["j4"]
+
+    # After a completed step, j4_current changes → next step's FK-computed j4 differs.
+    # (camera_to_arm adds j4_pos offset, so step 1 j4 = step 0 j4 + step 0 j4 = 2× step0 j4)
+    assert step0_j4 != step1_j4, (
+        f"After a completed step, step 1 applied j4 ({step1_j4:.4f}) must differ "
+        f"from step 0 applied j4 ({step0_j4:.4f}) because prev_joints should be updated."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Fix F2: unreachable cotton positions must be skipped, not sent to Gazebo
+# ---------------------------------------------------------------------------
+
+# cam_z=0.5 → j4≈-0.400 m, below J4_MIN=-0.250 → reachable=False
+_UNREACHABLE_STEP = {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.5}
+# cam_y=0.3, cam_z=0.0 → j3=-0.173, j4=0.100, j5=0.128 → reachable=True
+_REACHABLE_STEP = {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.0}
+
+
+def test_unreachable_step_produces_terminal_status_unreachable():
+    """A step whose FK yields reachable=False must produce terminal_status='unreachable'.
+
+    Bug F2: before this fix, out-of-limit joint values were passed to the executor
+    and published to Gazebo, which silently clips or ignores them. The arm would appear
+    to freeze at the last-known position with no error indication.
+    """
+    from run_controller import RunController
+
+    execute_calls: list = []
+
+    class _CapturingExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            execute_calls.append({"arm_id": arm_id, "blocked": blocked, "skipped": skipped,
+                                  "applied_joints": dict(applied_joints)})
+            if skipped:
+                return {"terminal_status": "unreachable", "pick_completed": False,
+                        "executed_in_gazebo": False}
+            return {"terminal_status": "completed", "pick_completed": True,
+                    "executed_in_gazebo": True}
+
+    rc = RunController(executor=_CapturingExecutor())
+    rc.load_scenario({"steps": [_UNREACHABLE_STEP]})
+    summary = rc.run()
+
+    reports = summary["step_reports"]
+    assert len(reports) == 1
+    assert reports[0]["terminal_status"] == "unreachable", (
+        f"Unreachable step must produce terminal_status='unreachable'; "
+        f"got '{reports[0]['terminal_status']}'"
+    )
+
+
+def test_unreachable_step_is_not_executed_in_gazebo():
+    """An unreachable step must have executed_in_gazebo=False."""
+    from run_controller import RunController
+
+    class _CapturingExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            if skipped:
+                return {"terminal_status": "unreachable", "pick_completed": False,
+                        "executed_in_gazebo": False}
+            return {"terminal_status": "completed", "pick_completed": True,
+                    "executed_in_gazebo": True}
+
+    rc = RunController(executor=_CapturingExecutor())
+    rc.load_scenario({"steps": [_UNREACHABLE_STEP]})
+    summary = rc.run()
+
+    assert summary["step_reports"][0]["executed_in_gazebo"] is False, (
+        "Unreachable step must not be executed in Gazebo."
+    )
+
+
+def test_unreachable_step_does_not_corrupt_prev_joints_for_next_step():
+    """An unreachable step (F2) combined with prev_joints guard (F1) must not
+    corrupt the arm position for subsequent steps.
+
+    Scenario: step 0 is unreachable, step 1 is reachable with identical cam coords
+    as step 0. If prev_joints is NOT corrupted, step 1 sees j4_current=0.0 (home)
+    and its candidate j4 matches what step 0 would have produced from home.
+    """
+    from run_controller import RunController
+
+    received_applied_joints: list = []
+
+    class _CapturingExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            received_applied_joints.append(dict(applied_joints))
+            if skipped:
+                return {"terminal_status": "unreachable", "pick_completed": False,
+                        "executed_in_gazebo": False}
+            return {"terminal_status": "completed", "pick_completed": True,
+                    "executed_in_gazebo": True}
+
+    # Step 0: unreachable (cam_z=0.5). Step 1: same cam coords but reachable=False too.
+    # Both steps use the same coords; if prev_joints was corrupted, step 1's j4 would differ.
+    # We use a reachable step for step 1 so it actually reaches the executor.
+    scenario = {
+        "steps": [
+            {**_UNREACHABLE_STEP, "step_id": 0},
+            {**_REACHABLE_STEP, "step_id": 1},
+        ]
+    }
+
+    rc = RunController(executor=_CapturingExecutor())
+    rc.load_scenario(scenario)
+    rc.run()
+
+    # Both calls must have happened (step 0 skipped, step 1 executed).
+    assert len(received_applied_joints) == 2, (
+        f"Expected 2 executor calls; got {len(received_applied_joints)}"
+    )
+    # Step 1's j4 must be computed from j4_current=0.0, not from step 0's (unreachable) j4.
+    # _REACHABLE_STEP (cam_y=0.3, cam_z=0.0) from j4_current=0.0 gives j4≈0.100 m.
+    step1_j4 = received_applied_joints[1]["j4"]
+    from fk_chain import camera_to_arm, polar_decompose
+    ax, ay, az = camera_to_arm(0.3, 0.3, 0.0, j4_pos=0.0)
+    expected_j4 = polar_decompose(ax, ay, az)["j4"]
+    assert abs(step1_j4 - expected_j4) < 1e-6, (
+        f"Step 1 j4 ({step1_j4:.4f}) must equal home-based FK j4 ({expected_j4:.4f}), "
+        f"proving prev_joints was not corrupted by the unreachable step 0."
+    )
+
+
+def test_reachable_step_still_executes_normally_after_f2_fix():
+    """Regression: a reachable step must still produce terminal_status='completed'
+    and executed_in_gazebo=True after the F2 reachability check is added.
+    """
+    from run_controller import RunController
+
+    class _CompleteExecutor:
+        def execute(self, arm_id, applied_joints, blocked=False, skipped=False, **kwargs):
+            if skipped:
+                return {"terminal_status": "unreachable", "pick_completed": False,
+                        "executed_in_gazebo": False}
+            return {"terminal_status": "completed", "pick_completed": True,
+                    "executed_in_gazebo": True}
+
+    rc = RunController(executor=_CompleteExecutor())
+    rc.load_scenario({"steps": [_REACHABLE_STEP]})
+    summary = rc.run()
+
+    reports = summary["step_reports"]
+    assert reports[0]["terminal_status"] == "completed", (
+        f"Reachable step must still complete normally; got '{reports[0]['terminal_status']}'"
+    )
+    assert reports[0]["executed_in_gazebo"] is True

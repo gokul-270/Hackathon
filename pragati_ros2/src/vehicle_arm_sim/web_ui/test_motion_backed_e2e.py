@@ -594,3 +594,88 @@ class TestEstopIntegration:
             f"GET /api/run/status returned {status_result['status']} while run in progress — "
             "event loop may be blocked (asyncio.to_thread not working)"
         )
+
+
+# ---------------------------------------------------------------------------
+# Fix F3: _gz_publish must log a warning when subprocess.run returns non-zero
+# ---------------------------------------------------------------------------
+
+class TestGzPublishStderrLogging:
+    """F3: _gz_publish must capture stderr and log a warning when gz returns non-zero.
+
+    Before this fix, stderr=subprocess.DEVNULL silently discarded all Gazebo errors.
+    A failed gz publish looked identical to a successful one, making debugging impossible.
+    """
+
+    def test_gz_publish_logs_warning_when_subprocess_returns_nonzero(self):
+        """When subprocess.run returns returncode != 0, _gz_publish must emit a warning
+        containing the topic name so the operator knows which joint command failed.
+        """
+        from unittest.mock import MagicMock
+
+        def mock_run_fail(cmd, **kwargs):
+            return type("CompletedProcess", (), {
+                "returncode": 1,
+                "stderr": b"gz: cannot connect to server",
+            })()
+
+        mock_logger = MagicMock()
+
+        tb._current_run_result = None
+        with (
+            patch("testing_backend.subprocess.run", side_effect=mock_run_fail),
+            patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
+            patch("testing_backend.logger", mock_logger),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        # At least one warning must have been emitted about the failed gz publish
+        assert mock_logger.warning.called, (
+            "_gz_publish must call logger.warning when subprocess.run returns non-zero; "
+            "no warning calls were made"
+        )
+        # The first warning call must mention the topic name for debugging
+        first_call_args = mock_logger.warning.call_args_list[0]
+        call_str = str(first_call_args)
+        assert "/joint" in call_str or "topic" in call_str.lower(), (
+            f"Warning must include topic name for debugging; got call args: {first_call_args}"
+        )
+
+    def test_gz_publish_does_not_log_on_success(self):
+        """When subprocess.run returns returncode 0, no warning must be emitted."""
+        from unittest.mock import MagicMock
+
+        def mock_run_ok(cmd, **kwargs):
+            return type("CompletedProcess", (), {
+                "returncode": 0,
+                "stderr": b"",
+            })()
+
+        mock_logger = MagicMock()
+
+        tb._current_run_result = None
+        with (
+            patch("testing_backend.subprocess.run", side_effect=mock_run_ok),
+            patch("testing_backend.subprocess.Popen", side_effect=lambda *a, **k: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+            patch("testing_backend.time.sleep", side_effect=lambda s: None),
+            patch("testing_backend.logger", mock_logger),
+        ):
+            client = TestClient(app)
+            resp = client.post(
+                "/api/run/start", json={"mode": 0, "scenario": _SOLO_SCENARIO}
+            )
+        assert resp.status_code == 200
+        assert not mock_logger.warning.called, (
+            f"No logger.warning must be called on successful publish; "
+            f"got calls: {mock_logger.warning.call_args_list}"
+        )

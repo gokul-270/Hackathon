@@ -1161,7 +1161,15 @@ async def run_start(req: RunStartRequest):
             "-p", f"data: {value}",
         ]
         for i in range(3):
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            result = subprocess.run(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
+            )
+            if result.returncode != 0:
+                stderr_text = result.stderr.decode("utf-8", errors="replace").strip()
+                logger.warning(
+                    "gz publish failed on topic %s (attempt %d/3): %s",
+                    topic, i + 1, stderr_text or "(no stderr)",
+                )
             if i < 2:
                 time.sleep(0.150)
 
