@@ -1,17 +1,13 @@
 {
-  "description": "Geometry pack: overlap-heavy scenarios for three-mode comparison",
+  "description": "Geometry pack: asymmetric independent-arm scenarios mixing colliding and safe positions",
   "steps": [
     {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
     {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.070},
-    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.060},
-    {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.075},
+    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
+    {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.200},
     {"step_id": 2, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.055},
-    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.065},
-    {"step_id": 3, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.040},
-    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.090},
-    {"step_id": 4, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.045},
-    {"step_id": 4, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.048},
-    {"step_id": 5, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.080},
-    {"step_id": 5, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.085}
+    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.060},
+    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.095},
+    {"step_id": 4, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.090}
   ]
 }

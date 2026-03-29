@@ -127,3 +127,51 @@ def test_geometry_pack_has_at_least_two_overlap_heavy_paired_steps(geometry_pack
     assert overlap_count >= 2, (
         f"Expected >= 2 overlap-heavy paired steps (j4 gap < 0.12 m), got {overlap_count}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Group 6 — Asymmetric arm counts and collision/safe mix
+# ---------------------------------------------------------------------------
+
+
+def test_geometry_pack_has_asymmetric_arm_counts(geometry_pack):
+    """arm1 must have exactly 3 steps and arm2 must have exactly 5 steps."""
+    arm1_steps = [s for s in geometry_pack["steps"] if s["arm_id"] == "arm1"]
+    arm2_steps = [s for s in geometry_pack["steps"] if s["arm_id"] == "arm2"]
+    assert len(arm1_steps) == 3, (
+        f"arm1 must have 3 steps, got {len(arm1_steps)}"
+    )
+    assert len(arm2_steps) == 5, (
+        f"arm2 must have 5 steps, got {len(arm2_steps)}"
+    )
+
+
+def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
+    """Must have at least 1 step with j4 gap < 0.05 m and 1 step with j4 gap > 0.08 m."""
+    step_map: dict[int, dict] = {}
+    for step in geometry_pack["steps"]:
+        step_map.setdefault(step["step_id"], {})[step["arm_id"]] = step
+
+    colliding = 0
+    safe = 0
+    for step_id, arms in step_map.items():
+        if "arm1" not in arms or "arm2" not in arms:
+            continue
+        j4_arm1 = _j4_for_step(arms["arm1"])
+        j4_arm2 = _j4_for_step(arms["arm2"])
+        gap = abs(j4_arm1 - j4_arm2)
+        if gap < 0.05:
+            colliding += 1
+        if gap > 0.08:
+            safe += 1
+
+    assert colliding >= 1, (
+        f"Must have >= 1 paired step with j4 gap < 0.05 m (collision zone); "
+        f"step_map j4 gaps: "
+        f"{[round(abs(_j4_for_step(arms['arm1'])-_j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+    )
+    assert safe >= 1, (
+        f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
+        f"step_map j4 gaps: "
+        f"{[round(abs(_j4_for_step(arms['arm1'])-_j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+    )

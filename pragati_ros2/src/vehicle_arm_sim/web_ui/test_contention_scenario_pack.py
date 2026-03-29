@@ -116,3 +116,61 @@ def test_contention_pack_scenario_has_varied_cam_values(contention_pack):
         f"Expected at least 2 distinct cam_z values for scenario diversity, "
         f"got {len(cam_z_values)}: {cam_z_values}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Group 6 — Asymmetric arm counts and collision/safe mix
+# ---------------------------------------------------------------------------
+
+
+def test_contention_pack_has_asymmetric_arm_counts(contention_pack):
+    """arm1 must have exactly 4 steps and arm2 must have exactly 6 steps."""
+    arm1_steps = [s for s in contention_pack["steps"] if s["arm_id"] == "arm1"]
+    arm2_steps = [s for s in contention_pack["steps"] if s["arm_id"] == "arm2"]
+    assert len(arm1_steps) == 4, (
+        f"arm1 must have 4 steps, got {len(arm1_steps)}"
+    )
+    assert len(arm2_steps) == 6, (
+        f"arm2 must have 6 steps, got {len(arm2_steps)}"
+    )
+
+
+def _j4_for_contention_step(step: dict) -> float:
+    """Compute the j4 for a step using FK (starting from j4_pos=0)."""
+    import os
+    import sys
+    _WEB_UI = os.path.dirname(__file__)
+    if _WEB_UI not in sys.path:
+        sys.path.insert(0, _WEB_UI)
+    from fk_chain import camera_to_arm, polar_decompose
+    joints = polar_decompose(*camera_to_arm(step["cam_x"], step["cam_y"], step["cam_z"], j4_pos=0.0))
+    return joints["j4"]
+
+
+def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
+    """Must have at least 1 paired step with j4 gap < 0.05 m and 1 with j4 gap > 0.08 m."""
+    step_map: dict[int, dict] = {}
+    for step in contention_pack["steps"]:
+        step_map.setdefault(step["step_id"], {})[step["arm_id"]] = step
+
+    colliding = 0
+    safe = 0
+    for step_id, arms in step_map.items():
+        if "arm1" not in arms or "arm2" not in arms:
+            continue
+        j4_arm1 = _j4_for_contention_step(arms["arm1"])
+        j4_arm2 = _j4_for_contention_step(arms["arm2"])
+        gap = abs(j4_arm1 - j4_arm2)
+        if gap < 0.05:
+            colliding += 1
+        if gap > 0.08:
+            safe += 1
+
+    assert colliding >= 1, (
+        f"Must have >= 1 paired step with j4 gap < 0.05 m (collision zone); "
+        f"gaps: {[round(abs(_j4_for_contention_step(arms['arm1'])-_j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+    )
+    assert safe >= 1, (
+        f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
+        f"gaps: {[round(abs(_j4_for_contention_step(arms['arm1'])-_j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+    )
