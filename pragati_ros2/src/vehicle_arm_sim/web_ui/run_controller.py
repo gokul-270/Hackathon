@@ -316,6 +316,7 @@ class RunController:
                 own_applied = args["applied"]
                 own_skipped = args["skipped"]
                 j5_blocked = args["j5_blocked"]
+                cam_step = args["step"]
 
                 # Override outcome for unreachable steps so the report clearly identifies
                 # them as "unreachable" rather than the generic "skipped".
@@ -349,6 +350,9 @@ class RunController:
                         terminal_status=outcome["terminal_status"],
                         pick_completed=outcome["pick_completed"],
                         executed_in_gazebo=outcome["executed_in_gazebo"],
+                        cam_x=cam_step.cam_x,
+                        cam_y=cam_step.cam_y,
+                        cam_z=cam_step.cam_z,
                     )
                 )
                 # Update previous joints only when the step was actually executed in Gazebo.

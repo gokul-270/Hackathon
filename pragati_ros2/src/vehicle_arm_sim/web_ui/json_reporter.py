@@ -21,6 +21,10 @@ class StepReport:
     terminal_status: str = "completed"  # "completed" | "blocked" | "skipped"
     pick_completed: bool = False
     executed_in_gazebo: bool = False
+    # Original camera coordinates for traceability (added by run-observability change)
+    cam_x: Optional[float] = None
+    cam_y: Optional[float] = None
+    cam_z: Optional[float] = None
 
 
 class JsonReporter:

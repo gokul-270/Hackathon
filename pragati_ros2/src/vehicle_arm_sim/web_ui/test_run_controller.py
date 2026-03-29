@@ -1325,3 +1325,20 @@ def test_arm2_solo_tail_step_receives_none_peer_state():
     assert peer_states_solo[0] is None, (
         f"peer_state for arm2 solo step must be None, got {peer_states_solo[0]!r}"
     )
+
+
+def test_run_controller_step_reports_include_cam_coords():
+    """StepReport entries must include cam_x/cam_y/cam_z from the scenario step."""
+    from run_controller import RunController
+    ctrl = RunController(mode=0)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+        ]
+    })
+    summary = ctrl.run()
+    reports = summary["step_reports"]
+    assert len(reports) == 1
+    assert reports[0]["cam_x"] == 0.65
+    assert reports[0]["cam_y"] == -0.001
+    assert reports[0]["cam_z"] == 0.150

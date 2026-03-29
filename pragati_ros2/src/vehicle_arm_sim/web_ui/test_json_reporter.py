@@ -22,6 +22,7 @@ def make_step(
     near_collision: bool = False,
     collision: bool = False,
     min_j4_distance: Optional[float] = None,
+    **kwargs,
 ) -> StepReport:
     return StepReport(
         step_id=step_id,
@@ -33,6 +34,7 @@ def make_step(
         near_collision=near_collision,
         collision=collision,
         min_j4_distance=min_j4_distance,
+        **kwargs,
     )
 
 
@@ -143,3 +145,13 @@ def test_json_reporter_add_step_is_thread_safe():
     assert len(summary["step_reports"]) == 1000, (
         f"All 1000 step reports must be present; got {len(summary['step_reports'])}"
     )
+
+
+def test_step_report_cam_coords_appear_in_serialized_output():
+    """StepReport cam_x/cam_y/cam_z fields must serialize via asdict()."""
+    from dataclasses import asdict
+    step = make_step(cam_x=0.65, cam_y=-0.001, cam_z=0.150)
+    d = asdict(step)
+    assert d["cam_x"] == 0.65
+    assert d["cam_y"] == -0.001
+    assert d["cam_z"] == 0.150
