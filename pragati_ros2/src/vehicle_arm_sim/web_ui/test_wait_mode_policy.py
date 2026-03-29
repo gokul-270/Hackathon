@@ -1,4 +1,4 @@
-"""Tests for WaitModePolicy — Mode 3: OVERLAP_ZONE_WAIT."""
+"""Tests for WaitModePolicy — Mode 3: SEQUENTIAL_PICK."""
 
 import pytest
 from wait_mode_policy import WaitModePolicy

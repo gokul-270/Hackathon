@@ -108,4 +108,4 @@ def test_e2e_json_report_summary_mode_matches_requested():
     """The JSON report summary mode matches the mode that was run."""
     client.post("/api/run/start", json={"mode": 3, "scenario": _SCENARIO})
     data = client.get("/api/run/report/json").json()
-    assert data["summary"]["mode"] == "overlap_zone_wait"
+    assert data["summary"]["mode"] == "sequential_pick"

@@ -145,7 +145,7 @@ def test_run_summary_blocked_or_skipped_combined_not_separately():
     reporter.add_step(_make_step(step_id=1, pick_completed=False, j5_blocked=True, terminal_status="blocked"))
     reporter.add_step(_make_step(step_id=2, pick_completed=False, skipped=True, terminal_status="skipped"))
     reporter.add_step(_make_step(step_id=3, pick_completed=True, terminal_status="completed"))
-    summary = reporter.build_run_summary("overlap_zone_wait", total_steps=3)
+    summary = reporter.build_run_summary("sequential_pick", total_steps=3)
 
     # combined count = 1 blocked + 1 skipped = 2
     assert summary["steps_with_blocked_or_skipped"] == 2

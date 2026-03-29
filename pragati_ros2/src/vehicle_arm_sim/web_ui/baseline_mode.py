@@ -10,17 +10,17 @@ Modes
                             distance (< 0.12 m → risky).  Stage 2 checks the
                             combined j5 extension (> 0.5) AND close lateral gap
                             (< 0.06 m) → unsafe → zero out j5.
-3  OVERLAP_ZONE_WAIT      : alternating-turn wait arbitration.  When both arms are
-                            in the overlap zone (|j4| < 0.10 m) and both extending,
-                            the non-priority arm waits (j5=0).  After timeout_steps
-                            the waiting arm skips (j5=0, skipped=True).
+3  SEQUENTIAL_PICK        : sequential two-phase dispatch.  When both arms contend
+                             at the same step (|j4_gap| < 0.10 m and both extending),
+                             the winner arm is dispatched first, waits for completion,
+                             then the loser arm is dispatched.
 """
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 from geometry_check import GeometryStage1Screen, GeometryStage2Check
-from wait_mode_policy import WaitModePolicy
+from sequential_pick_policy import SequentialPickPolicy
 
 if TYPE_CHECKING:  # pragma: no cover
     from arm_runtime import PeerStatePacket
@@ -33,10 +33,10 @@ class BaselineMode:
     UNRESTRICTED = 0
     BASELINE_J5_BLOCK_SKIP = 1
     GEOMETRY_BLOCK = 2
-    OVERLAP_ZONE_WAIT = 3
+    SEQUENTIAL_PICK = 3
 
     def __init__(self, wait_timeout_steps: int = 0) -> None:
-        self._wait_policy = WaitModePolicy(timeout_steps=wait_timeout_steps)
+        self._wait_policy = SequentialPickPolicy(timeout_steps=wait_timeout_steps)
 
     def apply(
         self,
@@ -48,13 +48,13 @@ class BaselineMode:
 
         Args:
             mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
-                  3=overlap_zone_wait
+                  3=sequential_pick
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
 
         Returns:
             Modified joints dict (may be same or different from own_joints).
-            For overlap_zone_wait use apply_with_skip() to also get the skipped flag.
+            For sequential_pick use apply_with_skip() to also get the skipped flag.
         """
         joints, _ = self.apply_with_skip(mode, own_joints, peer_state)
         return joints
@@ -71,15 +71,15 @@ class BaselineMode:
 
         Args:
             mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
-                  3=overlap_zone_wait
+                  3=sequential_pick
             own_joints: {"j3": float, "j4": float, "j5": float}
             peer_state: peer arm's PeerStatePacket or None
-            step_id: current step identifier (used by overlap_zone_wait)
-            arm_id: "arm1" or "arm2" (used by overlap_zone_wait)
+            step_id: current step identifier (used by sequential_pick)
+            arm_id: "arm1" or "arm2" (used by sequential_pick)
 
         Returns:
             (applied_joints, skipped) where skipped is True only when
-            overlap_zone_wait times out and skips a pick.
+            sequential_pick times out and skips a pick.
         """
         if mode == self.UNRESTRICTED:
             return own_joints, False
@@ -90,7 +90,7 @@ class BaselineMode:
         if mode == self.GEOMETRY_BLOCK:
             return self._apply_geometry_block(own_joints, peer_state), False
 
-        if mode == self.OVERLAP_ZONE_WAIT:
+        if mode == self.SEQUENTIAL_PICK:
             return self._apply_overlap_zone_wait(own_joints, peer_state, step_id, arm_id)
 
         raise ValueError(f"Unknown mode: {mode!r}")

@@ -62,7 +62,7 @@ def test_json_reporter_step_report_has_skipped_field():
     step = StepReport(
         step_id=1,
         arm_id="arm_a",
-        mode="overlap_zone_wait",
+        mode="sequential_pick",
         candidate_joints={"j3": 0.0, "j4": 0.0, "j5": 0.0},
         applied_joints={"j3": 0.0, "j4": 0.0, "j5": 0.0},
         j5_blocked=False,
@@ -77,7 +77,7 @@ def test_json_reporter_summary_has_steps_with_skipped():
     """build_run_summary must contain a 'steps_with_skipped' key."""
     reporter = JsonReporter()
     reporter.add_step(make_step(step_id=1))
-    summary = reporter.build_run_summary(mode="overlap_zone_wait", total_steps=1)
+    summary = reporter.build_run_summary(mode="sequential_pick", total_steps=1)
     assert "steps_with_skipped" in summary
 
 
@@ -87,7 +87,7 @@ def test_json_reporter_steps_with_skipped_counts_skipped_steps():
     reporter.add_step(make_step(step_id=1, skipped=True))
     reporter.add_step(make_step(step_id=2, skipped=False))
     reporter.add_step(make_step(step_id=3, skipped=True))
-    summary = reporter.build_run_summary(mode="overlap_zone_wait", total_steps=3)
+    summary = reporter.build_run_summary(mode="sequential_pick", total_steps=3)
     assert summary["steps_with_skipped"] == 2
 
 
@@ -95,7 +95,7 @@ def test_json_reporter_summary_has_steps_with_blocked_or_skipped():
     """build_run_summary must contain a 'steps_with_blocked_or_skipped' key."""
     reporter = JsonReporter()
     reporter.add_step(make_step(step_id=1))
-    summary = reporter.build_run_summary(mode="overlap_zone_wait", total_steps=1)
+    summary = reporter.build_run_summary(mode="sequential_pick", total_steps=1)
     assert "steps_with_blocked_or_skipped" in summary
 
 
@@ -109,7 +109,7 @@ def test_json_reporter_blocked_or_skipped_combines_both():
     reporter.add_step(make_step(step_id=3, skipped=True))
     # 1 normal step
     reporter.add_step(make_step(step_id=4))
-    summary = reporter.build_run_summary(mode="overlap_zone_wait", total_steps=4)
+    summary = reporter.build_run_summary(mode="sequential_pick", total_steps=4)
     assert summary["steps_with_blocked_or_skipped"] == 3
 
 
@@ -124,7 +124,7 @@ def test_markdown_reporter_four_runs_produces_four_mode_heading():
         _make_run("unrestricted"),
         _make_run("baseline_j5_block_skip"),
         _make_run("geometry_block"),
-        _make_run("overlap_zone_wait"),
+        _make_run("sequential_pick"),
     ]
     md = reporter.generate(runs)
     assert "Four-Mode" in md
@@ -147,20 +147,20 @@ def test_markdown_reporter_recommendation_prefers_zero_collision_mode():
     reporter = MarkdownReporter()
     runs = [
         _make_run("unrestricted", total_steps=10, collision=2, blocked=0),
-        _make_run("overlap_zone_wait", total_steps=10, collision=0, blocked=2,
+        _make_run("sequential_pick", total_steps=10, collision=0, blocked=2,
                   blocked_or_skipped=2),
         _make_run("baseline_j5_block_skip", total_steps=10, collision=1, blocked=1,
                   blocked_or_skipped=1),
         _make_run("geometry_block", total_steps=10, collision=3, blocked=0),
     ]
     md = reporter.generate(runs)
-    assert "overlap_zone_wait" in md
+    assert "sequential_pick" in md
     # The zero-collision mode should be recommended
-    # Check the Recommendation section contains overlap_zone_wait
+    # Check the Recommendation section contains sequential_pick
     rec_start = md.find("### Recommendation")
     assert rec_start != -1
     rec_section = md[rec_start:]
-    assert "overlap_zone_wait" in rec_section
+    assert "sequential_pick" in rec_section
 
 
 def test_markdown_reporter_recommendation_among_zero_collision_modes_prefers_higher_success():

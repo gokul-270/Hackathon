@@ -1204,10 +1204,10 @@ async def run_start(req: RunStartRequest):
     """Start a replay run with the given mode and scenario data."""
     global _current_run_result, _run_state
 
-    valid_modes = {0, 1, 2, 3}
+    valid_modes = {0, 1, 2, 3, 4}
     if req.mode not in valid_modes:
         from fastapi import HTTPException
-        raise HTTPException(status_code=422, detail=f"Invalid mode {req.mode}; must be 0-3")
+        raise HTTPException(status_code=422, detail=f"Invalid mode {req.mode}; must be 0-4")
 
     # Validate arm_pair
     from fk_chain import ARM_CONFIGS

@@ -1,4 +1,4 @@
-"""Overlap zone state model for Mode 3: OVERLAP_ZONE_WAIT."""
+"""Overlap zone state model for contention detection."""
 
 
 class OverlapZoneState:

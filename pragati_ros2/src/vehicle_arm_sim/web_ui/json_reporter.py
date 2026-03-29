@@ -9,14 +9,14 @@ from typing import Optional
 class StepReport:
     step_id: int
     arm_id: str
-    mode: str  # "unrestricted" | "baseline_j5_block_skip" | "geometry_block" | "overlap_zone_wait"
+    mode: str  # "unrestricted" | "baseline_j5_block_skip" | "geometry_block" | "sequential_pick" | "smart_reorder"
     candidate_joints: dict  # {"j3": float, "j4": float, "j5": float}
     applied_joints: dict    # after mode logic
     j5_blocked: bool
     near_collision: bool
     collision: bool
     min_j4_distance: Optional[float]  # None if only one arm active in this step
-    skipped: bool = False  # True when overlap_zone_wait skips the step
+    skipped: bool = False  # True when sequential_pick skips the step
     # Explicit terminal outcome fields (added by gazebo-scenario-execution change)
     terminal_status: str = "completed"  # "completed" | "blocked" | "skipped"
     pick_completed: bool = False

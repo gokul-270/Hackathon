@@ -10,7 +10,7 @@ Covers the full stack integration of all three Phase 2 correction groups:
 
   Group 2 — Wait-mode corrections:
     - WaitModePolicy paired-call delivers one winner and one blocked arm per step
-    - RunController OVERLAP_ZONE_WAIT mode correctly arbitrates paired steps
+    - RunController SEQUENTIAL_PICK mode correctly arbitrates paired steps
 
   Group 3 — Recommendation/truth corrections:
     - MarkdownReporter recommendation names the actual winning mode
@@ -104,13 +104,13 @@ def test_e2e_paired_step_reports_have_correct_arm_ids():
 # ---------------------------------------------------------------------------
 
 
-def test_e2e_overlap_zone_wait_mode_arbitrates_paired_step_contention():
-    """In OVERLAP_ZONE_WAIT mode, a paired step with contention must produce exactly
+def test_e2e_sequential_pick_mode_arbitrates_paired_step_contention():
+    """In SEQUENTIAL_PICK mode, a paired step with contention must produce exactly
     one non-skipped pick and one skipped/blocked pick.
 
     This verifies wait-mode paired-call arbitration works end-to-end through RunController.
     """
-    rc = RunController(mode=BaselineMode.OVERLAP_ZONE_WAIT)
+    rc = RunController(mode=BaselineMode.SEQUENTIAL_PICK)
     rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
     summary = rc.run()
 
@@ -124,17 +124,17 @@ def test_e2e_overlap_zone_wait_mode_arbitrates_paired_step_contention():
     # At least one arm must be blocked (j5=0 or skipped) when contention occurs
     # (only valid if arms are actually in contention — cam_z=0.10 for both puts j4 in overlap zone)
     assert skipped_count >= 1 or not_skipped_count >= 1, (
-        "OVERLAP_ZONE_WAIT must arbitrate: at least one arm processed per step"
+        "SEQUENTIAL_PICK must arbitrate: at least one arm processed per step"
     )
 
 
-def test_e2e_overlap_zone_wait_mode_alternates_turn_across_steps():
-    """In OVERLAP_ZONE_WAIT mode on a contention scenario, the winning arm must
+def test_e2e_sequential_pick_mode_alternates_turn_across_steps():
+    """In SEQUENTIAL_PICK mode on a contention scenario, the winning arm must
     alternate between step 0 and step 1 (turn-based arbitration).
 
     Turn starts at arm1; arm1 wins step 0, arm2 wins step 1.
     """
-    rc = RunController(mode=BaselineMode.OVERLAP_ZONE_WAIT)
+    rc = RunController(mode=BaselineMode.SEQUENTIAL_PICK)
     rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
     summary = rc.run()
 
@@ -173,7 +173,7 @@ def test_e2e_four_mode_comparison_recommendation_names_actual_winner():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(scenario)
@@ -192,7 +192,7 @@ def test_e2e_four_mode_comparison_recommendation_names_actual_winner():
     rec_idx = md.find("### Recommendation")
     assert rec_idx != -1
     rec_text = md[rec_idx:]
-    mode_names = {"unrestricted", "baseline_j5_block_skip", "geometry_block", "overlap_zone_wait"}
+    mode_names = {"unrestricted", "baseline_j5_block_skip", "geometry_block", "sequential_pick"}
     assert any(name in rec_text for name in mode_names), (
         f"Recommendation section must name one of {mode_names}; got:\n{rec_text}"
     )
@@ -208,7 +208,7 @@ def test_e2e_four_mode_report_recommendation_names_best_mode_explicitly():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(scenario)
@@ -236,7 +236,7 @@ def test_e2e_run_results_are_trustworthy_truth_monitor_data_present():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -263,7 +263,7 @@ def test_e2e_run_summary_counts_are_internally_consistent():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -289,7 +289,7 @@ def test_e2e_unrestricted_mode_has_most_collisions_when_arms_contend():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         rc = RunController(mode=mode)
         rc.load_scenario(_CONTENTION_PAIRED_SCENARIO)
@@ -299,7 +299,7 @@ def test_e2e_unrestricted_mode_has_most_collisions_when_arms_contend():
     for mode in [
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]:
         blocking_collisions = summaries_by_mode[mode]["steps_with_collision"]
         assert unrestricted_collisions >= blocking_collisions, (

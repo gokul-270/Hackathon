@@ -5,7 +5,7 @@ Produces a Markdown document comparing the results of replay modes:
   - unrestricted
   - baseline_j5_block_skip
   - geometry_block
-  - overlap_zone_wait  (Release 3)
+  - sequential_pick     (Release 3, replaces overlap_zone_wait)
 
 Usage
 -----

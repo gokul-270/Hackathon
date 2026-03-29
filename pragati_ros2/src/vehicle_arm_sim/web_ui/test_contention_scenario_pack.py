@@ -5,7 +5,7 @@ The contention scenario pack lives at:
   scenarios/contention_pack.json
 
 It must contain scenarios where both arms target cotton in the overlap zone
-simultaneously, causing contention in overlap_zone_wait mode and collisions in
+simultaneously, causing contention in sequential_pick mode and collisions in
 unrestricted mode.
 
 Design contract

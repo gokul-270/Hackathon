@@ -83,7 +83,7 @@ def test_json_reporter_step_report_skipped_has_terminal_status_skipped():
     """A skipped step report must have terminal_status='skipped'."""
     reporter = JsonReporter()
     reporter.add_step(_make_step(terminal_status="skipped", pick_completed=False, skipped=True))
-    summary = reporter.build_run_summary("overlap_zone_wait", total_steps=1)
+    summary = reporter.build_run_summary("sequential_pick", total_steps=1)
     assert summary["step_reports"][0]["terminal_status"] == "skipped"
     assert summary["step_reports"][0]["pick_completed"] is False
 

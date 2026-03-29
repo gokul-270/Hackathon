@@ -75,7 +75,7 @@ def test_json_report_mode_name_matches_requested_mode():
         0: "unrestricted",
         1: "baseline_j5_block_skip",
         2: "geometry_block",
-        3: "overlap_zone_wait",
+        3: "sequential_pick",
     }
     for mode, expected_name in mode_names.items():
         _run(mode)

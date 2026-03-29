@@ -22,7 +22,7 @@ _MODE_NAMES = {
     BaselineMode.UNRESTRICTED: "unrestricted",
     BaselineMode.BASELINE_J5_BLOCK_SKIP: "baseline_j5_block_skip",
     BaselineMode.GEOMETRY_BLOCK: "geometry_block",
-    BaselineMode.OVERLAP_ZONE_WAIT: "overlap_zone_wait",
+    BaselineMode.SEQUENTIAL_PICK: "sequential_pick",
 }
 
 _SAFE_HOME = {"j3": 0.0, "j4": 0.0, "j5": 0.0}
@@ -47,7 +47,7 @@ class RunController:
         """
         Args:
             mode: 0=unrestricted, 1=baseline_j5_block_skip, 2=geometry_block,
-                  3=overlap_zone_wait
+                  3=sequential_pick
             executor: Optional RunStepExecutor (or duck-typed compatible) instance.
                       If None, a no-op executor is created (no Gazebo publishing).
                       Inject a real RunStepExecutor for motion-backed runs.
@@ -287,7 +287,7 @@ class RunController:
                 own_applied = applied[arm_id]
                 own_skipped = skipped_flags[arm_id]
                 # j5_blocked: any blocking mode that zeroed j5 when candidate was non-zero
-                # (does not include overlap_zone_wait skips — those are tracked separately)
+                # (does not include sequential_pick skips — those are tracked separately)
                 j5_blocked = (
                     self._mode in (BaselineMode.BASELINE_J5_BLOCK_SKIP, BaselineMode.GEOMETRY_BLOCK)
                     and own_applied["j5"] == 0.0

@@ -170,20 +170,20 @@ def test_recommendation_text_names_actual_winning_mode_not_hardcoded_string():
     """The recommendation section must reference the ACTUAL best mode name, not a
     hardcoded string like 'geometry-aware strategy'.
 
-    When the winner is 'overlap_zone_wait', the recommendation text must contain
-    'overlap_zone_wait'.  When the winner is 'baseline_j5_block_skip', the
+    When the winner is 'sequential_pick', the recommendation text must contain
+    'sequential_pick'.  When the winner is 'baseline_j5_block_skip', the
     recommendation text must contain 'baseline_j5_block_skip'.
     """
     reporter = MarkdownReporter()
-    # overlap_zone_wait is the winner: zero collisions with fewest blocked
+    # sequential_pick is the winner: zero collisions with fewest blocked
     runs = [
         _make_run("unrestricted", collision=3, near=4, blocked=0),
         _make_run("baseline_j5_block_skip", collision=1, near=2, blocked=2),
-        _make_run("overlap_zone_wait", collision=0, near=1, blocked=1),
+        _make_run("sequential_pick", collision=0, near=1, blocked=1),
     ]
     md = reporter.generate(runs)
     # Must name the actual winner
-    assert "overlap_zone_wait" in md
+    assert "sequential_pick" in md
     # Must NOT use a hardcoded label for a mode that didn't win
     assert "geometry-aware strategy" not in md
 

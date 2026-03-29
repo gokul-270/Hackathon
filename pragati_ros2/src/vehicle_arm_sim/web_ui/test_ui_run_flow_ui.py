@@ -31,7 +31,7 @@ def test_html_mode_select_has_all_four_modes():
     assert 'value="0"' in _HTML  # unrestricted
     assert 'value="1"' in _HTML  # baseline_j5_block_skip
     assert 'value="2"' in _HTML  # geometry_block
-    assert 'value="3"' in _HTML  # overlap_zone_wait
+    assert 'value="3"' in _HTML  # sequential_pick
 
 
 # ---------------------------------------------------------------------------

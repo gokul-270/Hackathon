@@ -222,7 +222,7 @@ def test_e2e_full_architecture_run_produces_reports_for_all_modes():
         BaselineMode.UNRESTRICTED,
         BaselineMode.BASELINE_J5_BLOCK_SKIP,
         BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.OVERLAP_ZONE_WAIT,
+        BaselineMode.SEQUENTIAL_PICK,
     ]
 
     for mode in modes:

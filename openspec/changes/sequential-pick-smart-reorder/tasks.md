@@ -16,14 +16,14 @@
 
 Replace all `overlap_zone_wait` / `OVERLAP_ZONE_WAIT` references with `sequential_pick` / `SEQUENTIAL_PICK` across source and test files. No behavior change — pure rename. Commit when green.
 
-- [ ] 1.1 In `baseline_mode.py`: rename constant `OVERLAP_ZONE_WAIT = 3` to `SEQUENTIAL_PICK = 3`. Update all internal references.
-- [ ] 1.2 In `run_controller.py`: rename `_MODE_NAMES` entry from `"overlap_zone_wait"` to `"sequential_pick"` for key 3. Add entry `4: "smart_reorder"`.
-- [ ] 1.3 In `testing_backend.py`: update `valid_modes` from `{0, 1, 2, 3}` to `{0, 1, 2, 3, 4}`. Update error message from `"must be 0-3"` to `"must be 0-4"`.
-- [ ] 1.4 In `json_reporter.py`: update mode type comment from overlap_zone_wait to sequential_pick/smart_reorder. Update skipped comment if present.
-- [ ] 1.5 Rename file `wait_mode_policy.py` to `sequential_pick_policy.py` (empty the old class, write stub `SequentialPickPolicy` with pass-through `apply` method that preserves the old interface signature).
-- [ ] 1.6 Update all import references from `wait_mode_policy` to `sequential_pick_policy` in `baseline_mode.py` and any other importing files.
-- [ ] 1.7 Bulk-rename string `"overlap_zone_wait"` to `"sequential_pick"` in all 16 test files. Update test names/docstrings referencing old Mode 3.
-- [ ] 1.8 Run full test suite (`python3 -m pytest -k "not test_run_report_markdown"`) — all 446+ tests must pass. TDD: this is a rename-only commit, tests should pass with no behavior change. Commit.
+- [x] 1.1 In `baseline_mode.py`: rename constant `OVERLAP_ZONE_WAIT = 3` to `SEQUENTIAL_PICK = 3`. Update all internal references.
+- [x] 1.2 In `run_controller.py`: rename `_MODE_NAMES` entry from `"overlap_zone_wait"` to `"sequential_pick"` for key 3. Add entry `4: "smart_reorder"`.
+- [x] 1.3 In `testing_backend.py`: update `valid_modes` from `{0, 1, 2, 3}` to `{0, 1, 2, 3, 4}`. Update error message from `"must be 0-3"` to `"must be 0-4"`.
+- [x] 1.4 In `json_reporter.py`: update mode type comment from overlap_zone_wait to sequential_pick/smart_reorder. Update skipped comment if present.
+- [x] 1.5 Rename file `wait_mode_policy.py` to `sequential_pick_policy.py` (empty the old class, write stub `SequentialPickPolicy` with pass-through `apply` method that preserves the old interface signature).
+- [x] 1.6 Update all import references from `wait_mode_policy` to `sequential_pick_policy` in `baseline_mode.py` and any other importing files.
+- [x] 1.7 Bulk-rename string `"overlap_zone_wait"` to `"sequential_pick"` in all 16 test files. Update test names/docstrings referencing old Mode 3.
+- [x] 1.8 Run full test suite (`python3 -m pytest -k "not test_run_report_markdown"`) — all 446+ tests must pass. TDD: this is a rename-only commit, tests should pass with no behavior change. Commit.
 
 ## 2. Sequential Pick Policy [PARALLEL with 3]
 

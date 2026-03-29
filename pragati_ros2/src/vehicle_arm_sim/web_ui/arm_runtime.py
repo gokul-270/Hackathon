@@ -82,7 +82,7 @@ class ArmRuntime:
         Returns:
             (applied_joints, skipped, candidate_joints) where:
               - applied_joints: joints after mode logic has been applied.
-              - skipped: True only when overlap_zone_wait times out and skips the pick.
+              - skipped: True only when sequential_pick times out and skips the pick.
               - candidate_joints: raw FK result before mode logic.
         """
         step = next((s for s in self._steps if s.step_id == step_id), None)
