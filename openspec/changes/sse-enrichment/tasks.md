@@ -41,12 +41,12 @@ Add formatting for 4 new event types and enhance `step_start` in `testing_ui.js`
 
 Start Gazebo server, start backend, run all 5 modes via Playwright, assert SSE log content.
 
-- [ ] 3.1 Start Gazebo server (`gz sim -s`) and backend on port 8081.
-- [ ] 3.2 Navigate Playwright to UI, verify mode dropdown has 5 options.
-- [ ] 3.3 Mode 0 (Unrestricted): select mode, load `contention_pack`, start run, wait for completion. Assert: `parallel dispatch` present, `cotton_reached` with correct positions present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
-- [ ] 3.4 Mode 1 (Baseline J5): same flow. Assert: `parallel dispatch` present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
-- [ ] 3.5 Mode 2 (Geometry Block): same flow. Assert: `parallel dispatch` present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
-- [ ] 3.6 Mode 3 (Sequential Pick): same flow. Assert: `Contention at step` present, `sequential dispatch` present at contention steps, `parallel dispatch` at non-contention steps, `cotton_reached` in winner-first order at contention steps, NO `Reorder`.
-- [ ] 3.7 Mode 4 (Smart Reorder): same flow. Assert: `Reorder applied` present with min gap, `parallel dispatch` present, `cotton_reached` with reordered positions, NO `Contention`, NO `sequential dispatch`.
-- [ ] 3.8 Take screenshot evidence of each mode's log output.
-- [ ] 3.9 Final commit if any fixes needed. Update tasks.md.
+- [x] 3.1 Start Gazebo server (`gz sim -s`) and backend on port 8081.
+- [x] 3.2 Navigate Playwright to UI, verify mode dropdown has 5 options.
+- [x] 3.3 Mode 0 (Unrestricted): select mode, load `contention_pack`, start run, wait for completion. Assert: `parallel dispatch` present, `cotton_reached` with correct positions present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
+- [x] 3.4 Mode 1 (Baseline J5): same flow. Assert: `parallel dispatch` present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
+- [x] 3.5 Mode 2 (Geometry Block): same flow. Assert: `parallel dispatch` present, NO `Contention`, NO `sequential dispatch`, NO `Reorder`.
+- [x] 3.6 Mode 3 (Sequential Pick): same flow. Assert: `Contention at step` present, `sequential dispatch` present at contention steps, `parallel dispatch` at non-contention steps, `cotton_reached` in winner-first order at contention steps, NO `Reorder`.
+- [x] 3.7 Mode 4 (Smart Reorder): same flow. Assert: `Reorder applied` present with min gap, `parallel dispatch` present, `cotton_reached` with reordered positions, NO `Contention`, NO `sequential dispatch`.
+- [x] 3.8 Take screenshot evidence of each mode's log output.
+- [x] 3.9 Final commit if any fixes needed. Update tasks.md.
