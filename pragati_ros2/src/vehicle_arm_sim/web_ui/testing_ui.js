@@ -1565,7 +1565,8 @@
                             ' steps, min j4 gap=' + evt.min_j4_gap + 'm', 'success');
                     } else if (t === 'step_complete') {
                         var cls = evt.collision ? 'warn' : 'success';
-                        log('Step ' + evt.step_id + ' complete' +
+                        var status = evt.terminal_status || 'complete';
+                        log('Step ' + evt.step_id + ' ' + status +
                             (evt.collision ? ' (COLLISION)' : ''), cls);
                     } else if (t === 'run_complete') {
                         log('Run complete: ' + evt.run_id, 'success');
