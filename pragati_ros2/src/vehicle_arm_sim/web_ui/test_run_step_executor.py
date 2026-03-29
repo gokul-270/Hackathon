@@ -541,3 +541,53 @@ def test_executor_arm2_publishes_to_joint5_copy_cmd_topic():
     assert len(j5_topics) > 0, f"No joint5 topics. All: {publish_calls}"
     for topic in j5_topics:
         assert topic == "/joint5_copy_cmd", f"Expected /joint5_copy_cmd, got {topic}"
+
+
+# ---------------------------------------------------------------------------
+# Group 2: cotton_model parameter
+# ---------------------------------------------------------------------------
+
+
+def test_executor_with_cotton_model_skips_spawn_fn():
+    """When cotton_model is provided, spawn_fn must NOT be called."""
+    spawn_calls = []
+    executor = _make_executor(spawn_calls=spawn_calls)
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+        cotton_model="pre_cotton_5",
+        blocked=False,
+    )
+
+    assert spawn_calls == []
+
+
+def test_executor_with_cotton_model_calls_remove_with_provided_name():
+    """When cotton_model is provided, remove_fn must be called with that model name."""
+    remove_calls = []
+    executor = _make_executor(remove_calls=remove_calls)
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.1, "j4": 0.2, "j5": 0.3},
+        cotton_model="pre_cotton_5",
+        blocked=False,
+    )
+
+    assert remove_calls == ["pre_cotton_5"]
+
+
+def test_executor_with_cotton_model_and_blocked_does_not_call_remove():
+    """When cotton_model is provided and step is blocked, remove_fn must NOT be called."""
+    remove_calls = []
+    executor = _make_executor(remove_calls=remove_calls)
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.0, "j4": 0.2, "j5": 0.0},
+        cotton_model="pre_cotton_5",
+        blocked=True,
+    )
+
+    assert remove_calls == []

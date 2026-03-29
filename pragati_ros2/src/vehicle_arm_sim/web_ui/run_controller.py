@@ -38,6 +38,7 @@ class RunController:
         self,
         mode: int = BaselineMode.UNRESTRICTED,
         executor: Optional[object] = None,
+        arm_pair: tuple = ("arm1", "arm2"),
     ) -> None:
         """
         Args:
@@ -46,11 +47,28 @@ class RunController:
             executor: Optional RunStepExecutor (or duck-typed compatible) instance.
                       If None, a no-op executor is created (no Gazebo publishing).
                       Inject a real RunStepExecutor for motion-backed runs.
+            arm_pair: Tuple of (primary_arm_id, secondary_arm_id). Scenario "arm1" slots
+                      are loaded onto primary_arm; "arm2" slots onto secondary_arm.
+                      Default ("arm1", "arm2") preserves existing behaviour.
         """
         self._mode = mode
-        self._arm1 = ArmRuntime("arm1")
-        self._arm2 = ArmRuntime("arm2")
-        self._arm3 = ArmRuntime("arm3")
+        self._primary_id, self._secondary_id = arm_pair
+
+        # Always create all three named runtimes for backward compatibility.
+        # _arm1/_arm2/_arm3 attributes must be accessible (coherence tests check them).
+        _arm_runtimes = {
+            "arm1": ArmRuntime("arm1"),
+            "arm2": ArmRuntime("arm2"),
+            "arm3": ArmRuntime("arm3"),
+        }
+        self._arm1 = _arm_runtimes["arm1"]
+        self._arm2 = _arm_runtimes["arm2"]
+        self._arm3 = _arm_runtimes["arm3"]
+
+        # The active pair used for scenario loading and run execution.
+        self._primary_arm = _arm_runtimes[self._primary_id]
+        self._secondary_arm = _arm_runtimes[self._secondary_id]
+
         self._truth_monitor = TruthMonitor()
         self._reporter = JsonReporter()
         self._baseline = BaselineMode()
@@ -90,8 +108,30 @@ class RunController:
             )
             for r in raw_steps
         ]
-        self._arm1.load_scenario(steps)
-        self._arm2.load_scenario(steps)
+        # Remap scenario canonical slots to the active arm pair:
+        # "arm1" slots → primary arm, "arm2" slots → secondary arm.
+        primary_steps = [
+            ScenarioStep(
+                step_id=s.step_id,
+                arm_id=self._primary_id,
+                cam_x=s.cam_x,
+                cam_y=s.cam_y,
+                cam_z=s.cam_z,
+            )
+            for s in steps if s.arm_id == "arm1"
+        ]
+        secondary_steps = [
+            ScenarioStep(
+                step_id=s.step_id,
+                arm_id=self._secondary_id,
+                cam_x=s.cam_x,
+                cam_y=s.cam_y,
+                cam_z=s.cam_z,
+            )
+            for s in steps if s.arm_id == "arm2"
+        ]
+        self._primary_arm.load_scenario(primary_steps + secondary_steps)
+        self._secondary_arm.load_scenario(primary_steps + secondary_steps)
 
     def run(self) -> dict:
         """Execute the full scenario and return the run summary dict.
@@ -109,27 +149,27 @@ class RunController:
 
         # Build step_id -> {arm_id: step} map
         step_map: dict[int, dict[str, object]] = {}
-        for step in self._arm1.get_own_steps():
-            step_map.setdefault(step.step_id, {})["arm1"] = step
-        for step in self._arm2.get_own_steps():
-            step_map.setdefault(step.step_id, {})["arm2"] = step
+        for step in self._primary_arm.get_own_steps():
+            step_map.setdefault(step.step_id, {})[self._primary_id] = step
+        for step in self._secondary_arm.get_own_steps():
+            step_map.setdefault(step.step_id, {})[self._secondary_id] = step
 
         total_steps = len(step_map)
 
         # Track "previous applied joints" per arm to use as current_joints
         prev_joints: dict[str, dict] = {
-            "arm1": dict(_SAFE_HOME),
-            "arm2": dict(_SAFE_HOME),
+            self._primary_id: dict(_SAFE_HOME),
+            self._secondary_id: dict(_SAFE_HOME),
         }
 
         for step_id in sorted(step_map.keys()):
             arm_steps = step_map[step_id]
-            both_active = "arm1" in arm_steps and "arm2" in arm_steps
+            both_active = self._primary_id in arm_steps and self._secondary_id in arm_steps
 
             # Compute candidate joints for each active arm
             candidates: dict[str, dict] = {}
             for arm_id, step in arm_steps.items():
-                rt = self._arm1 if arm_id == "arm1" else self._arm2
+                rt = self._primary_arm if arm_id == self._primary_id else self._secondary_arm
                 j4_current = prev_joints[arm_id]["j4"]
                 candidates[arm_id] = rt.compute_candidate_joints(step, j4_current=j4_current)
 
@@ -140,7 +180,7 @@ class RunController:
             # Solo arms publish so their state is available if queried; the peer's
             # receive() will return None at solo steps — correct "peer not active" result.
             for arm_id in arm_steps:
-                rt = self._arm1 if arm_id == "arm1" else self._arm2
+                rt = self._primary_arm if arm_id == self._primary_id else self._secondary_arm
                 packet = rt.build_peer_state(
                     step_id=step_id,
                     status="ready",
@@ -150,7 +190,7 @@ class RunController:
                 self._transport.publish(packet)
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
-                peer_id = "arm2" if arm_id == "arm1" else "arm1"
+                peer_id = self._secondary_id if arm_id == self._primary_id else self._primary_id
                 peer_state = None
                 if both_active:
                     peer_state = self._transport.receive(peer_id)
@@ -167,9 +207,9 @@ class RunController:
             near_col = False
             col = False
             if both_active:
-                j4_arm1 = candidates["arm1"]["j4"]
-                j4_arm2 = candidates["arm2"]["j4"]
-                self._truth_monitor.observe(step_id, j4_arm1, j4_arm2)
+                j4_primary = candidates[self._primary_id]["j4"]
+                j4_secondary = candidates[self._secondary_id]["j4"]
+                self._truth_monitor.observe(step_id, j4_primary, j4_secondary)
                 record = self._truth_monitor.get_step_record(step_id)
                 if record is not None:
                     min_j4_dist = record.min_j4_distance
@@ -245,9 +285,17 @@ class RunController:
 
     def reset(self) -> None:
         """Reset all state for a new run."""
-        self._arm1 = ArmRuntime("arm1")
-        self._arm2 = ArmRuntime("arm2")
-        self._arm3 = ArmRuntime("arm3")
+        # Recreate all named runtimes and re-wire the active pair.
+        _arm_runtimes = {
+            "arm1": ArmRuntime("arm1"),
+            "arm2": ArmRuntime("arm2"),
+            "arm3": ArmRuntime("arm3"),
+        }
+        self._arm1 = _arm_runtimes["arm1"]
+        self._arm2 = _arm_runtimes["arm2"]
+        self._arm3 = _arm_runtimes["arm3"]
+        self._primary_arm = _arm_runtimes[self._primary_id]
+        self._secondary_arm = _arm_runtimes[self._secondary_id]
         self._truth_monitor.reset()
         self._reporter.reset()
         self._transport.reset()

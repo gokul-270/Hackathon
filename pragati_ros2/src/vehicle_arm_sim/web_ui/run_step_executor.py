@@ -94,6 +94,7 @@ class RunStepExecutor:
         cam_y: float = 0.0,
         cam_z: float = 0.0,
         j4_pos: float = 0.0,
+        cotton_model: str = "",
     ) -> dict:
         """Execute a single arm-step and return a terminal outcome dict.
 
@@ -104,6 +105,8 @@ class RunStepExecutor:
             skipped:        True when overlap-zone wait times out.
             cam_x, cam_y, cam_z: Camera-frame position used to spawn cotton.
             j4_pos:         Current j4 position used for cotton spawn placement.
+            cotton_model:   Name of a pre-spawned cotton model. When non-empty,
+                            spawn_fn is skipped and this name is used directly.
 
         Returns:
             dict with keys:
@@ -130,8 +133,11 @@ class RunStepExecutor:
         j4_topic = arm_cfg["j4_topic"]
         j5_topic = arm_cfg["j5_topic"]
 
-        # 1. Spawn cotton at the cam position
-        model_name = self._spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos)
+        # 1. Spawn cotton at the cam position (or use pre-spawned model)
+        if cotton_model:
+            model_name = cotton_model
+        else:
+            model_name = self._spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos)
 
         # 2. Run timed pick animation: j4 → j3 → j5 → retract → home
         self._publish_fn(j4_topic, applied_joints["j4"])

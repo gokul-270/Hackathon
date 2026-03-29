@@ -334,3 +334,54 @@ def test_run_paired_step_both_arms_receive_truth_monitor_data():
     reports_step0 = [r for r in summary["step_reports"] if r["step_id"] == 0]
     assert len(reports_step0) == 2
     assert all(r["min_j4_distance"] is not None for r in reports_step0)
+
+
+# ---------------------------------------------------------------------------
+# Group 3: arm_pair parameter for dynamic arm selection and scenario remapping
+# ---------------------------------------------------------------------------
+
+
+def test_run_controller_with_arm_pair_arm1_arm3_creates_arm1_and_arm3_runtimes():
+    """RunController with arm_pair=('arm1','arm3') uses arm1 and arm3 (not arm2) for execution."""
+    from run_controller import RunController
+
+    rc = RunController(arm_pair=("arm1", "arm3"))
+    assert rc._primary_id == "arm1"
+    assert rc._secondary_id == "arm3"
+
+
+def test_load_scenario_with_arm_pair_arm1_arm3_remaps_arm2_steps_to_arm3():
+    """load_scenario with arm_pair=('arm1','arm3') remaps arm2 scenario steps to arm3."""
+    from run_controller import RunController
+
+    rc = RunController(arm_pair=("arm1", "arm3"))
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()
+    arm_ids_in_reports = {r["arm_id"] for r in summary["step_reports"]}
+    # arm2 steps in scenario should be remapped to arm3
+    assert "arm3" in arm_ids_in_reports
+    assert "arm2" not in arm_ids_in_reports
+
+
+def test_run_controller_with_arm_pair_arm2_arm3_remaps_arm1_to_arm2_and_arm2_to_arm3():
+    """arm_pair=('arm2','arm3') remaps arm1 scenario steps to arm2 and arm2 steps to arm3."""
+    from run_controller import RunController
+
+    rc = RunController(arm_pair=("arm2", "arm3"))
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()
+    arm_ids_in_reports = {r["arm_id"] for r in summary["step_reports"]}
+    assert "arm2" in arm_ids_in_reports
+    assert "arm3" in arm_ids_in_reports
+    assert "arm1" not in arm_ids_in_reports
+
+
+def test_run_controller_default_arm_pair_behavior_unchanged():
+    """Default arm_pair=('arm1','arm2') preserves existing arm1/arm2 behavior."""
+    from run_controller import RunController
+
+    rc = RunController()  # no arm_pair → defaults to ("arm1", "arm2")
+    rc.load_scenario(_make_same_step_paired_scenario())
+    summary = rc.run()
+    arm_ids_in_reports = {r["arm_id"] for r in summary["step_reports"]}
+    assert arm_ids_in_reports == {"arm1", "arm2"}
