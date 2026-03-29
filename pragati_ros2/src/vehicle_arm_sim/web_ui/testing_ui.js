@@ -1535,7 +1535,31 @@
                             ' ' + evt.arm_id +
                             ' cam_z=' + evt.cam_z);
                     } else if (t === 'step_start') {
-                        log('Step ' + evt.step_id + ' starting');
+                        log('Step ' + evt.step_id + ' ' + evt.arm_id +
+                            ' starting -> target (x:' + evt.cam_x +
+                            ', y:' + evt.cam_y +
+                            ', z:' + evt.cam_z + ')');
+                    } else if (t === 'cotton_reached') {
+                        log(evt.arm_id + ' reached cotton (step:' + evt.step_id +
+                            ', x:' + evt.cam_x +
+                            ', y:' + evt.cam_y +
+                            ', z:' + evt.cam_z + ')', 'success');
+                    } else if (t === 'contention_detected') {
+                        log('Contention at step ' + evt.step_id + ': ' +
+                            evt.winner_arm + ' wins, ' +
+                            evt.loser_arm + ' waits (gap=' + evt.j4_gap + 'm)', 'warn');
+                    } else if (t === 'dispatch_order') {
+                        var seq = evt.sequence || [];
+                        if (evt.order === 'sequential') {
+                            log('Step ' + evt.step_id + ': sequential dispatch [' +
+                                seq[0] + ' -> ' + seq[1] + ']');
+                        } else {
+                            log('Step ' + evt.step_id + ': parallel dispatch [' +
+                                seq.join(', ') + ']');
+                        }
+                    } else if (t === 'reorder_applied') {
+                        log('Reorder applied: ' + evt.reordered_step_count +
+                            ' steps, min j4 gap=' + evt.min_j4_gap + 'm', 'success');
                     } else if (t === 'step_complete') {
                         var cls = evt.collision ? 'warn' : 'success';
                         log('Step ' + evt.step_id + ' complete' +

@@ -227,6 +227,27 @@ class RunController:
                 new_step_map[new_sid] = new_entry
             step_map = new_step_map
 
+            # Compute min j4 gap from rebuilt step_map using FK formula: j4 = 0.1005 - cam_z
+            _FK_OFFSET = 0.1005
+            _min_gap = float("inf")
+            for _sid, _arms in step_map.items():
+                _steps = list(_arms.values())
+                if len(_steps) == 2:
+                    _g = abs(
+                        (_FK_OFFSET - _steps[0].cam_z)
+                        - (_FK_OFFSET - _steps[1].cam_z)
+                    )
+                    if _g < _min_gap:
+                        _min_gap = _g
+            if _min_gap == float("inf"):
+                _min_gap = 0.0
+            self._emit({
+                "type": "reorder_applied",
+                "original_step_count": len(arm1_step_ids),
+                "reordered_step_count": len(step_map),
+                "min_j4_gap": round(_min_gap, 6),
+            })
+
         total_steps = len(step_map)
 
         # Upfront cotton spawn: spawn all cottons concurrently before any execution begins.
@@ -369,6 +390,9 @@ class RunController:
                     "target_j4": round(args["applied"]["j4"], 4),
                     "target_j5": round(args["applied"]["j5"], 4),
                     "mode": mode_name,
+                    "cam_x": args["step"].cam_x,
+                    "cam_y": args["step"].cam_y,
+                    "cam_z": args["step"].cam_z,
                 })
 
             # Dispatch executor calls.
@@ -389,9 +413,27 @@ class RunController:
                 loser_arm = next(
                     a for a in arm_execute_args if a != winner_arm
                 )
+                # Compute j4 gap from candidate joints for observability
+                _j4_gap = abs(
+                    candidates[self._primary_id]["j4"]
+                    - candidates[self._secondary_id]["j4"]
+                )
+                self._emit({
+                    "type": "contention_detected",
+                    "step_id": step_id,
+                    "winner_arm": winner_arm,
+                    "loser_arm": loser_arm,
+                    "j4_gap": round(_j4_gap, 6),
+                })
+                self._emit({
+                    "type": "dispatch_order",
+                    "step_id": step_id,
+                    "order": "sequential",
+                    "sequence": [winner_arm, loser_arm],
+                })
                 for dispatch_arm in [winner_arm, loser_arm]:
                     args = arm_execute_args[dispatch_arm]
-                    outcomes[dispatch_arm] = self._executor.execute(
+                    outcome = self._executor.execute(
                         arm_id=dispatch_arm,
                         applied_joints=args["applied"],
                         blocked=args["j5_blocked"],
@@ -402,8 +444,24 @@ class RunController:
                         j4_pos=args["applied"]["j4"],
                         cotton_model=cotton_models.get((step_id, dispatch_arm), ""),
                     )
+                    outcomes[dispatch_arm] = outcome
+                    if outcome.get("pick_completed"):
+                        self._emit({
+                            "type": "cotton_reached",
+                            "arm_id": dispatch_arm,
+                            "step_id": step_id,
+                            "cam_x": args["step"].cam_x,
+                            "cam_y": args["step"].cam_y,
+                            "cam_z": args["step"].cam_z,
+                        })
             else:
                 # Parallel dispatch (max 2 workers for a pair of arms)
+                self._emit({
+                    "type": "dispatch_order",
+                    "step_id": step_id,
+                    "order": "parallel",
+                    "sequence": sorted(arm_execute_args.keys()),
+                })
                 with ThreadPoolExecutor(max_workers=2) as pool:
                     futures = {
                         arm_id: pool.submit(
@@ -422,6 +480,18 @@ class RunController:
                     }
                     for arm_id in futures:
                         outcomes[arm_id] = futures[arm_id].result()
+                # Emit cotton_reached for completed picks after parallel dispatch
+                for arm_id in sorted(arm_execute_args.keys()):
+                    if outcomes[arm_id].get("pick_completed"):
+                        args = arm_execute_args[arm_id]
+                        self._emit({
+                            "type": "cotton_reached",
+                            "arm_id": arm_id,
+                            "step_id": step_id,
+                            "cam_x": args["step"].cam_x,
+                            "cam_y": args["step"].cam_y,
+                            "cam_z": args["step"].cam_z,
+                        })
 
             # Add step reports in sorted arm_id order
             for arm_id in sorted(arm_execute_args.keys()):

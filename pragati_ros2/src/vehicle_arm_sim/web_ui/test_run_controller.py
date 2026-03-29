@@ -1607,3 +1607,259 @@ def test_mode4_mode_name_is_smart_reorder():
     assert summary["mode"] == "smart_reorder", (
         f"Expected mode name 'smart_reorder'; got '{summary['mode']}'"
     )
+
+
+# ---------------------------------------------------------------------------
+# Group: SSE Enrichment — new event types and enhanced step_start
+# ---------------------------------------------------------------------------
+
+def _get_events_of_type(bus, event_type):
+    """Helper: return all events from bus of a given type."""
+    return [e for e in bus._queue if e["type"] == event_type]
+
+
+def test_step_start_includes_cam_position():
+    """step_start event must include cam_x, cam_y, cam_z from the scenario step."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=0, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    step_starts = _get_events_of_type(bus, "step_start")
+    assert len(step_starts) == 2
+    for evt in step_starts:
+        assert "cam_x" in evt, "step_start event missing cam_x"
+        assert "cam_y" in evt, "step_start event missing cam_y"
+        assert "cam_z" in evt, "step_start event missing cam_z"
+
+    arm1_evt = next(e for e in step_starts if e["arm_id"] == "arm1")
+    assert arm1_evt["cam_x"] == 0.65
+    assert arm1_evt["cam_y"] == -0.001
+    assert arm1_evt["cam_z"] == 0.150
+
+
+def test_cotton_reached_event_emitted():
+    """cotton_reached must be emitted after a completed pick with correct fields."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=0, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    reached = _get_events_of_type(bus, "cotton_reached")
+    assert len(reached) == 2, f"Expected 2 cotton_reached events; got {len(reached)}"
+
+    arm1_evt = next((e for e in reached if e["arm_id"] == "arm1"), None)
+    assert arm1_evt is not None, "No cotton_reached event for arm1"
+    assert arm1_evt["step_id"] == 0
+    assert arm1_evt["cam_x"] == 0.65
+    assert arm1_evt["cam_y"] == -0.001
+    assert arm1_evt["cam_z"] == 0.150
+
+
+def test_cotton_reached_not_emitted_on_skip():
+    """cotton_reached must NOT be emitted when a step is skipped."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    # Mode 3 with contention: loser arm's step is not skipped but let's use
+    # an unreachable step (arm2 solo with cam_z out of range) to force no pick.
+    # Actually: use a scenario where arm1 is solo and cam_z is out of reachable range.
+    # cam_z=0.450 is outside [0.050, 0.350] — arm1 step will be unreachable/skipped.
+    bus = RunEventBus()
+    ctrl = RunController(mode=0, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.450},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    reached = _get_events_of_type(bus, "cotton_reached")
+    assert len(reached) == 0, (
+        f"Expected no cotton_reached events for unreachable step; got {len(reached)}"
+    )
+
+
+def test_contention_detected_event_emitted():
+    """Mode 3 contention step must emit contention_detected with winner, loser, gap."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, event_bus=bus)
+    ctrl.load_scenario(_CONTENTION_SCENARIO)
+    ctrl.run()
+    bus.close()
+
+    contention_events = _get_events_of_type(bus, "contention_detected")
+    assert len(contention_events) == 1, (
+        f"Expected 1 contention_detected event; got {len(contention_events)}"
+    )
+    evt = contention_events[0]
+    assert evt["step_id"] == 0
+    assert "winner_arm" in evt
+    assert "loser_arm" in evt
+    assert "j4_gap" in evt
+    assert evt["winner_arm"] != evt["loser_arm"]
+    assert evt["j4_gap"] < 0.10
+
+
+def test_contention_detected_not_emitted_safe_gap():
+    """Mode 3 with safe j4 gap must NOT emit contention_detected."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, event_bus=bus)
+    ctrl.load_scenario(_NO_CONTENTION_SCENARIO)
+    ctrl.run()
+    bus.close()
+
+    contention_events = _get_events_of_type(bus, "contention_detected")
+    assert len(contention_events) == 0, (
+        f"Expected no contention_detected events for safe gap; got {len(contention_events)}"
+    )
+
+
+def test_contention_detected_not_emitted_other_modes():
+    """Modes 0, 1, 2 must NOT emit contention_detected regardless of j4 gap."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+
+    for mode in [0, 1, 2]:
+        bus = RunEventBus()
+        ctrl = RunController(mode=mode, event_bus=bus)
+        ctrl.load_scenario(_CONTENTION_SCENARIO)
+        ctrl.run()
+        bus.close()
+
+        contention_events = _get_events_of_type(bus, "contention_detected")
+        assert len(contention_events) == 0, (
+            f"Mode {mode} must not emit contention_detected; got {len(contention_events)}"
+        )
+
+
+def test_dispatch_order_sequential():
+    """Mode 3 contention step must emit dispatch_order with order='sequential'."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=BaselineMode.SEQUENTIAL_PICK, event_bus=bus)
+    ctrl.load_scenario(_CONTENTION_SCENARIO)
+    ctrl.run()
+    bus.close()
+
+    dispatch_events = _get_events_of_type(bus, "dispatch_order")
+    assert len(dispatch_events) == 1
+    evt = dispatch_events[0]
+    assert evt["order"] == "sequential"
+    assert "sequence" in evt
+    assert len(evt["sequence"]) == 2
+    # winner must be first in sequence
+    contention_events = _get_events_of_type(bus, "contention_detected")
+    winner = contention_events[0]["winner_arm"]
+    assert evt["sequence"][0] == winner
+
+
+def test_dispatch_order_parallel():
+    """Mode 0 step must emit dispatch_order with order='parallel'."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=0, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    dispatch_events = _get_events_of_type(bus, "dispatch_order")
+    assert len(dispatch_events) == 1
+    evt = dispatch_events[0]
+    assert evt["order"] == "parallel"
+    assert "sequence" in evt
+    assert set(evt["sequence"]) == {"arm1", "arm2"}
+
+
+def test_reorder_applied_event_emitted():
+    """Mode 4 must emit reorder_applied with step counts and min_j4_gap."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    bus = RunEventBus()
+    ctrl = RunController(mode=BaselineMode.SMART_REORDER, event_bus=bus)
+    ctrl.load_scenario({
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.080},
+            {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.090},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.200},
+            {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+        ]
+    })
+    ctrl.run()
+    bus.close()
+
+    reorder_events = _get_events_of_type(bus, "reorder_applied")
+    assert len(reorder_events) == 1, (
+        f"Expected 1 reorder_applied event; got {len(reorder_events)}"
+    )
+    evt = reorder_events[0]
+    assert "original_step_count" in evt
+    assert "reordered_step_count" in evt
+    assert "min_j4_gap" in evt
+    assert evt["original_step_count"] == 2
+    assert evt["reordered_step_count"] == 2
+    assert evt["min_j4_gap"] >= 0.0
+
+
+def test_reorder_applied_not_emitted_other_modes():
+    """Modes 0, 1, 2, 3 must NOT emit reorder_applied."""
+    from run_event_bus import RunEventBus
+    from run_controller import RunController
+    from baseline_mode import BaselineMode
+
+    for mode in [0, 1, 2, BaselineMode.SEQUENTIAL_PICK]:
+        bus = RunEventBus()
+        ctrl = RunController(mode=mode, event_bus=bus)
+        ctrl.load_scenario({
+            "steps": [
+                {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
+                {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.300},
+            ]
+        })
+        ctrl.run()
+        bus.close()
+
+        reorder_events = _get_events_of_type(bus, "reorder_applied")
+        assert len(reorder_events) == 0, (
+            f"Mode {mode} must not emit reorder_applied; got {len(reorder_events)}"
+        )
