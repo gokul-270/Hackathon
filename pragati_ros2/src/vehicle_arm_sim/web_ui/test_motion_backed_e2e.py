@@ -48,18 +48,26 @@ class TestMotionBackedE2E:
     def _run(self, scenario, mode=0):
         publish_calls = []
 
-        def mock_publish(topic: str, value: float):
-            publish_calls.append((topic, value))
+        def mock_popen(cmd, **kwargs):
+            if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
+                topic = cmd[3]
+                val_str = cmd[7].replace("data: ", "")
+                publish_calls.append((topic, float(val_str)))
 
         tb._current_run_result = None
-        with patch("testing_backend._publish_joint_gz", side_effect=mock_publish):
+        with (
+            patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        ):
             client = TestClient(app)
             resp = client.post("/api/run/start", json={"mode": mode, "scenario": scenario})
 
         return resp, publish_calls, client
 
     def test_e2e_motion_backed_run_publishes_joint_commands(self):
-        """A motion-backed run must invoke _publish_joint_gz for allowed arm-steps."""
+        """A motion-backed run must invoke gz topic publish for allowed arm-steps."""
         resp, publish_calls, _ = self._run(_PAIRED_SCENARIO, mode=0)
         assert resp.status_code == 200
         # 4 arm-steps × 3 joints = 12 publish calls expected
@@ -146,8 +154,11 @@ class TestMotionBackedE2EWithSpawn:
         spawn_calls = []
         remove_calls = []
 
-        def mock_publish(topic: str, value: float):
-            publish_calls.append((topic, value))
+        def mock_popen(cmd, **kwargs):
+            if len(cmd) >= 8 and cmd[0] == "gz" and cmd[1] == "topic":
+                topic = cmd[3]
+                val_str = cmd[7].replace("data: ", "")
+                publish_calls.append((topic, float(val_str)))
 
         def mock_spawn(arm_id, cam_x, cam_y, cam_z, j4_pos):
             model_name = f"cotton_{len(spawn_calls)}"
@@ -159,7 +170,7 @@ class TestMotionBackedE2EWithSpawn:
 
         tb._current_run_result = None
         with (
-            patch("testing_backend._publish_joint_gz", side_effect=mock_publish),
+            patch("testing_backend.subprocess.Popen", side_effect=mock_popen),
             patch("testing_backend._run_spawn_cotton", side_effect=mock_spawn),
             patch("testing_backend._run_remove_cotton", side_effect=mock_remove),
             patch("testing_backend._run_sleep", side_effect=lambda s: None),

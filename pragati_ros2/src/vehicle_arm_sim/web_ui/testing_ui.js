@@ -1448,9 +1448,6 @@
         // Cotton placement (ported from yanthra_move)
         setupCottonPlacement();
 
-        // Cotton position sequence
-        setupCottonSequence();
-
         // UI Run Flow
         setupRunFlow();
 

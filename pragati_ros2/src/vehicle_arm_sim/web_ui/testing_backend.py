@@ -697,11 +697,6 @@ _cotton_name: str = ""
 _last_cotton_cam: tuple | None = None
 _last_cotton_arm: str | None = None
 _last_cotton_j4: float = 0.0
-_pick_in_progress: bool = False
-_pick_status: str = "idle"
-_pick_current: str | None = None  # Name of cotton currently being picked
-_pick_progress: dict | None = None  # {"current": N, "total": M} during pick-all
-_pick_lock = threading.Lock()  # Protects _pick_in_progress and _pick_status
 
 # SDF template for cotton ball (white sphere, 0.04m radius)
 _COTTON_SDF_TEMPLATE = (
@@ -966,20 +961,6 @@ class CottonPickRequest(BaseModel):
     enable_phi_compensation: bool = False
 
 
-def _publish_joint_gz(topic: str, value: float):
-    """Publish a joint command via gz topic (non-blocking)."""
-    subprocess.Popen(
-        [
-            "gz", "topic",
-            "-t", topic,
-            "-m", "gz.msgs.Double",
-            "-p", f"data: {value}",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
 def _run_spawn_cotton(
     arm_id: str,
     cam_x: float,
@@ -1010,73 +991,6 @@ def _run_remove_cotton(model_name: str) -> None:
 def _run_sleep(seconds: float) -> None:
     """time.sleep wrapper used during run replay animation; injectable in tests."""
     time.sleep(seconds)
-
-
-def _execute_pick_sequence(
-    j3: float, j4: float, j5: float, arm_config: dict
-):
-    """Run the pick animation in a background thread.
-
-    Steps (times relative to start):
-      0.0s  J4 lateral move
-      0.8s  J3 tilt
-      1.6s  J5 extend
-      3.0s  J5 retract
-      3.8s  J3 home
-      4.6s  J4 home
-      5.5s  done
-    """
-    global _pick_in_progress, _pick_status, _cotton_spawned
-    j3_topic = arm_config["j3_topic"]
-    j4_topic = arm_config["j4_topic"]
-    j5_topic = arm_config["j5_topic"]
-
-    try:
-        with _pick_lock:
-            _pick_status = "j4_lateral"
-        _publish_joint_gz(j4_topic, j4)
-        time.sleep(0.8)
-
-        with _pick_lock:
-            _pick_status = "j3_tilt"
-        _publish_joint_gz(j3_topic, j3)
-        time.sleep(0.8)
-
-        with _pick_lock:
-            _pick_status = "j5_extend"
-        _publish_joint_gz(j5_topic, j5)
-        time.sleep(1.4)
-
-        with _pick_lock:
-            _pick_status = "j5_retract"
-        _publish_joint_gz(j5_topic, 0.0)
-        time.sleep(0.8)
-
-        with _pick_lock:
-            _pick_status = "j3_home"
-        _publish_joint_gz(j3_topic, 0.0)
-        time.sleep(0.8)
-
-        with _pick_lock:
-            _pick_status = "j4_home"
-        _publish_joint_gz(j4_topic, 0.0)
-        time.sleep(0.9)
-
-        # Remove cotton from Gazebo
-        if _cotton_spawned:
-            world_name = _detect_gz_world_name()
-            _gz_remove_model(_cotton_name, world_name)
-            _cotton_spawned = False
-
-        with _pick_lock:
-            _pick_status = "done"
-    except Exception as e:
-        logger.error("Pick sequence error: %s", e)
-        with _pick_lock:
-            _pick_status = f"error: {e}"
-    finally:
-        with _pick_lock:
-            _pick_in_progress = False
 
 
 @app.post("/api/cotton/pick")
@@ -1218,8 +1132,21 @@ async def run_start(req: RunStartRequest):
     _run_state = "running"
     run_id = str(uuid.uuid4())
 
+    def _gz_publish(topic: str, value: float) -> None:
+        """Publish a joint command via gz topic (non-blocking)."""
+        subprocess.Popen(
+            [
+                "gz", "topic",
+                "-t", topic,
+                "-m", "gz.msgs.Double",
+                "-p", f"data: {value}",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
     executor = RunStepExecutor(
-        publish_fn=_publish_joint_gz,
+        publish_fn=_gz_publish,
         spawn_fn=_run_spawn_cotton,
         remove_fn=_run_remove_cotton,
         sleep_fn=_run_sleep,

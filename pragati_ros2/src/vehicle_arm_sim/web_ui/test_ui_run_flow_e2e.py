@@ -34,7 +34,7 @@ def _no_gz_side_effects():
         patch("testing_backend._run_sleep", side_effect=lambda s: None),
         patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
         patch("testing_backend._run_remove_cotton"),
-        patch("testing_backend._publish_joint_gz"),
+        patch("testing_backend.subprocess.Popen"),
     ):
         yield
 
