@@ -1894,3 +1894,191 @@ def test_run_controller_passes_phi_compensation_to_runtime():
 
     assert len(calls) == 1
     assert calls[0].get("enable_phi_compensation") is False
+
+
+def test_controller_logs_dispatched_before_executor_submit():
+    """RunController emits a debug log containing 'dispatched' before executor submit."""
+    from unittest.mock import patch
+    from run_controller import RunController
+
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": -0.065, "cam_z": 0.0},
+        ]
+    }
+    ctrl = RunController(mode=0)
+    ctrl.load_scenario(scenario)
+
+    with patch("run_controller.logger") as mock_logger:
+        ctrl.run()
+
+    debug_messages = [call.args[0] for call in mock_logger.debug.call_args_list]
+    assert any("dispatched" in msg for msg in debug_messages), (
+        f"Expected a debug log containing 'dispatched', got: {debug_messages}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Regression tests — emit path (spec: dual-arm-run-orchestration)
+# ---------------------------------------------------------------------------
+
+# cam_z=0.5 → j4≈-0.400 m, below J4_MIN=-0.250 → unreachable (reuses _UNREACHABLE_STEP)
+# _UNREACHABLE_STEP is defined near line 793 in this file.
+
+def _make_all_unreachable_scenario():
+    """A two-step solo-arm1 scenario where both steps are unreachable (cam_z=0.5).
+
+    cam_z=0.5 → j4≈-0.400 m, below J4_MIN=-0.250 → reachable=False for both steps.
+    This scenario is used to test repeated reruns without stalling.
+    """
+    return {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.5},
+            {"step_id": 1, "arm_id": "arm1", "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.5},
+        ]
+    }
+
+
+def test_unreachable_tail_step_emits_step_complete_with_unreachable_status():
+    """An unreachable tail step must emit step_complete with terminal_status='unreachable'.
+
+    Regression: steps determined unreachable before executor dispatch must still appear
+    in step_complete events so the UI and event consumers know what happened.
+    """
+    from run_controller import RunController
+    from run_event_bus import RunEventBus
+
+    bus = RunEventBus()
+    rc = RunController(mode=0, event_bus=bus)
+    rc.load_scenario({"steps": [_UNREACHABLE_STEP]})
+    rc.run()
+    bus.close()
+
+    events = list(bus._queue)
+    step_complete_events = [e for e in events if e["type"] == "step_complete"]
+    assert len(step_complete_events) >= 1, (
+        "Unreachable step must still produce at least one step_complete event"
+    )
+    statuses = [e["terminal_status"] for e in step_complete_events]
+    assert "unreachable" in statuses, (
+        f"step_complete must have terminal_status='unreachable' for an unreachable step; "
+        f"got statuses: {statuses}"
+    )
+
+
+def test_three_consecutive_reruns_all_emit_run_complete():
+    """Three consecutive in-process reruns of an all-unreachable scenario must all complete.
+
+    Regression: the third rerun was observed to stall — run_complete was never emitted.
+    Each run must produce a run_complete event within a short time (no stall).
+    """
+    import threading
+    from run_controller import RunController
+    from run_event_bus import RunEventBus
+
+    scenario = _make_all_unreachable_scenario()
+
+    for run_index in range(3):
+        bus = RunEventBus()
+        rc = RunController(mode=0, event_bus=bus)
+        rc.load_scenario(scenario)
+
+        # Run in a thread with a timeout to detect stalls
+        result: dict = {"done": False, "summary": None}
+
+        def _run():
+            result["summary"] = rc.run()
+            result["done"] = True
+
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        t.join(timeout=10)  # 10 s is generous — unreachable steps complete instantly
+
+        assert result["done"], (
+            f"Run {run_index + 1}/3 stalled — rc.run() did not return within 10 s"
+        )
+        bus.close()
+
+        events = list(bus._queue)
+        types = [e["type"] for e in events]
+        # step_complete must appear for every step
+        step_complete_events = [e for e in events if e["type"] == "step_complete"]
+        assert len(step_complete_events) >= 1, (
+            f"Run {run_index + 1}/3: expected at least one step_complete event"
+        )
+        # run_complete is emitted by testing_backend, NOT by RunController itself —
+        # verify the run returned a valid summary instead
+        assert result["summary"] is not None, (
+            f"Run {run_index + 1}/3: rc.run() must return a summary dict"
+        )
+        assert "total_steps" in result["summary"], (
+            f"Run {run_index + 1}/3: summary must contain 'total_steps'"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Regression tests — cotton cleanup for unreachable/skipped steps
+# ---------------------------------------------------------------------------
+
+
+def test_remove_fn_called_for_cotton_spawned_on_unreachable_step():
+    """If cotton was spawned for a step, remove_fn must be called even when step is unreachable.
+
+    Regression: before this fix, remove_fn was never called for unreachable steps because
+    the executor returns early (skipped=True) without invoking remove_fn.
+    """
+    from run_controller import RunController
+
+    spawned: list[str] = []
+    removed: list[str] = []
+
+    def _spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=None):
+        name = f"cotton_{arm_id}_{step_id}"
+        spawned.append(name)
+        return name
+
+    def _remove_fn(model_name: str):
+        removed.append(model_name)
+
+    # cam_z=0.5 → unreachable (j4≈-0.400, below J4_MIN=-0.250)
+    rc = RunController(mode=0, spawn_fn=_spawn_fn, remove_fn=_remove_fn)
+    rc.load_scenario({"steps": [{"step_id": 0, "arm_id": "arm1",
+                                  "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.5}]})
+    rc.run()
+
+    assert len(spawned) == 1, f"Expected 1 cotton spawn, got {spawned}"
+    assert len(removed) >= 1, (
+        f"remove_fn must be called for cotton of unreachable step; "
+        f"spawned={spawned}, removed={removed}"
+    )
+    assert spawned[0] in removed, (
+        f"remove_fn must be called with the spawned model name; "
+        f"spawned={spawned}, removed={removed}"
+    )
+
+
+def test_remove_fn_not_called_when_cotton_was_never_spawned():
+    """remove_fn must NOT be called for a step whose cotton spawn returned empty string.
+
+    This guards the case where spawn_fn fails silently (returns '') — we must not pass
+    an empty model name to remove_fn.
+    """
+    from run_controller import RunController
+
+    removed: list[str] = []
+
+    def _spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos, step_id=None):
+        return ""  # spawn failed / no-op
+
+    def _remove_fn(model_name: str):
+        removed.append(model_name)
+
+    # cam_z=0.5 → unreachable
+    rc = RunController(mode=0, spawn_fn=_spawn_fn, remove_fn=_remove_fn)
+    rc.load_scenario({"steps": [{"step_id": 0, "arm_id": "arm1",
+                                  "cam_x": 0.3, "cam_y": 0.3, "cam_z": 0.5}]})
+    rc.run()
+
+    assert len(removed) == 0, (
+        f"remove_fn must not be called when spawn returned ''; got removed={removed}"
+    )

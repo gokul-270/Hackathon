@@ -7,8 +7,11 @@ recording truth monitor observations, and generating a JSON run summary.
 
 from __future__ import annotations
 
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from arm_runtime import ArmRuntime
 from baseline_mode import BaselineMode
@@ -285,6 +288,10 @@ class RunController:
             self._secondary_id: dict(_SAFE_HOME),
         }
 
+        # Track (step_id, arm_id) pairs that were unreachable so their cotton
+        # can be removed after the run (executor skips removal for unreachable steps).
+        unreachable_pairs: set = set()
+
         for step_id in sorted(step_map.keys()):
             arm_steps = step_map[step_id]
             both_active = self._primary_id in arm_steps and self._secondary_id in arm_steps
@@ -338,6 +345,8 @@ class RunController:
                     skipped_flags[arm_id] = True
                     contention_flags[arm_id] = False
                     winner_flags[arm_id] = False
+                    unreachable_pairs.add((step_id, arm_id))
+                    logger.info("step %s arm %s unreachable — skipping executor", step_id, arm_id)
                     continue
                 result_joints, skipped = self._baseline.apply_with_skip(
                     self._mode, own_cand, peer_state, step_id=step_id, arm_id=arm_id
@@ -470,6 +479,8 @@ class RunController:
                     "order": "parallel",
                     "sequence": sorted(arm_execute_args.keys()),
                 })
+                for _arm_id in sorted(arm_execute_args.keys()):
+                    logger.debug("step %s arm %s dispatched → executor", step_id, _arm_id)
                 with ThreadPoolExecutor(max_workers=2) as pool:
                     futures = {
                         arm_id: pool.submit(
@@ -488,6 +499,10 @@ class RunController:
                     }
                     for arm_id in futures:
                         outcomes[arm_id] = futures[arm_id].result()
+                        logger.debug(
+                            "step %s arm %s executor returned: %s",
+                            step_id, arm_id, outcomes[arm_id].get("terminal_status", "?"),
+                        )
                 # Emit cotton_reached for completed picks after parallel dispatch
                 for arm_id in sorted(arm_execute_args.keys()):
                     if outcomes[arm_id].get("pick_completed"):
@@ -558,21 +573,37 @@ class RunController:
                         "j5": own_applied["j5"],
                     }
 
-            # Emit step_complete event for each active arm
+            # Emit step_complete event for each active arm.
+            # Apply the same unreachable override used in the reporter so that the SSE
+            # terminal_status matches the JSON report (unreachable > skipped).
             for arm_id in sorted(arm_execute_args.keys()):
                 outcome = outcomes[arm_id]
+                emit_status = (
+                    "unreachable" if unreachable_flags.get(arm_id, False)
+                    else outcome["terminal_status"]
+                )
+                logger.debug("step %s arm %s emitting step_complete", step_id, arm_id)
                 self._emit({
                     "type": "step_complete",
                     "arm_id": arm_id,
                     "step_id": step_id,
-                    "terminal_status": outcome["terminal_status"],
+                    "terminal_status": emit_status,
                     "pick_completed": outcome["pick_completed"],
                     "collision": col,
                     "near_collision": near_col,
                     "skipped": skipped_flags.get(arm_id, False),
                 })
+                logger.debug("step %s arm %s step_complete emitted", step_id, arm_id)
+
+        # Remove cotton for unreachable steps — the executor returns early (skipped=True)
+        # without calling remove_fn, so we must do the cleanup here.
+        # Only remove when a model name was actually spawned (non-empty string).
+        for key, model_name in cotton_models.items():
+            if key in unreachable_pairs and model_name:
+                self._remove_fn(model_name)
 
         self._last_summary = self._reporter.build_run_summary(mode_name, total_steps)
+        logger.debug("run summary built — returning to backend")
         return self._last_summary
 
     def get_json_report(self) -> str:

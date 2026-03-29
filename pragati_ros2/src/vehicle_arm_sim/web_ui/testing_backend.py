@@ -1282,6 +1282,7 @@ async def run_start(req: RunStartRequest):
     }
     _run_state = "complete"
 
+    logger.info("run_complete emitting — summary keys: %s", list(summary.keys()))
     _event_bus.emit({
         "type": "run_complete",
         "run_id": run_id,
@@ -1290,6 +1291,7 @@ async def run_start(req: RunStartRequest):
         "completed_picks": summary.get("completed_picks", 0),
     })
     _event_bus.close()
+    logger.info("event_bus closed after run_complete")
 
     return {"run_id": run_id, "status": "complete"}
 
