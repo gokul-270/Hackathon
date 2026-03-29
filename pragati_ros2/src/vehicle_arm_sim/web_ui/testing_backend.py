@@ -75,6 +75,48 @@ logging.basicConfig(
 logger = logging.getLogger("testing_backend")
 
 # ---------------------------------------------------------------------------
+# gz-transport Python publisher (fast in-process publish, ~microseconds vs
+# ~1 second for the subprocess `gz topic` CLI)
+# ---------------------------------------------------------------------------
+_GZ_NODE = None
+_GZ_PUBLISHERS: dict = {}  # topic -> gz Publisher
+_GZ_DOUBLE_TYPE = None
+
+def _init_gz_transport() -> bool:
+    """Initialise the gz-transport Node and Double message type once.
+    Returns True if successful, False if gz Python bindings are unavailable.
+    """
+    global _GZ_NODE, _GZ_DOUBLE_TYPE
+    if _GZ_NODE is not None:
+        return True
+    try:
+        import sys as _sys
+        _sys.path.insert(0, '/opt/ros/jazzy/opt/gz_transport_vendor/lib/python')
+        from gz.transport13 import Node as _GzNode
+        from gz.msgs10.double_pb2 import Double as _GzDouble
+        _GZ_NODE = _GzNode()
+        _GZ_DOUBLE_TYPE = _GzDouble
+        logger.info("gz-transport Python bindings initialised (fast publish mode)")
+        return True
+    except Exception as exc:
+        logger.warning("gz-transport Python bindings unavailable (%s); falling back to subprocess", exc)
+        return False
+
+
+def _gz_publish_fast(topic: str, value: float) -> None:
+    """Publish a joint command via gz-transport Python bindings (microseconds per call)."""
+    global _GZ_PUBLISHERS
+    if not _init_gz_transport():
+        _gz_publish_subprocess(topic, value)
+        return
+    if topic not in _GZ_PUBLISHERS:
+        _GZ_PUBLISHERS[topic] = _GZ_NODE.advertise(topic, _GZ_DOUBLE_TYPE)
+    pub = _GZ_PUBLISHERS[topic]
+    msg = _GZ_DOUBLE_TYPE()
+    msg.data = value
+    pub.publish(msg)
+
+# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -1148,33 +1190,34 @@ class RunStartRequest(BaseModel):
     enable_phi_compensation: bool = True
 
 
-def _gz_publish(topic: str, value: float) -> None:
-    """Publish a joint command via gz topic (blocking, triple-publish for reliability)."""
+def _gz_publish_subprocess(topic: str, value: float) -> None:
+    """Fallback: publish via gz topic CLI subprocess (slow, ~1 s per call)."""
     cmd = [
         "gz", "topic",
         "-t", topic,
         "-m", "gz.msgs.Double",
         "-p", f"data: {value}",
     ]
-    for i in range(3):
-        try:
-            result = subprocess.run(
-                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                timeout=5,
-            )
-        except subprocess.TimeoutExpired:
-            logger.warning(
-                "gz publish timed out on topic %s (attempt %d/3)", topic, i + 1
-            )
-            continue
+    try:
+        result = subprocess.run(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+            timeout=5,
+        )
         if result.returncode != 0:
             stderr_text = result.stderr.decode("utf-8", errors="replace").strip()
             logger.warning(
-                "gz publish failed on topic %s (attempt %d/3): %s",
-                topic, i + 1, stderr_text or "(no stderr)",
+                "gz publish subprocess failed on topic %s: %s",
+                topic, stderr_text or "(no stderr)",
             )
-        if i < 2:
-            time.sleep(0.050)
+    except subprocess.TimeoutExpired:
+        logger.warning("gz publish subprocess timed out on topic %s", topic)
+
+
+def _gz_publish(topic: str, value: float) -> None:
+    """Publish a joint command — uses fast Python gz-transport bindings.
+    Falls back to subprocess if bindings are unavailable.
+    """
+    _gz_publish_fast(topic, value)
 
 
 # ---------------------------------------------------------------------------

@@ -126,8 +126,14 @@ export VEHICLE_ARM_URDF_FILE="$URDF_FILE"
 
 # ---- Track PIDs ----
 PIDS=()
+_CLEANUP_DONE=false
 
 cleanup() {
+    # Guard: only run once (EXIT fires after INT/TERM, which would print the
+    # message a second time without this check).
+    if [[ "$_CLEANUP_DONE" = true ]]; then return; fi
+    _CLEANUP_DONE=true
+
     echo -e "\n${YELLOW}Shutting down testing environment...${NC}"
     for pid in "${PIDS[@]}"; do
         kill "$pid" 2>/dev/null || true

@@ -300,7 +300,7 @@ class RunController:
             candidates: dict[str, dict] = {}
             for arm_id, step in arm_steps.items():
                 rt = self._primary_arm if arm_id == self._primary_id else self._secondary_arm
-                j4_current = prev_joints[arm_id]["j4"]
+                j4_current = 0.0
                 candidates[arm_id] = rt.compute_candidate_joints(
                     step,
                     j4_current=j4_current,
