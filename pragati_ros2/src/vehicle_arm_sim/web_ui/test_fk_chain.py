@@ -138,14 +138,53 @@ def test_phi_compensation_zone1():
     from fk_chain import phi_compensation
     # phi = -0.5 rad => phi_deg = abs(degrees(-0.5)) = 28.6 => Zone1
     j3_compensated = phi_compensation(j3=-0.5, j5=0.1)
-    # Zone1 base = +0.014 rot
+    # Formula: base = slope * (phi_deg / 90) + offset
+    # Zone1: slope=0.0, offset=0.014
+    # base = 0.0 * (28.6 / 90) + 0.014 = 0.014 rot
     # l5_norm = max(0, 0.1) / 0.6 = 0.167
     # l5_scale = 1.0 + 0.5 * 0.167 = 1.083
     # comp_rot = 0.014 * 1.083 = 0.01517
     # comp_rad = 0.01517 * 2 * pi = 0.09529
     # result = -0.5 + 0.09529 = -0.40471
-    expected = -0.5 + 0.014 * (1.0 + 0.5 * (0.1 / 0.6)) * 2 * math.pi
+    phi_deg = abs(math.degrees(-0.5))
+    base = 0.0 * (phi_deg / 90.0) + 0.014
+    expected = -0.5 + base * (1.0 + 0.5 * (0.1 / 0.6)) * 2 * math.pi
     assert abs(j3_compensated - expected) < 1e-9
+
+
+def test_phi_compensation_uses_slope_term():
+    """phi_compensation includes slope * (phi_deg / 90) in base computation."""
+    from unittest.mock import patch
+    from fk_chain import phi_compensation
+
+    # Patch PHI_ZONE1_SLOPE to 0.1 to verify slope path
+    with patch("fk_chain.PHI_ZONE1_SLOPE", 0.1):
+        # j3=-0.3 rad => phi_deg=17.19 => Zone1
+        j3_compensated = phi_compensation(j3=-0.3, j5=0.0)
+        phi_deg = abs(math.degrees(-0.3))
+        # base = 0.1 * (17.19 / 90) + 0.014 = 0.01910 + 0.014 = 0.03310 rot
+        base = 0.1 * (phi_deg / 90.0) + 0.014
+        # l5_scale = 1.0 (j5=0)
+        expected = -0.3 + base * 1.0 * 2 * math.pi
+        assert abs(j3_compensated - expected) < 1e-9
+
+
+def test_phi_compensation_with_nonzero_slope():
+    """phi_compensation with nonzero slope produces different result than offset-only."""
+    from unittest.mock import patch
+    from fk_chain import phi_compensation
+
+    j3, j5 = -0.3, 0.0
+    # Get offset-only result (slope=0)
+    offset_only = phi_compensation(j3=j3, j5=j5)
+
+    # With nonzero slope, result should differ
+    with patch("fk_chain.PHI_ZONE1_SLOPE", 0.1):
+        slope_result = phi_compensation(j3=j3, j5=j5)
+
+    assert slope_result != offset_only, (
+        "Nonzero slope should produce different compensation"
+    )
 
 
 def test_phi_compensation_zone2():

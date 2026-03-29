@@ -1863,3 +1863,34 @@ def test_reorder_applied_not_emitted_other_modes():
         assert len(reorder_events) == 0, (
             f"Mode {mode} must not emit reorder_applied; got {len(reorder_events)}"
         )
+
+
+def test_run_controller_passes_phi_compensation_to_runtime():
+    """RunController forwards enable_phi_compensation to compute_candidate_joints."""
+    from unittest.mock import patch, MagicMock
+    from run_controller import RunController
+
+    scenario = {
+        "steps": [
+            {"step_id": 0, "arm_id": "arm1",
+             "cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004},
+        ]
+    }
+
+    # Test with enable_phi_compensation=False
+    ctrl = RunController(mode=0, enable_phi_compensation=False)
+    ctrl.load_scenario(scenario)
+
+    # Patch the primary arm's compute_candidate_joints to capture kwargs
+    original_fn = ctrl._primary_arm.compute_candidate_joints
+    calls = []
+
+    def spy(*args, **kwargs):
+        calls.append(kwargs)
+        return original_fn(*args, **kwargs)
+
+    ctrl._primary_arm.compute_candidate_joints = spy
+    ctrl.run()
+
+    assert len(calls) == 1
+    assert calls[0].get("enable_phi_compensation") is False

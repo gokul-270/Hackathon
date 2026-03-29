@@ -225,3 +225,31 @@ def test_run_start_rejects_mode_99_with_message():
     assert resp.status_code == 422
     detail = resp.json().get("detail", "")
     assert "must be 0-4" in detail, f"Expected 'must be 0-4' in detail, got: '{detail}'"
+
+
+# ---------------------------------------------------------------------------
+# Group 8 – Phi compensation in run start
+# ---------------------------------------------------------------------------
+
+def test_run_start_sends_phi_compensation():
+    """POST /api/run/start with enable_phi_compensation=False returns 200."""
+    payload = {
+        "mode": 0,
+        "scenario": {
+            "steps": [
+                {"step_id": 0, "arm_id": "arm1",
+                 "cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004},
+            ]
+        },
+        "enable_phi_compensation": False,
+    }
+    resp = client.post("/api/run/start", json=payload)
+    assert resp.status_code == 200
+
+
+def test_run_start_phi_compensation_defaults_to_true():
+    """RunStartRequest.enable_phi_compensation defaults to True."""
+    from testing_backend import RunStartRequest
+
+    req = RunStartRequest(mode=0, scenario={"steps": []})
+    assert req.enable_phi_compensation is True

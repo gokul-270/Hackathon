@@ -232,3 +232,62 @@ def test_run_step_baseline_j5_block_skip_close_peer_zeroes_j5():
 
     assert applied_joints["j5"] == 0.0
     assert skipped is False
+
+
+# ---------------------------------------------------------------------------
+# phi compensation in compute_candidate_joints
+# ---------------------------------------------------------------------------
+
+
+def test_compute_candidate_joints_applies_phi_compensation():
+    """compute_candidate_joints with enable_phi_compensation=True
+    returns a different j3 than raw polar_decompose."""
+    from arm_runtime import ArmRuntime
+    from fk_chain import camera_to_arm, polar_decompose
+
+    rt = ArmRuntime("arm1")
+    step = ScenarioStep(
+        step_id=1, arm_id="arm1",
+        cam_x=0.494, cam_y=-0.001, cam_z=0.004,
+    )
+    # Raw result (no compensation)
+    ax, ay, az = camera_to_arm(
+        step.cam_x, step.cam_y, step.cam_z, j4_pos=0.0,
+    )
+    raw = polar_decompose(ax, ay, az)
+
+    # Compensated result
+    result = rt.compute_candidate_joints(
+        step, j4_current=0.0, enable_phi_compensation=True,
+    )
+
+    # j3 should differ from the raw value (compensation applied)
+    assert result["j3"] != raw["j3"], (
+        "Compensated j3 should differ from raw polar_decompose j3"
+    )
+    # j4, j5 should be unchanged
+    assert result["j4"] == raw["j4"]
+    assert result["j5"] == raw["j5"]
+
+
+def test_compute_candidate_joints_skips_compensation_when_disabled():
+    """compute_candidate_joints with enable_phi_compensation=False
+    returns raw polar_decompose result (j3 unchanged)."""
+    from arm_runtime import ArmRuntime
+    from fk_chain import camera_to_arm, polar_decompose
+
+    rt = ArmRuntime("arm1")
+    step = ScenarioStep(
+        step_id=1, arm_id="arm1",
+        cam_x=0.494, cam_y=-0.001, cam_z=0.004,
+    )
+    ax, ay, az = camera_to_arm(
+        step.cam_x, step.cam_y, step.cam_z, j4_pos=0.0,
+    )
+    raw = polar_decompose(ax, ay, az)
+
+    result = rt.compute_candidate_joints(
+        step, j4_current=0.0, enable_phi_compensation=False,
+    )
+
+    assert result["j3"] == raw["j3"]

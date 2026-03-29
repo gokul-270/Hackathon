@@ -83,3 +83,52 @@ secondary (replaces "arm2" scenario slots). The default SHALL be ("arm1", "arm2"
 - **GIVEN** RunController instantiated with arm_pair=("arm2","arm3")
 - **WHEN** a scenario with arm_id="arm1" and arm_id="arm2" steps is loaded
 - **THEN** arm1 steps are executed by arm2 and arm2 steps are executed by arm3
+
+### Requirement: RunController emits SSE events during execution
+
+The RunController SHALL emit enriched SSE events during step execution, including `cotton_reached`
+after successful picks, `contention_detected` for Mode 3 contention steps, `dispatch_order` at
+every dispatch decision, and `reorder_applied` after Mode 4 reordering. All events flow through
+the existing `RunEventBus` via `self._emit()`.
+
+#### Scenario: enriched events emitted during dual-arm run
+
+- **WHEN** a dual-arm run executes with any collision avoidance mode (0–4)
+- **THEN** the RunController emits `step_start` (with cam position), `dispatch_order`,
+  `cotton_reached` (on completed picks), and `step_complete` events for each step,
+  plus mode-specific events (`contention_detected` for Mode 3, `reorder_applied` for Mode 4)
+
+### Requirement: Dual-arm run applies phi compensation
+
+The dual-arm run path SHALL apply phi compensation to J3 values computed by
+`ArmRuntime.compute_candidate_joints()`. The `RunStartRequest` model SHALL
+include an `enable_phi_compensation: bool = True` field. When enabled,
+`phi_compensation(j3, j5)` SHALL be called on the candidate joints before
+they are passed to mode logic and execution.
+
+#### Scenario: Dual-arm run uses compensated J3 by default
+
+- **GIVEN** a dual-arm run is started via `POST /api/run/start` without
+  specifying `enable_phi_compensation`
+- **WHEN** `ArmRuntime.compute_candidate_joints()` returns raw joints
+- **THEN** `phi_compensation(j3, j5)` is applied to the j3 value
+- **AND** the compensated j3 is used for mode logic and published to `/joint3_cmd`
+
+#### Scenario: Compensation disabled via request parameter
+
+- **GIVEN** a dual-arm run is started with `enable_phi_compensation: false`
+- **WHEN** joints are computed for each step
+- **THEN** the raw j3 from `polar_decompose()` is used without compensation
+
+#### Scenario: UI passes phi compensation state to run endpoint
+
+- **GIVEN** the user has the "Phi Compensation" checkbox checked in the UI
+- **WHEN** the user starts a dual-arm run
+- **THEN** the `POST /api/run/start` request body includes
+  `enable_phi_compensation: true`
+
+#### Scenario: Phi compensation checkbox default matches endpoint default
+
+- **GIVEN** the testing UI is loaded fresh
+- **WHEN** the user inspects the "Phi Compensation" checkbox
+- **THEN** it is checked by default (matching the endpoint default of `true`)

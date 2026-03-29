@@ -1524,6 +1524,9 @@
             const armPairSelect = document.getElementById('run-arm-pair-select');
             const armPair = armPairSelect ? armPairSelect.value.split(',') : ['arm1', 'arm2'];
 
+            const phiCompCheckbox = document.getElementById('cotton-phi-comp');
+            const enablePhiComp = phiCompCheckbox ? phiCompCheckbox.checked : true;
+
             // Open SSE stream BEFORE starting the run so we capture all events
             var evtSource = new EventSource('/api/run/events');
             evtSource.onmessage = function (e) {
@@ -1580,7 +1583,12 @@
                 const resp = await fetch('/api/run/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mode, scenario: scenarioData, arm_pair: armPair }),
+                    body: JSON.stringify({
+                        mode,
+                        scenario: scenarioData,
+                        arm_pair: armPair,
+                        enable_phi_compensation: enablePhiComp,
+                    }),
                 });
                 if (!resp.ok) {
                     const err = await resp.text();

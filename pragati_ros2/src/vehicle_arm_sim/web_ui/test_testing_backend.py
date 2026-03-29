@@ -88,3 +88,58 @@ def test_run_events_endpoint_returns_event_stream_content_type():
             assert resp.status_code == 200
             assert "text/event-stream" in resp.headers.get("content-type", "")
     timer.join(timeout=2.0)
+
+
+def test_compute_applies_compensation_by_default():
+    """CottonComputeRequest.enable_phi_compensation defaults to True."""
+    import testing_backend as tb
+
+    req = tb.CottonComputeRequest()
+    assert req.enable_phi_compensation is True
+
+
+def test_pick_applies_compensation_by_default():
+    """CottonPickRequest.enable_phi_compensation defaults to True."""
+    import testing_backend as tb
+
+    req = tb.CottonPickRequest()
+    assert req.enable_phi_compensation is True
+
+
+def test_pick_all_applies_compensation_by_default():
+    """CottonPickAllRequest.enable_phi_compensation defaults to True."""
+    import testing_backend as tb
+
+    req = tb.CottonPickAllRequest()
+    assert req.enable_phi_compensation is True
+
+
+def test_compensation_can_be_disabled_explicitly():
+    """All 3 request models accept enable_phi_compensation=False."""
+    import testing_backend as tb
+
+    compute = tb.CottonComputeRequest(enable_phi_compensation=False)
+    assert compute.enable_phi_compensation is False
+    pick = tb.CottonPickRequest(enable_phi_compensation=False)
+    assert pick.enable_phi_compensation is False
+    pick_all = tb.CottonPickAllRequest(enable_phi_compensation=False)
+    assert pick_all.enable_phi_compensation is False
+
+
+def test_phi_comp_checkbox_checked_by_default_in_html():
+    """The cotton-phi-comp checkbox in testing_ui.html has checked attribute."""
+    from pathlib import Path
+
+    html_path = Path(__file__).resolve().parent / "testing_ui.html"
+    html_content = html_path.read_text()
+    # Find the input element with id="cotton-phi-comp"
+    import re
+
+    match = re.search(
+        r'<input[^>]*id="cotton-phi-comp"[^>]*>', html_content,
+    )
+    assert match is not None, "cotton-phi-comp input not found"
+    assert "checked" in match.group(0), (
+        f"cotton-phi-comp should have 'checked' attribute, "
+        f"got: {match.group(0)}"
+    )

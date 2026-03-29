@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from fk_chain import camera_to_arm, polar_decompose
+from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 
 
 @dataclass
@@ -42,22 +42,33 @@ class ArmRuntime:
         """Return the filtered list of steps belonging to this arm."""
         return list(self._steps)
 
-    def compute_candidate_joints(self, step, j4_current: float = 0.0) -> dict:
+    def compute_candidate_joints(
+        self,
+        step,
+        j4_current: float = 0.0,
+        enable_phi_compensation: bool = True,
+    ) -> dict:
         """Compute candidate j3/j4/j5 joints from a scenario step's camera point.
 
         Uses fk_chain.camera_to_arm to transform the camera-frame point into the
         arm (yanthra_link) frame, then fk_chain.polar_decompose to derive joint
-        commands.
+        commands. Optionally applies phi zone-based compensation to J3.
 
         Args:
             step: ScenarioStep with cam_x, cam_y, cam_z fields.
             j4_current: Current J4 position in metres (default 0.0).
+            enable_phi_compensation: Apply phi compensation to J3 (default True).
 
         Returns:
             dict with keys j3, j4, j5, reachable (and r, theta, phi from polar_decompose).
         """
-        ax, ay, az = camera_to_arm(step.cam_x, step.cam_y, step.cam_z, j4_pos=j4_current)
-        return polar_decompose(ax, ay, az)
+        ax, ay, az = camera_to_arm(
+            step.cam_x, step.cam_y, step.cam_z, j4_pos=j4_current,
+        )
+        result = polar_decompose(ax, ay, az)
+        if enable_phi_compensation:
+            result["j3"] = phi_compensation(result["j3"], result["j5"])
+        return result
 
     def run_step(
         self,

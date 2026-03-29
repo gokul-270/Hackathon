@@ -45,6 +45,7 @@ class RunController:
         spawn_fn=None,
         remove_fn=None,
         event_bus=None,
+        enable_phi_compensation: bool = True,
     ) -> None:
         """
         Args:
@@ -64,8 +65,11 @@ class RunController:
                        Defaults to _noop_remove.
             event_bus: Optional RunEventBus for emitting per-step observability events.
                        If None, events are silently dropped.
+            enable_phi_compensation: Apply phi zone-based compensation to J3
+                                     in compute_candidate_joints (default True).
         """
         self._mode = mode
+        self._enable_phi_compensation = enable_phi_compensation
         self._primary_id, self._secondary_id = arm_pair
 
         # Always create all three named runtimes for backward compatibility.
@@ -290,7 +294,11 @@ class RunController:
             for arm_id, step in arm_steps.items():
                 rt = self._primary_arm if arm_id == self._primary_id else self._secondary_arm
                 j4_current = prev_joints[arm_id]["j4"]
-                candidates[arm_id] = rt.compute_candidate_joints(step, j4_current=j4_current)
+                candidates[arm_id] = rt.compute_candidate_joints(
+                    step,
+                    j4_current=j4_current,
+                    enable_phi_compensation=self._enable_phi_compensation,
+                )
 
             # Reachability check: arms whose FK yields out-of-limit joints are skipped entirely.
             # Sending out-of-limit values to Gazebo would cause silent clipping/ignoring and

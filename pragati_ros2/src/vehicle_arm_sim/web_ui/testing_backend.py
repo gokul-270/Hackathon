@@ -919,7 +919,7 @@ class CottonComputeRequest(BaseModel):
     cam_z: float = -0.003
     arm: str = "arm1"
     j4_pos: float = 0.0
-    enable_phi_compensation: bool = False
+    enable_phi_compensation: bool = True
 
 
 @app.post("/api/cotton/compute")
@@ -971,7 +971,7 @@ def cotton_compute(req: CottonComputeRequest):
 # ---------------------------------------------------------------------------
 class CottonPickRequest(BaseModel):
     arm: str = "arm1"
-    enable_phi_compensation: bool = False
+    enable_phi_compensation: bool = True
 
 
 def _run_spawn_cotton(
@@ -1068,7 +1068,7 @@ def cotton_pick(req: CottonPickRequest):
 
 class CottonPickAllRequest(BaseModel):
     arm: str = "arm1"
-    enable_phi_compensation: bool = False
+    enable_phi_compensation: bool = True
 
 
 @app.post("/api/cotton/pick-all")
@@ -1145,6 +1145,7 @@ class RunStartRequest(BaseModel):
     mode: int
     scenario: dict
     arm_pair: list = ["arm1", "arm2"]
+    enable_phi_compensation: bool = True
 
 
 def _gz_publish(topic: str, value: float) -> None:
@@ -1156,9 +1157,16 @@ def _gz_publish(topic: str, value: float) -> None:
         "-p", f"data: {value}",
     ]
     for i in range(3):
-        result = subprocess.run(
-            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE
-        )
+        try:
+            result = subprocess.run(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                timeout=5,
+            )
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                "gz publish timed out on topic %s (attempt %d/3)", topic, i + 1
+            )
+            continue
         if result.returncode != 0:
             stderr_text = result.stderr.decode("utf-8", errors="replace").strip()
             logger.warning(
@@ -1238,6 +1246,7 @@ async def run_start(req: RunStartRequest):
         spawn_fn=_run_spawn_cotton,
         remove_fn=_run_remove_cotton,
         event_bus=_event_bus,
+        enable_phi_compensation=req.enable_phi_compensation,
     )
     controller.load_scenario(req.scenario)
     summary = await asyncio.to_thread(controller.run)

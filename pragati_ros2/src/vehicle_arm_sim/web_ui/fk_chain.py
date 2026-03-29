@@ -236,25 +236,31 @@ def polar_decompose(
     }
 
 
-# Phi compensation constants
+# Phi compensation constants (matches production.yaml values)
 PHI_ZONE1_MAX_DEG = 50.5
 PHI_ZONE2_MAX_DEG = 60.0
 PHI_ZONE1_OFFSET = 0.014    # rotations (+5 deg)
 PHI_ZONE2_OFFSET = 0.0      # rotations (no change)
 PHI_ZONE3_OFFSET = -0.014   # rotations (-5 deg)
+PHI_ZONE1_SLOPE = 0.0       # rotations per (phi_deg/90)
+PHI_ZONE2_SLOPE = 0.0       # rotations per (phi_deg/90)
+PHI_ZONE3_SLOPE = 0.0       # rotations per (phi_deg/90)
 PHI_L5_SCALE = 0.5
-JOINT5_MAX = 0.6             # m, for L5 normalization (matches yanthra_move reference)
+JOINT5_MAX = 0.6             # m, for L5 normalization
 
 
 def phi_compensation(j3: float, j5: float) -> float:
     """Apply phi zone-based compensation to J3.
 
-    Three zones based on abs(degrees(j3)):
-      Zone1 (<=50.5 deg): +0.014 rotations
-      Zone2 (<=60.0 deg): 0.0 rotations
-      Zone3 (>60.0 deg):  -0.014 rotations
+    Formula matches C++ trajectory_planner.cpp:
+      base = slope * (phi_deg / 90) + offset
 
-    The base offset is scaled by L5 extension:
+    Three zones based on abs(degrees(j3)):
+      Zone1 (<=50.5 deg): slope=PHI_ZONE1_SLOPE, offset=+0.014
+      Zone2 (<=60.0 deg): slope=PHI_ZONE2_SLOPE, offset=0.0
+      Zone3 (>60.0 deg):  slope=PHI_ZONE3_SLOPE, offset=-0.014
+
+    The base value is scaled by L5 extension:
       l5_scale = 1.0 + PHI_L5_SCALE * (j5 / JOINT5_MAX)
 
     Args:
@@ -267,15 +273,20 @@ def phi_compensation(j3: float, j5: float) -> float:
     phi_deg = abs(math.degrees(j3))
 
     if phi_deg <= PHI_ZONE1_MAX_DEG:
-        base_offset = PHI_ZONE1_OFFSET
+        slope = PHI_ZONE1_SLOPE
+        offset = PHI_ZONE1_OFFSET
     elif phi_deg <= PHI_ZONE2_MAX_DEG:
-        base_offset = PHI_ZONE2_OFFSET
+        slope = PHI_ZONE2_SLOPE
+        offset = PHI_ZONE2_OFFSET
     else:
-        base_offset = PHI_ZONE3_OFFSET
+        slope = PHI_ZONE3_SLOPE
+        offset = PHI_ZONE3_OFFSET
+
+    base = slope * (phi_deg / 90.0) + offset
 
     l5_normalized = max(0.0, j5) / JOINT5_MAX
     l5_scale_factor = 1.0 + PHI_L5_SCALE * l5_normalized
-    compensation_rot = base_offset * l5_scale_factor
+    compensation_rot = base * l5_scale_factor
     compensation_rad = compensation_rot * 2.0 * math.pi
 
     return j3 + compensation_rad
