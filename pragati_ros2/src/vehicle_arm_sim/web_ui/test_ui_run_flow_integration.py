@@ -237,3 +237,47 @@ def test_start_fires_before_sse_opens():
     assert any(e.get("run_id") == "post-sse" for e in received), (
         f"SSE consumer did not receive post-open event; got: {received}"
     )
+
+
+def test_sse_reconnect_mid_run_does_not_wipe_queued_events():
+    """A mid-run SSE reconnect must NOT clear in-flight events from the active bus.
+
+    Regression test for: SSE handler calling reset() unconditionally wipes the
+    event queue when the browser reconnects mid-run, causing cotton_reached /
+    step_complete / run_complete events to be lost.
+    """
+    import time as _time
+    import json as _json
+
+    # Simulate run_start: reset() marks bus active and starts a run
+    tb._event_bus.reset()
+    assert tb._event_bus.run_active, "precondition: bus must be active after reset()"
+
+    # Emit events as if the run is mid-way through (step 4 parallel dispatch)
+    tb._event_bus.emit({"type": "step_start", "step_id": 0, "arm_id": "arm1"})
+    tb._event_bus.emit({"type": "cotton_reached", "arm_id": "arm1"})
+
+    # Simulate mid-run SSE reconnect: GET /api/run/events called again
+    # The handler must NOT call reset() on an active bus
+    pre_reconnect_queue_size = len(tb._event_bus._queue)
+
+    # Call reset() the way the SSE handler currently (incorrectly) does
+    # After the fix, the handler must check run_active before resetting
+    tb._event_bus.reset()  # this is what the broken SSE handler does
+
+    post_reconnect_queue_size = len(tb._event_bus._queue)
+    assert post_reconnect_queue_size == pre_reconnect_queue_size, (
+        f"Mid-run reset() wiped queued events: had {pre_reconnect_queue_size} events, "
+        f"now have {post_reconnect_queue_size}"
+    )
+
+    # Emit the final event and close
+    tb._event_bus.emit({"type": "run_complete", "run_id": "mid-run-reconnect-test"})
+    tb._event_bus.close()
+
+    # Collect all events via subscribe() — must include all 3 events
+    collected = list(tb._event_bus._queue)
+    types = [e["type"] for e in collected]
+    assert "step_start" in types, f"step_start lost after mid-run reset; got: {types}"
+    assert "cotton_reached" in types, f"cotton_reached lost after mid-run reset; got: {types}"
+    assert "run_complete" in types, f"run_complete lost after mid-run reset; got: {types}"
