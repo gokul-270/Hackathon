@@ -102,7 +102,7 @@ def test_executor_returns_skipped_outcome_for_skipped_arm_step():
 
 
 def test_executor_publish_fn_called_with_arm_topics_for_allowed_step():
-    """publish_fn is called with arm-specific topic names (containing arm_id) and joint values."""
+    """publish_fn is called with Gazebo topic names from ARM_CONFIGS and joint values."""
     from run_step_executor import RunStepExecutor
 
     calls_made = []
@@ -110,14 +110,21 @@ def test_executor_publish_fn_called_with_arm_topics_for_allowed_step():
     def record_publish(topic, value):
         calls_made.append((topic, value))
 
-    executor = RunStepExecutor(publish_fn=record_publish)
+    executor = RunStepExecutor(
+        publish_fn=record_publish,
+        spawn_fn=lambda *a: "",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
     applied_joints = {"j3": 0.15, "j4": 0.25, "j5": 0.35}
 
     executor.execute(arm_id="arm1", applied_joints=applied_joints, blocked=False)
 
-    # All topics must reference arm1
-    for topic, _ in calls_made:
-        assert "arm1" in topic
+    # All topics must be arm1's Gazebo topics from ARM_CONFIGS
+    topics = {t for t, _ in calls_made}
+    assert "/joint3_cmd" in topics
+    assert "/joint4_cmd" in topics
+    assert "/joint5_cmd" in topics
 
     # All three joint values must appear
     published_values = [v for _, v in calls_made]
@@ -327,10 +334,10 @@ def test_executor_publishes_timed_sequence_j4_then_j3_then_j5():
     )
 
     topics_in_order = [t for t, _ in publish_calls]
-    # Find first non-zero publish for each joint
-    j4_idx = next(i for i, t in enumerate(topics_in_order) if "j4" in t and publish_calls[i][1] != 0.0)
-    j3_idx = next(i for i, t in enumerate(topics_in_order) if "j3" in t and publish_calls[i][1] != 0.0)
-    j5_idx = next(i for i, t in enumerate(topics_in_order) if "j5" in t and publish_calls[i][1] != 0.0)
+    # Find first non-zero publish for each joint (use "joint3"/"joint4"/"joint5")
+    j4_idx = next(i for i, t in enumerate(topics_in_order) if "joint4" in t and publish_calls[i][1] != 0.0)
+    j3_idx = next(i for i, t in enumerate(topics_in_order) if "joint3" in t and publish_calls[i][1] != 0.0)
+    j5_idx = next(i for i, t in enumerate(topics_in_order) if "joint5" in t and publish_calls[i][1] != 0.0)
 
     assert j4_idx < j3_idx < j5_idx, (
         f"Expected j4({j4_idx}) < j3({j3_idx}) < j5({j5_idx}) in publish order"
@@ -350,16 +357,16 @@ def test_executor_publishes_retract_and_home_after_j5():
     )
 
     topics_values = [(t, v) for t, v in publish_calls]
-    # Check j5 retract to 0.0 exists
-    j5_retracts = [v for t, v in topics_values if "j5" in t and v == 0.0]
+    # Check j5 retract to 0.0 exists (use "joint5")
+    j5_retracts = [v for t, v in topics_values if "joint5" in t and v == 0.0]
     assert len(j5_retracts) >= 1, "Expected j5 retract to 0.0"
 
     # Check j3 home to 0.0 exists
-    j3_homes = [v for t, v in topics_values if "j3" in t and v == 0.0]
+    j3_homes = [v for t, v in topics_values if "joint3" in t and v == 0.0]
     assert len(j3_homes) >= 1, "Expected j3 home to 0.0"
 
     # Check j4 home to 0.0 exists
-    j4_homes = [v for t, v in topics_values if "j4" in t and v == 0.0]
+    j4_homes = [v for t, v in topics_values if "joint4" in t and v == 0.0]
     assert len(j4_homes) >= 1, "Expected j4 home to 0.0"
 
 
@@ -379,3 +386,158 @@ def test_executor_old_interface_still_works_with_defaults():
     )
 
     assert outcome["terminal_status"] == "completed"
+
+
+# ---------------------------------------------------------------------------
+# Bug fix: executor must use real Gazebo topic names from ARM_CONFIGS
+# ---------------------------------------------------------------------------
+
+
+def test_executor_arm1_publishes_to_joint3_cmd_topic():
+    """arm1 must publish to /joint3_cmd, not /arm1/j3_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j3_topics = [t for t, _ in publish_calls if "joint3" in t]
+    assert len(j3_topics) > 0, f"No joint3 topics. All: {publish_calls}"
+    for topic in j3_topics:
+        assert topic == "/joint3_cmd", f"Expected /joint3_cmd, got {topic}"
+
+
+def test_executor_arm1_publishes_to_joint4_cmd_topic():
+    """arm1 must publish to /joint4_cmd, not /arm1/j4_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j4_topics = [t for t, _ in publish_calls if "joint4" in t]
+    assert len(j4_topics) > 0, f"No joint4 topics. All: {publish_calls}"
+    for topic in j4_topics:
+        assert topic == "/joint4_cmd", f"Expected /joint4_cmd, got {topic}"
+
+
+def test_executor_arm1_publishes_to_joint5_cmd_topic():
+    """arm1 must publish to /joint5_cmd, not /arm1/j5_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm1",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j5_topics = [t for t, _ in publish_calls if "joint5" in t]
+    assert len(j5_topics) > 0, f"No joint5 topics. All: {publish_calls}"
+    for topic in j5_topics:
+        assert topic == "/joint5_cmd", f"Expected /joint5_cmd, got {topic}"
+
+
+def test_executor_arm2_publishes_to_joint3_copy_cmd_topic():
+    """arm2 must publish to /joint3_copy_cmd, not /arm2/j3_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm2",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j3_topics = [t for t, _ in publish_calls if "joint3" in t]
+    assert len(j3_topics) > 0, f"No joint3 topics. All: {publish_calls}"
+    for topic in j3_topics:
+        assert topic == "/joint3_copy_cmd", f"Expected /joint3_copy_cmd, got {topic}"
+
+
+def test_executor_arm2_publishes_to_joint4_copy_cmd_topic():
+    """arm2 must publish to /joint4_copy_cmd, not /arm2/j4_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm2",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j4_topics = [t for t, _ in publish_calls if "joint4" in t]
+    assert len(j4_topics) > 0, f"No joint4 topics. All: {publish_calls}"
+    for topic in j4_topics:
+        assert topic == "/joint4_copy_cmd", f"Expected /joint4_copy_cmd, got {topic}"
+
+
+def test_executor_arm2_publishes_to_joint5_copy_cmd_topic():
+    """arm2 must publish to /joint5_copy_cmd, not /arm2/j5_cmd."""
+    from run_step_executor import RunStepExecutor
+
+    publish_calls = []
+
+    executor = RunStepExecutor(
+        publish_fn=lambda t, v: publish_calls.append((t, v)),
+        spawn_fn=lambda *a: "c0",
+        remove_fn=lambda n: None,
+        sleep_fn=lambda s: None,
+    )
+
+    executor.execute(
+        arm_id="arm2",
+        applied_joints={"j3": 0.15, "j4": 0.25, "j5": 0.35},
+        blocked=False,
+    )
+
+    j5_topics = [t for t, _ in publish_calls if "joint5" in t]
+    assert len(j5_topics) > 0, f"No joint5 topics. All: {publish_calls}"
+    for topic in j5_topics:
+        assert topic == "/joint5_copy_cmd", f"Expected /joint5_copy_cmd, got {topic}"

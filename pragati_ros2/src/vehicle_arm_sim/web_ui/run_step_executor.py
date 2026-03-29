@@ -13,7 +13,8 @@ Accepts an arm_id, applied_joints, and callable dependencies, then:
 
 Callable signatures:
     publish_fn(topic: str, value: float) -> None
-        Topic names: /arm1/j3_cmd, /arm1/j4_cmd, /arm1/j5_cmd (and /arm2/...)
+        Topic names are looked up from ARM_CONFIGS in fk_chain.py
+        (e.g. /joint3_cmd for arm1, /joint3_copy_cmd for arm2).
     spawn_fn(arm_id: str, cam_x: float, cam_y: float, cam_z: float, j4_pos: float) -> str
         Returns the Gazebo model name that was spawned.
     remove_fn(model_name: str) -> None
@@ -25,6 +26,8 @@ from __future__ import annotations
 
 import time
 from typing import Callable, Optional
+
+from fk_chain import ARM_CONFIGS
 
 
 # Terminal status constants
@@ -122,9 +125,10 @@ class RunStepExecutor:
                 "executed_in_gazebo": False,
             }
 
-        j3_topic = f"/{arm_id}/j3_cmd"
-        j4_topic = f"/{arm_id}/j4_cmd"
-        j5_topic = f"/{arm_id}/j5_cmd"
+        arm_cfg = ARM_CONFIGS[arm_id]
+        j3_topic = arm_cfg["j3_topic"]
+        j4_topic = arm_cfg["j4_topic"]
+        j5_topic = arm_cfg["j5_topic"]
 
         # 1. Spawn cotton at the cam position
         model_name = self._spawn_fn(arm_id, cam_x, cam_y, cam_z, j4_pos)

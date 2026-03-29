@@ -971,10 +971,14 @@ def _run_spawn_cotton(
     """Spawn a cotton model at cam position for a replay run step.
 
     Returns the model name so the caller can remove it later.
+    Uses the arm-specific FK config so cotton appears at the correct
+    world position for each arm.
     """
     global _cotton_counter
     world_name = _detect_gz_world_name()
-    wx, wy, wz = cam_to_world(cam_x, cam_y, cam_z)
+    arm_config = ARM_CONFIGS[arm_id]
+    wx, wy, wz = camera_to_world_fk(cam_x, cam_y, cam_z, j3=0.0, j4=0.0,
+                                      arm_config=arm_config)
     name = f"run_cotton_{arm_id}_{_cotton_counter}"
     _cotton_counter += 1
     sdf = _COTTON_SDF_TEMPLATE.format(name=name)

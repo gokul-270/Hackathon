@@ -74,12 +74,17 @@ class TestMotionBackedE2E:
         assert len(publish_calls) >= 4  # at minimum one per arm-step
 
     def test_e2e_motion_backed_run_publishes_to_arm_specific_topics(self):
-        """publish calls must reference arm1 and arm2 topics."""
+        """publish calls must reference arm1 and arm2 Gazebo topics."""
         resp, publish_calls, _ = self._run(_PAIRED_SCENARIO, mode=0)
         assert resp.status_code == 200
         topics = [t for t, _ in publish_calls]
-        assert any("arm1" in t for t in topics)
-        assert any("arm2" in t for t in topics)
+        # arm1 uses /joint3_cmd, arm2 uses /joint3_copy_cmd (from ARM_CONFIGS)
+        assert any("/joint3_cmd" == t for t in topics), (
+            f"expected arm1 topic /joint3_cmd in {topics}"
+        )
+        assert any("_copy_cmd" in t for t in topics), (
+            f"expected arm2 copy topic in {topics}"
+        )
 
     def test_e2e_json_report_steps_include_terminal_status(self):
         """Every step in the JSON report must have terminal_status after a motion-backed run."""

@@ -1156,3 +1156,53 @@ class TestPickStatusEndpointRemoved:
         """GET /api/cotton/pick/status endpoint must not exist."""
         resp = client.get("/api/cotton/pick/status")
         assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Bug fix: _run_spawn_cotton must use arm-specific FK for world position
+# ---------------------------------------------------------------------------
+class TestRunSpawnCottonArmSpecificFK:
+    """_run_spawn_cotton must use ARM_CONFIGS[arm_id] for FK, not hardcode arm1."""
+
+    def test_spawn_cotton_arm2_uses_arm2_fk_config(self):
+        """Cotton spawned for arm2 must use arm2's base frame, producing different
+        world coordinates than arm1 for the same camera input."""
+        from fk_chain import camera_to_world_fk, ARM_CONFIGS
+
+        cam_x, cam_y, cam_z = 0.65, -0.001, 0.05
+
+        arm1_pos = camera_to_world_fk(cam_x, cam_y, cam_z, j3=0.0, j4=0.0,
+                                       arm_config=ARM_CONFIGS['arm1'])
+        arm2_pos = camera_to_world_fk(cam_x, cam_y, cam_z, j3=0.0, j4=0.0,
+                                       arm_config=ARM_CONFIGS['arm2'])
+
+        # arm1 and arm2 have different base_xyz, so world positions must differ
+        assert arm1_pos != arm2_pos, (
+            "arm1 and arm2 should produce different world positions"
+        )
+
+        # Now verify _run_spawn_cotton actually uses arm-specific FK
+        # by checking the model spawn position matches arm2's FK output
+        import testing_backend
+        spawn_positions = []
+        original_spawn = testing_backend._gz_spawn_model
+
+        def capture_spawn(name, sdf, wx, wy, wz, world_name):
+            spawn_positions.append((wx, wy, wz))
+
+        with mock.patch.object(testing_backend, '_gz_spawn_model', capture_spawn), \
+             mock.patch.object(testing_backend, '_detect_gz_world_name', return_value='test'):
+            testing_backend._run_spawn_cotton("arm2", cam_x, cam_y, cam_z, 0.0)
+
+        assert len(spawn_positions) == 1
+        actual_pos = spawn_positions[0]
+        # Must match arm2's FK output, not arm1's
+        assert abs(actual_pos[0] - arm2_pos[0]) < 1e-6, (
+            f"x: spawn={actual_pos[0]}, arm2_fk={arm2_pos[0]}, arm1_fk={arm1_pos[0]}"
+        )
+        assert abs(actual_pos[1] - arm2_pos[1]) < 1e-6, (
+            f"y: spawn={actual_pos[1]}, arm2_fk={arm2_pos[1]}, arm1_fk={arm1_pos[1]}"
+        )
+        assert abs(actual_pos[2] - arm2_pos[2]) < 1e-6, (
+            f"z: spawn={actual_pos[2]}, arm2_fk={arm2_pos[2]}, arm1_fk={arm1_pos[2]}"
+        )
