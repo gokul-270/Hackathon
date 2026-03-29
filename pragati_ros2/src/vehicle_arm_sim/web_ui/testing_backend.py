@@ -1117,6 +1117,7 @@ def cotton_mark_picked(name: str):
 class RunStartRequest(BaseModel):
     mode: int
     scenario: dict
+    arm_pair: list = ["arm1", "arm2"]
 
 
 # ---------------------------------------------------------------------------
@@ -1132,6 +1133,17 @@ async def run_start(req: RunStartRequest):
     if req.mode not in valid_modes:
         from fastapi import HTTPException
         raise HTTPException(status_code=422, detail=f"Invalid mode {req.mode}; must be 0-3")
+
+    # Validate arm_pair
+    from fk_chain import ARM_CONFIGS
+    valid_arm_ids = set(ARM_CONFIGS.keys())
+    if (
+        len(req.arm_pair) != 2
+        or len(set(req.arm_pair)) != 2
+        or not all(a in valid_arm_ids for a in req.arm_pair)
+    ):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=f"Invalid arm_pair {req.arm_pair}")
 
     _run_state = "running"
     run_id = str(uuid.uuid4())
@@ -1151,11 +1163,16 @@ async def run_start(req: RunStartRequest):
 
     executor = RunStepExecutor(
         publish_fn=_gz_publish,
-        spawn_fn=_run_spawn_cotton,
         remove_fn=_run_remove_cotton,
         sleep_fn=_run_sleep,
     )
-    controller = RunController(req.mode, executor=executor)
+    controller = RunController(
+        req.mode,
+        executor=executor,
+        arm_pair=tuple(req.arm_pair),
+        spawn_fn=_run_spawn_cotton,
+        remove_fn=_run_remove_cotton,
+    )
     controller.load_scenario(req.scenario)
     summary = controller.run()
     json_report_str = controller.get_json_report()

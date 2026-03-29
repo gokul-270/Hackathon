@@ -198,16 +198,16 @@ class TestMotionBackedE2EWithSpawn:
         assert resp.status_code == 200
         assert len(remove_calls) == len(spawn_calls)
 
-    def test_run_start_does_not_spawn_for_blocked_steps(self):
-        """Blocked arm-steps must not trigger spawn."""
-        # _BLOCKED_SCENARIO uses mode=1 (baseline_j5_block_skip) which blocks j5
-        resp, _, spawn_calls, _, client = self._run_with_spawn_tracking(_BLOCKED_SCENARIO, mode=1)
+    def test_run_start_spawn_called_for_all_steps_including_blocked(self):
+        """Upfront spawn is called for ALL steps (including blocked); remove is not called for blocked."""
+        resp, _, spawn_calls, remove_calls, client = self._run_with_spawn_tracking(_BLOCKED_SCENARIO, mode=1)
         assert resp.status_code == 200
         data = client.get("/api/run/report/json").json()
         blocked_count = sum(1 for s in data["steps"] if s["terminal_status"] == "blocked")
-        # Each blocked step must not contribute a spawn
-        non_blocked_count = len(data["steps"]) - blocked_count
-        assert len(spawn_calls) == non_blocked_count
+        # Upfront spawn: spawn is called for ALL steps
+        assert len(spawn_calls) == len(data["steps"])
+        # Remove is NOT called for blocked steps (cotton stays visible)
+        assert len(remove_calls) == len(data["steps"]) - blocked_count
 
     def test_run_start_unrestricted_reports_completed_picks_equal_step_count(self):
         """In unrestricted mode, completed_picks must equal number of arm-steps."""
@@ -219,3 +219,70 @@ class TestMotionBackedE2EWithSpawn:
         assert data["summary"]["completed_picks"] == 4  # 4 arm-steps in PAIRED_SCENARIO
         assert len(spawn_calls) == 4
         assert len(remove_calls) == 4
+
+
+class TestArmPairSupport:
+    """Tests for arm_pair selection in /api/run/start."""
+
+    def test_arm_pair_arm1_arm3_runs_successfully(self):
+        """arm_pair=['arm1','arm3'] → 200 and step reports include arm1 and arm3 (not arm2)."""
+        tb._current_run_result = None
+        with (
+            patch("testing_backend.subprocess.Popen", side_effect=lambda cmd, **kw: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post("/api/run/start", json={
+                "mode": 0,
+                "scenario": _PAIRED_SCENARIO,
+                "arm_pair": ["arm1", "arm3"],
+            })
+        assert resp.status_code == 200
+        data = client.get("/api/run/report/json").json()
+        arm_ids = {s["arm_id"] for s in data["steps"]}
+        assert "arm3" in arm_ids
+        assert "arm2" not in arm_ids
+
+    def test_arm_pair_duplicate_ids_returns_422(self):
+        """arm_pair=['arm1','arm1'] (duplicate) → 422."""
+        tb._current_run_result = None
+        client = TestClient(app)
+        resp = client.post("/api/run/start", json={
+            "mode": 0,
+            "scenario": _PAIRED_SCENARIO,
+            "arm_pair": ["arm1", "arm1"],
+        })
+        assert resp.status_code == 422
+
+    def test_arm_pair_invalid_arm_id_returns_422(self):
+        """arm_pair=['arm1','arm99'] (unknown arm) → 422."""
+        tb._current_run_result = None
+        client = TestClient(app)
+        resp = client.post("/api/run/start", json={
+            "mode": 0,
+            "scenario": _PAIRED_SCENARIO,
+            "arm_pair": ["arm1", "arm99"],
+        })
+        assert resp.status_code == 422
+
+    def test_arm_pair_defaults_to_arm1_arm2_when_not_provided(self):
+        """Omitting arm_pair from request defaults to arm1+arm2 (backward compat)."""
+        tb._current_run_result = None
+        with (
+            patch("testing_backend.subprocess.Popen", side_effect=lambda cmd, **kw: None),
+            patch("testing_backend._run_spawn_cotton", return_value="mock_cotton"),
+            patch("testing_backend._run_remove_cotton"),
+            patch("testing_backend._run_sleep", side_effect=lambda s: None),
+        ):
+            client = TestClient(app)
+            resp = client.post("/api/run/start", json={
+                "mode": 0,
+                "scenario": _PAIRED_SCENARIO,
+                # no arm_pair field
+            })
+        assert resp.status_code == 200
+        data = client.get("/api/run/report/json").json()
+        arm_ids = {s["arm_id"] for s in data["steps"]}
+        assert arm_ids == {"arm1", "arm2"}

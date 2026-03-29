@@ -1521,11 +1521,14 @@
             const modeSelect = document.getElementById('run-mode-select');
             const mode = modeSelect ? parseInt(modeSelect.value, 10) : 0;
 
+            const armPairSelect = document.getElementById('run-arm-pair-select');
+            const armPair = armPairSelect ? armPairSelect.value.split(',') : ['arm1', 'arm2'];
+
             try {
                 const resp = await fetch('/api/run/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mode, scenario: scenarioData }),
+                    body: JSON.stringify({ mode, scenario: scenarioData, arm_pair: armPair }),
                 });
                 if (!resp.ok) {
                     const err = await resp.text();
