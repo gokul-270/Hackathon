@@ -7,6 +7,7 @@ recording truth monitor observations, and generating a JSON run summary.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 from arm_runtime import ArmRuntime
@@ -233,7 +234,9 @@ class RunController:
                     near_col = record.near_collision
                     col = record.collision
 
-            # Record StepReport for each active arm
+            # Record StepReport for each active arm — dispatch in parallel via ThreadPoolExecutor
+            # All mode logic (candidates, applied, j5_blocked) must be computed BEFORE dispatch.
+            arm_execute_args: dict = {}
             for arm_id in arm_steps:
                 own_cand = candidates[arm_id]
                 own_applied = applied[arm_id]
@@ -245,20 +248,44 @@ class RunController:
                     and own_applied["j5"] == 0.0
                     and own_cand["j5"] > 0.0
                 )
-
-                # Call executor to perform Gazebo motion and get terminal outcome
                 own_step = arm_steps[arm_id]
-                outcome = self._executor.execute(
-                    arm_id=arm_id,
-                    applied_joints=own_applied,
-                    blocked=j5_blocked,
-                    skipped=own_skipped,
-                    cam_x=own_step.cam_x,
-                    cam_y=own_step.cam_y,
-                    cam_z=own_step.cam_z,
-                    j4_pos=own_applied["j4"],
-                    cotton_model=cotton_models.get((step_id, arm_id), ""),
-                )
+                arm_execute_args[arm_id] = {
+                    "cand": own_cand,
+                    "applied": own_applied,
+                    "skipped": own_skipped,
+                    "j5_blocked": j5_blocked,
+                    "step": own_step,
+                }
+
+            # Dispatch all executor calls in parallel (max 2 workers for a pair of arms)
+            outcomes: dict = {}
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                futures = {
+                    arm_id: pool.submit(
+                        self._executor.execute,
+                        arm_id=arm_id,
+                        applied_joints=args["applied"],
+                        blocked=args["j5_blocked"],
+                        skipped=args["skipped"],
+                        cam_x=args["step"].cam_x,
+                        cam_y=args["step"].cam_y,
+                        cam_z=args["step"].cam_z,
+                        j4_pos=args["applied"]["j4"],
+                        cotton_model=cotton_models.get((step_id, arm_id), ""),
+                    )
+                    for arm_id, args in arm_execute_args.items()
+                }
+                for arm_id in futures:
+                    outcomes[arm_id] = futures[arm_id].result()
+
+            # Add step reports in sorted arm_id order
+            for arm_id in sorted(arm_execute_args.keys()):
+                args = arm_execute_args[arm_id]
+                outcome = outcomes[arm_id]
+                own_cand = args["cand"]
+                own_applied = args["applied"]
+                own_skipped = args["skipped"]
+                j5_blocked = args["j5_blocked"]
 
                 self._reporter.add_step(
                     StepReport(

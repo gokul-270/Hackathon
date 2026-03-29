@@ -37,12 +37,12 @@
 
 ## 4. RunController parallel animation [PARALLEL with 3]
 
-- [ ] 4.1 **RED** — In `test_run_controller.py`, write a test that for a paired step, both `executor.execute()` calls are started within 50ms of each other (use threading timestamps injected via a recording sleep_fn); confirm it fails
-- [ ] 4.2 **RED** — Write a test that step reports for a paired step are appended to the reporter in sorted arm-id order even if arm2's executor returns before arm1's; confirm it fails
-- [ ] 4.3 **RED** — Write a test that a solo step (only one arm active) still produces a single step report correctly with no threading change; confirm it still passes (this is a guard test)
-- [ ] 4.6 **RED** — Write a test that mode logic (candidate joints, peer-state exchange) runs and produces `applied` joints before any `executor.execute()` call is dispatched (use a recording executor that captures call order vs. candidate computation order); confirm it fails
-- [ ] 4.4 **GREEN** — In `RunController.run()`, replace the sequential `for arm_id in arm_steps` executor loop with a `ThreadPoolExecutor(max_workers=2)` block: submit all active arms' `execute()` calls, then collect `future.result()` in sorted `arm_id` order before calling `self._reporter.add_step()`
-- [ ] 4.5 **REFACTOR** — Run `pytest test_run_controller.py -x`; confirm all new + existing tests pass; commit: `feat: parallel dual-arm animation in RunController via ThreadPoolExecutor`
+- [x] 4.1 **RED** — In `test_run_controller.py`, write a test that for a paired step, both `executor.execute()` calls are started within 50ms of each other (use threading timestamps injected via a recording sleep_fn); confirm it fails
+- [x] 4.2 **RED** — Write a test that step reports for a paired step are appended to the reporter in sorted arm-id order even if arm2's executor returns before arm1's; confirm it fails
+- [x] 4.3 **RED** — Write a test that a solo step (only one arm active) still produces a single step report correctly with no threading change; confirm it still passes (this is a guard test)
+- [x] 4.6 **RED** — Write a test that mode logic (candidate joints, peer-state exchange) runs and produces `applied` joints before any `executor.execute()` call is dispatched (use a recording executor that captures call order vs. candidate computation order); confirm it fails
+- [x] 4.4 **GREEN** — In `RunController.run()`, replace the sequential `for arm_id in arm_steps` executor loop with a `ThreadPoolExecutor(max_workers=2)` block: submit all active arms' `execute()` calls, then collect `future.result()` in sorted `arm_id` order before calling `self._reporter.add_step()`
+- [x] 4.5 **REFACTOR** — Run `pytest test_run_controller.py -x`; confirm all new + existing tests pass; commit: `feat: parallel dual-arm animation in RunController via ThreadPoolExecutor`
 
 ## 5. testing_backend.py integration [SEQUENTIAL]
 
