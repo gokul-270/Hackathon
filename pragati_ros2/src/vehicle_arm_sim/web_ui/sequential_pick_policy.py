@@ -1,31 +1,25 @@
 """Sequential-pick policy for Mode 3: SEQUENTIAL_PICK.
 
-Implements alternating-turn arbitration with timeout-driven skip.
+Detects contention when both arms target nearby j4 positions (gap < 0.10m)
+and both are extending (j5 > 0). Alternates winner turn between arms.
+Winner and loser both receive unmodified joints — RunController handles
+dispatch ordering (winner first, then loser).
 
-Design note: RunController processes both arms sequentially within a step_id.
-The policy uses a "pending turn advance" pattern to ensure the turn advances
-only once per step_id (after both arms have been processed), preventing both
-arms from winning in the same step.
-
-NOTE: This file was renamed from wait_mode_policy.py. The class was renamed
-from WaitModePolicy to SequentialPickPolicy. Behavior will be replaced in a
-subsequent commit (Group 2).
+Returns 4-tuple: (applied_joints, skipped, is_contention, is_winner)
+- applied_joints: always the unmodified own_joints
+- skipped: always False (sequential pick never skips)
+- is_contention: True when gap < 0.10 and both j5 > 0
+- is_winner: True for the arm whose turn it is at this step
 """
-
-from overlap_zone_state import OverlapZoneState
 
 
 class SequentialPickPolicy:
-    """Alternating-turn wait arbitration with timeout-driven skip."""
+    """Alternating-turn contention arbitration for sequential pick mode."""
 
-    def __init__(self, timeout_steps: int = 1) -> None:
+    CONTENTION_THRESHOLD = 0.10
+
+    def __init__(self) -> None:
         self._turn: int = 0  # 0 = arm1's turn, 1 = arm2's turn
-        self._timeout_steps = timeout_steps
-        self._wait_counts: dict[str, int] = {"arm1": 0, "arm2": 0}
-        self._overlap = OverlapZoneState()
-        self._turn_map: dict[int, str] = {0: "arm1", 1: "arm2"}
-        # Pending turn advance: set to new turn value at first arm, committed at second.
-        # This ensures the effective turn for both arms in the same step is the same.
         self._current_step_id: int | None = None
         self._step_turn: int = 0  # the locked turn for the current step
 
@@ -35,56 +29,39 @@ class SequentialPickPolicy:
         arm_id: str,
         own_joints: dict,
         peer_joints: dict | None,
-    ) -> tuple[dict, bool]:
+    ) -> tuple[dict, bool, bool, bool]:
         """Apply sequential-pick policy.
 
-        Returns: (applied_joints, skipped)
-            - applied_joints: joints after policy (j5 may be zeroed)
-            - skipped: True if this pick was skipped due to timeout
+        Returns: (applied_joints, skipped, is_contention, is_winner)
         """
-        # Lock in the turn for this step_id on the first arm processed.
-        # Both arms in the same step use the same locked turn value.
+        # No peer → no contention possible
+        if peer_joints is None:
+            return (own_joints, False, False, False)
+
+        # Compute j4 gap
+        gap = abs(own_joints["j4"] - peer_joints["j4"])
+
+        # No contention if gap at or above threshold, or either arm not extending
+        if (
+            gap >= self.CONTENTION_THRESHOLD
+            or own_joints["j5"] <= 0
+            or peer_joints["j5"] <= 0
+        ):
+            return (own_joints, False, False, False)
+
+        # Contention detected — lock turn for this step_id
         if self._current_step_id != step_id:
             self._current_step_id = step_id
             self._step_turn = self._turn
 
-        # No peer → no contention possible, pass through
-        if peer_joints is None:
-            return own_joints, False
+        winner_arm = "arm1" if self._step_turn == 0 else "arm2"
+        is_winner = arm_id == winner_arm
 
-        # Not in overlap zone → pass through
-        if not self._overlap.is_in_overlap_zone(own_joints, peer_joints):
-            return own_joints, False
+        if is_winner:
+            # Advance turn for next step
+            self._turn = 1 - self._step_turn
 
-        # In overlap zone but no contention (peer j5 == 0) → pass through
-        if not self._overlap.detect_contention(own_joints, peer_joints):
-            return own_joints, False
-
-        # Contention detected — apply turn-based arbitration using the locked step turn
-        winner_arm = self._turn_map[self._step_turn]
-
-        if arm_id == winner_arm:
-            # This arm wins the turn — pick proceeds.
-            # Advance the underlying turn so the NEXT step uses the alternated value.
-            self._wait_counts[arm_id] = 0
-            self._turn = 1 - self._step_turn  # advance for next step
-            return own_joints, False
-        else:
-            # This arm must wait
-            wait_count = self._wait_counts[arm_id]
-            if wait_count >= self._timeout_steps:
-                # Timeout: skip this pick, advance turn, reset wait count
-                self._wait_counts[arm_id] = 0
-                self._turn = 1 - self._step_turn
-                applied = dict(own_joints)
-                applied["j5"] = 0.0
-                return applied, True
-            else:
-                # Still waiting: zero j5 but do NOT skip
-                self._wait_counts[arm_id] = wait_count + 1
-                applied = dict(own_joints)
-                applied["j5"] = 0.0
-                return applied, False
+        return (own_joints, False, True, is_winner)
 
 
 # Backward-compatible alias for existing imports

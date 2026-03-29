@@ -29,19 +29,19 @@ Replace all `overlap_zone_wait` / `OVERLAP_ZONE_WAIT` references with `sequentia
 
 Implement `SequentialPickPolicy` with contention detection, turn alternation, and winner/loser designation. Pure unit — no RunController changes yet.
 
-- [ ] 2.1 Write failing tests in `test_sequential_pick_policy.py` (new file replacing `test_wait_mode_policy.py`): contention detected when j4 gap < 0.10 and both j5 > 0; no contention when gap >= 0.10; no contention when peer j5 == 0; no contention when no peer; arm1 wins first contention; turn alternates; turn locked within same step_id; winner gets unmodified joints; loser gets unmodified joints with loser flag.
-- [ ] 2.2 Run tests — confirm RED (all new tests fail).
-- [ ] 2.3 Implement `SequentialPickPolicy` in `sequential_pick_policy.py`: `__init__` initializes turn state. `apply(step_id, arm_id, own_joints, peer_joints)` returns `(applied_joints, skipped, is_contention, is_winner)`. Contention: `|own_j4 - peer_j4| < 0.10` AND both j5 > 0 AND peer exists.
-- [ ] 2.4 Run tests — confirm GREEN. Refactor if needed. Commit.
+- [x] 2.1 Write failing tests in `test_sequential_pick_policy.py` (new file replacing `test_wait_mode_policy.py`): contention detected when j4 gap < 0.10 and both j5 > 0; no contention when gap >= 0.10; no contention when peer j5 == 0; no contention when no peer; arm1 wins first contention; turn alternates; turn locked within same step_id; winner gets unmodified joints; loser gets unmodified joints with loser flag.
+- [x] 2.2 Run tests — confirm RED (all new tests fail).
+- [x] 2.3 Implement `SequentialPickPolicy` in `sequential_pick_policy.py`: `__init__` initializes turn state. `apply(step_id, arm_id, own_joints, peer_joints)` returns `(applied_joints, skipped, is_contention, is_winner)`. Contention: `|own_j4 - peer_j4| < 0.10` AND both j5 > 0 AND peer exists.
+- [x] 2.4 Run tests — confirm GREEN. Refactor if needed. Commit.
 
 ## 3. Smart Reorder Scheduler [PARALLEL with 2]
 
 Implement `SmartReorderScheduler` — pure algorithm, no RunController wiring yet.
 
-- [ ] 3.1 Write failing tests in `test_smart_reorder_scheduler.py` (new file): reorder produces valid step map with all steps preserved; reorder improves min j4 gap over original; handles already-optimal order; j4 computed from cam_z using FK formula (0.1005 - cam_z); handles unequal step counts (solo tail preserved); brute-force for N <= 8; greedy fallback for N > 8.
-- [ ] 3.2 Run tests — confirm RED.
-- [ ] 3.3 Implement `SmartReorderScheduler` in `smart_reorder_scheduler.py` (new file): `reorder(step_map, arm1_steps, arm2_steps)` computes j4 for each step via FK, finds optimal pairing via brute-force permutations (N <= 8) or greedy (N > 8), returns reordered step_map.
-- [ ] 3.4 Run tests — confirm GREEN. Refactor if needed. Commit.
+- [x] 3.1 Write failing tests in `test_smart_reorder_scheduler.py` (new file): reorder produces valid step map with all steps preserved; reorder improves min j4 gap over original; handles already-optimal order; j4 computed from cam_z using FK formula (0.1005 - cam_z); handles unequal step counts (solo tail preserved); brute-force for N <= 8; greedy fallback for N > 8.
+- [x] 3.2 Run tests — confirm RED.
+- [x] 3.3 Implement `SmartReorderScheduler` in `smart_reorder_scheduler.py` (new file): `reorder(step_map, arm1_steps, arm2_steps)` computes j4 for each step via FK, finds optimal pairing via brute-force permutations (N <= 8) or greedy (N > 8), returns reordered step_map.
+- [x] 3.4 Run tests — confirm GREEN. Refactor if needed. Commit.
 
 ## 4. BaselineMode Integration [SEQUENTIAL]
 

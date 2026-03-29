@@ -35,8 +35,8 @@ class BaselineMode:
     GEOMETRY_BLOCK = 2
     SEQUENTIAL_PICK = 3
 
-    def __init__(self, wait_timeout_steps: int = 0) -> None:
-        self._wait_policy = SequentialPickPolicy(timeout_steps=wait_timeout_steps)
+    def __init__(self) -> None:
+        self._wait_policy = SequentialPickPolicy()
 
     def apply(
         self,
@@ -163,10 +163,13 @@ class BaselineMode:
     ) -> tuple[dict, bool]:
         """Overlap-zone wait arbitration (Mode 3).
 
-        Delegates to WaitModePolicy which tracks turn state and timeout.
+        Delegates to SequentialPickPolicy which tracks turn state.
         Returns (applied_joints, skipped).
         """
         peer_joints = None
         if peer_state is not None:
             peer_joints = peer_state.candidate_joints
-        return self._wait_policy.apply(step_id, arm_id, own_joints, peer_joints)
+        applied, skipped, _is_contention, _is_winner = self._wait_policy.apply(
+            step_id, arm_id, own_joints, peer_joints
+        )
+        return applied, skipped
