@@ -1240,41 +1240,75 @@ async def run_events():
         import asyncio
         import concurrent.futures
 
-        loop = asyncio.get_event_loop()
+        _STOP = object()  # sentinel: subscribe() generator exhausted
+
+        def _safe_next(g):
+            """Advance the subscribe() generator by one event.
+
+            Returns the next event dict, or _STOP when the generator is
+            exhausted.  Never raises StopIteration — that exception must not
+            propagate into a concurrent.futures.Future because Python 3.7+
+            raises TypeError when the event loop copies it into an asyncio
+            Future, leaving that Future permanently PENDING.
+            """
+            try:
+                return next(g)
+            except StopIteration:
+                return _STOP
+
         _event_bus.reset()  # Re-arm bus so second (and subsequent) runs work correctly.
         gen = _event_bus.subscribe()
+        # Single-worker pool: only one _safe_next call is ever in-flight at a
+        # time.  A new run_in_executor call is submitted ONLY after the previous
+        # one completes — eliminating duplicate next() calls that would silently
+        # consume events and leave the SSE stream stuck.
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         logger.info("SSE _generator: started, bus reset, subscribing")
         event_count = 0
         try:
             while True:
+                # Submit exactly one _safe_next call and hold the same future
+                # across all heartbeat iterations.  asyncio.shield is NOT used
+                # here — we never cancel the underlying future, only the shield
+                # wrapping it.  This prevents the "future left PENDING" bug that
+                # occurs when asyncio.shield + wait_for timeout causes the event
+                # loop to re-submit a second run_in_executor while the first is
+                # still blocking inside subscribe()._lock.wait().
+                logger.info("SSE _generator: waiting for next event (event_count=%d)", event_count)
+                future = asyncio.ensure_future(
+                    asyncio.wrap_future(
+                        executor.submit(_safe_next, gen)
+                    )
+                )
                 try:
-                    logger.info("SSE _generator: waiting for next event (event_count=%d)", event_count)
-                    future = loop.run_in_executor(executor, next, gen)
-                    while True:
+                    while not future.done():
                         try:
-                            event = await asyncio.wait_for(
-                                asyncio.shield(future), timeout=_SSE_HEARTBEAT_INTERVAL
-                            )
-                            break
+                            await asyncio.wait_for(asyncio.shield(future), timeout=_SSE_HEARTBEAT_INTERVAL)
                         except asyncio.TimeoutError:
-                            logger.info("SSE _generator: heartbeat (waiting, event_count=%d)", event_count)
+                            logger.info(
+                                "SSE _generator: heartbeat (waiting, event_count=%d)", event_count
+                            )
                             yield ": heartbeat\n\n"
-                    event_count += 1
-                    logger.info("SSE _generator: got event #%d type=%s", event_count, event.get("type"))
-                    yield f"data: {_json.dumps(event)}\n\n"
-                    if event.get("type") == "run_complete":
-                        logger.info("SSE _generator: run_complete received, closing stream")
-                        return
-                except StopIteration:
-                    logger.info("SSE _generator: StopIteration after %d events", event_count)
+                    event = future.result()
+                except asyncio.CancelledError:
+                    future.cancel()
+                    logger.info("SSE _generator: CancelledError after %d events", event_count)
                     return
                 except Exception as exc:
-                    logger.error("SSE _generator: unexpected exception %s: %s", type(exc).__name__, exc)
+                    logger.error(
+                        "SSE _generator: unexpected exception %s: %s", type(exc).__name__, exc
+                    )
                     return
-        except asyncio.CancelledError:
-            logger.info("SSE _generator: CancelledError after %d events", event_count)
-            return
+
+                if event is _STOP:
+                    logger.info("SSE _generator: generator exhausted after %d events", event_count)
+                    return
+                event_count += 1
+                logger.info("SSE _generator: got event #%d type=%s", event_count, event.get("type"))
+                yield f"data: {_json.dumps(event)}\n\n"
+                if event.get("type") == "run_complete":
+                    logger.info("SSE _generator: run_complete received, closing stream")
+                    return
         finally:
             executor.shutdown(wait=False)
             logger.info("SSE _generator: finished (event_count=%d)", event_count)

@@ -241,3 +241,329 @@ def test_sse_onerror_handler_does_not_close_evtsource_permanently():
         "this permanently disables EventSource reconnect on any transient error. "
         "Remove the close() call from onerror so the browser can auto-reconnect."
     )
+
+
+def test_sse_stream_delivers_all_events_when_heartbeats_fire_between_each_event():
+    """SSE stream must not lose events when heartbeat timeouts fire between event emissions.
+
+    Regression test for the duplicate run_in_executor bug:
+    - Old code: called loop.run_in_executor(executor, next, gen) at the TOP of the outer
+      while-loop on every iteration, including after a heartbeat.  Each heartbeat therefore
+      submitted a SECOND call to next(gen) while the first was still blocking — silently
+      consuming events that the SSE client never saw.
+    - New code: submits exactly ONE executor.submit(_safe_next, gen) per event and reuses
+      the same Future across all heartbeat iterations, preventing duplicate next() calls.
+
+    This test fires heartbeats BETWEEN every event (heartbeat interval < emit interval) and
+    verifies that ALL emitted events reach the client.
+    """
+    import json as _json
+    import threading
+    import time as _time
+    from fastapi.testclient import TestClient
+    import testing_backend as tb
+
+    tb._event_bus.close()
+    tb._event_bus.reset()
+    original_interval = tb._SSE_HEARTBEAT_INTERVAL
+    # Heartbeat fires every 0.05 s; events are emitted 0.15 s apart
+    # → at least 2 heartbeats fire between each pair of events.
+    tb._SSE_HEARTBEAT_INTERVAL = 0.05
+
+    EVENT_TYPES = ["step_start", "dispatch_order", "step_complete", "run_complete"]
+    emitted = list(EVENT_TYPES)  # copy so we can assert against it
+
+    def _emit_all():
+        for etype in emitted:
+            _time.sleep(0.15)
+            tb._event_bus.emit({"type": etype})
+        tb._event_bus.close()
+
+    emitter = threading.Thread(target=_emit_all, daemon=True)
+    emitter.start()
+
+    received_types = []
+    try:
+        with TestClient(tb.app) as client:
+            with client.stream("GET", "/api/run/events") as resp:
+                for raw_line in resp.iter_lines():
+                    if raw_line.startswith("data:"):
+                        evt = _json.loads(raw_line[len("data:"):].strip())
+                        received_types.append(evt.get("type"))
+                        if evt.get("type") == "run_complete":
+                            break
+    finally:
+        tb._SSE_HEARTBEAT_INTERVAL = original_interval
+
+    emitter.join(timeout=5.0)
+    assert received_types == emitted, (
+        f"SSE stream lost events when heartbeats fired between emissions.\n"
+        f"  Emitted:  {emitted}\n"
+        f"  Received: {received_types}\n"
+        "This is caused by duplicate run_in_executor submissions on each heartbeat iteration."
+    )
+
+
+def test_sse_generator_exits_cleanly_after_bus_close_without_hanging():
+    """SSE generator must exit cleanly when the event bus is closed after all events.
+
+    Regression test for the StopIteration-in-run_in_executor hang bug (Bug 1):
+
+    When loop.run_in_executor(executor, next, gen) is called and next(gen) raises
+    StopIteration (generator exhausted via bus.close()), Python 3.12 raises:
+        TypeError: StopIteration interacts badly with generators and cannot be
+        raised into a Future
+    in the asyncio callback _chain_future._set_state, leaving the asyncio Future
+    permanently PENDING.  The SSE inner wait_for loop then times out forever —
+    the stream hangs emitting heartbeats but never delivering further events or
+    closing.
+
+    The fix: wrap next(gen) in _safe_next() which catches StopIteration and
+    returns a _STOP sentinel instead.  The Future always completes normally, the
+    generator detects _STOP and exits.
+
+    This test verifies the SSE stream terminates within a short timeout when the
+    bus is closed WITHOUT a run_complete event, simulating an aborted/crashed run.
+    """
+    import asyncio
+    import concurrent.futures
+    import threading
+    import time
+
+    _HEARTBEAT_INTERVAL = 0.05
+    _STOP = object()
+
+    from run_event_bus import RunEventBus
+
+    bus = RunEventBus()
+    bus.reset()
+
+    # Emit one mid-run event, then close WITHOUT run_complete.
+    # This is the scenario that triggers StopIteration in the old code:
+    # subscribe() returns (via bus.close()), next() raises StopIteration,
+    # asyncio Future is left PENDING, and wait_for loops forever.
+    def _emit_then_close():
+        time.sleep(0.10)
+        bus.emit({"type": "step_start"})
+        time.sleep(0.20)
+        bus.close()  # no run_complete — simulates aborted run
+
+    emitter = threading.Thread(target=_emit_then_close, daemon=True)
+    emitter.start()
+
+    # --- FIXED pattern: _safe_next returns _STOP sentinel ---
+
+    def safe_next(g):
+        try:
+            return next(g)
+        except StopIteration:
+            return _STOP
+
+    async def run_fixed_pattern():
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        gen = bus.subscribe()
+        received = []
+        try:
+            while True:
+                future = asyncio.ensure_future(
+                    asyncio.wrap_future(executor.submit(safe_next, gen))
+                )
+                while not future.done():
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.shield(future), timeout=_HEARTBEAT_INTERVAL
+                        )
+                    except asyncio.TimeoutError:
+                        pass  # heartbeat
+                event = future.result()
+                if event is _STOP:
+                    break
+                received.append(event)
+                if event.get("type") == "run_complete":
+                    break
+        finally:
+            executor.shutdown(wait=False)
+        return received
+
+    async def run_with_timeout():
+        return await asyncio.wait_for(run_fixed_pattern(), timeout=2.0)
+
+    try:
+        result = asyncio.run(run_with_timeout())
+    except asyncio.TimeoutError:
+        raise AssertionError(
+            "SSE generator hung after bus.close() — StopIteration-in-Future bug not fixed.\n"
+            "The generator must exit cleanly within 2 s of bus close.\n"
+            "Fix: use _safe_next() to catch StopIteration and return a _STOP sentinel."
+        )
+    finally:
+        emitter.join(timeout=2.0)
+
+    assert result == [{"type": "step_start"}], (
+        f"Generator did not deliver the expected events before bus close.\n"
+        f"  Expected: [{{'type': 'step_start'}}]\n"
+        f"  Got:      {result}"
+    )
+
+
+def test_sse_generator_submits_next_exactly_once_per_event_across_heartbeats():
+    """SSE generator must call next(gen) exactly once per event, even with heartbeats.
+
+    Directly tests the asyncio generator pattern for the duplicate run_in_executor bug.
+    When a heartbeat timeout fires, the OLD code re-submitted run_in_executor(next, gen)
+    creating a second in-flight next() call on the same generator — silently consuming
+    the next event into a Future that nobody reads.  The NEW code holds a single Future
+    created once per event and reuses it across all heartbeat iterations.
+
+    This test uses asyncio directly (not FastAPI TestClient) to reproduce the exact
+    async scheduling conditions where the bug manifests.
+    """
+    import asyncio
+    import concurrent.futures
+
+    _HEARTBEAT_INTERVAL = 0.05  # short to ensure multiple heartbeats per event
+
+    # Slow event source: each call to next() blocks for 0.15 s to force heartbeats.
+    # Records every next() call so we can assert no duplicates.
+    next_call_log = []  # list of int indices; one entry per next() call
+    events = [{"type": "step_start"}, {"type": "run_complete"}]
+
+    def slow_next_gen():
+        """Generator that yields 2 events, each after a 0.15 s delay."""
+        for evt in events:
+            import time
+            time.sleep(0.15)  # forces at least 2 heartbeat timeouts
+            yield evt
+
+    _STOP = object()
+
+    def _safe_next(g):
+        next_call_log.append(len(next_call_log))
+        try:
+            return next(g)
+        except StopIteration:
+            return _STOP
+
+    async def run_new_generator_pattern(gen):
+        """New (fixed) pattern: submit executor future ONCE per event."""
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        received = []
+        try:
+            while True:
+                future = asyncio.ensure_future(
+                    asyncio.wrap_future(executor.submit(_safe_next, gen))
+                )
+                while not future.done():
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.shield(future), timeout=_HEARTBEAT_INTERVAL
+                        )
+                    except asyncio.TimeoutError:
+                        pass  # heartbeat — do NOT re-submit
+                event = future.result()
+                if event is _STOP:
+                    break
+                received.append(event)
+                if event.get("type") == "run_complete":
+                    break
+        finally:
+            executor.shutdown(wait=False)
+        return received
+
+    gen = slow_next_gen()
+    received = asyncio.run(run_new_generator_pattern(gen))
+
+    assert received == events, (
+        f"Generator did not deliver all events.\n"
+        f"  Expected: {events}\n"
+        f"  Got:      {received}"
+    )
+    # next() must be called exactly once per event: 2 events → 2 calls.
+    # More than 2 calls means duplicate submissions happened.
+    assert len(next_call_log) == len(events), (
+        f"next(gen) was called {len(next_call_log)} times for {len(events)} events.\n"
+        f"Expected exactly {len(events)} calls (one per event).\n"
+        f"Extra calls indicate duplicate run_in_executor submissions on heartbeat."
+    )
+
+
+def test_sse_generator_submits_next_exactly_once_per_event_across_heartbeats():
+    """SSE generator must call next(gen) exactly once per event, even with heartbeats.
+
+    Directly tests the asyncio generator pattern for the duplicate run_in_executor bug.
+    When a heartbeat timeout fires, the OLD code re-submitted run_in_executor(next, gen)
+    creating a second in-flight next() call on the same generator — silently consuming
+    the next event into a Future that nobody reads.  The NEW code holds a single Future
+    created once per event and reuses it across all heartbeat iterations.
+
+    This test uses asyncio directly (not FastAPI TestClient) to reproduce the exact
+    async scheduling conditions where the bug manifests.
+    """
+    import asyncio
+    import concurrent.futures
+
+    _HEARTBEAT_INTERVAL = 0.05  # short to ensure multiple heartbeats per event
+
+    # Slow event source: each call to next() blocks for 0.15 s to force heartbeats.
+    # Records every next() call so we can assert no duplicates.
+    next_call_log = []  # list of int indices; one entry per next() call
+    events = [{"type": "step_start"}, {"type": "run_complete"}]
+    event_index = [0]
+
+    def slow_next_gen():
+        """Generator that yields 2 events, each after a 0.15 s delay."""
+        for evt in events:
+            import time
+            time.sleep(0.15)  # forces at least 2 heartbeat timeouts
+            yield evt
+
+    _STOP = object()
+
+    def _safe_next(g):
+        next_call_log.append(len(next_call_log))
+        try:
+            return next(g)
+        except StopIteration:
+            return _STOP
+
+    async def run_new_generator_pattern(gen):
+        """New (fixed) pattern: submit executor future ONCE per event."""
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        received = []
+        try:
+            while True:
+                future = asyncio.ensure_future(
+                    asyncio.wrap_future(executor.submit(_safe_next, gen))
+                )
+                while not future.done():
+                    try:
+                        await asyncio.wait_for(
+                            asyncio.shield(future), timeout=_HEARTBEAT_INTERVAL
+                        )
+                    except asyncio.TimeoutError:
+                        pass  # heartbeat — do NOT re-submit
+                event = future.result()
+                if event is _STOP:
+                    break
+                received.append(event)
+                if event.get("type") == "run_complete":
+                    break
+        finally:
+            executor.shutdown(wait=False)
+        return received
+
+    gen = slow_next_gen()
+    received = asyncio.run(run_new_generator_pattern(gen))
+
+    assert received == events, (
+        f"Generator did not deliver all events.\n"
+        f"  Expected: {events}\n"
+        f"  Got:      {received}"
+    )
+    # next() must be called exactly once per event: 2 events → 2 calls.
+    # More than 2 calls means duplicate submissions happened.
+    assert len(next_call_log) == len(events), (
+        f"next(gen) was called {len(next_call_log)} times for {len(events)} events.\n"
+        f"Expected exactly {len(events)} calls (one per event).\n"
+        f"Extra calls indicate duplicate run_in_executor submissions on heartbeat."
+    )
