@@ -470,3 +470,47 @@ def test_returned_step_map_has_sequential_ids():
 
     expected_keys = list(range(len(result)))
     assert sorted(result.keys()) == expected_keys
+
+
+# ---------------------------------------------------------------------------
+# Regression: non-default arm IDs (arm2 + arm3) must not crash with ValueError
+# ---------------------------------------------------------------------------
+
+
+def test_reorder_works_with_non_default_arm_ids():
+    """reorder() must not crash when arm IDs are not 'arm1'/'arm2'.
+
+    Regression: SmartReorderScheduler hardcoded step_map lookups as
+    .get('arm1') and .get('arm2'), so an arm pair like (arm2, arm3) always
+    returned None for both arms, produced empty j4 lists, and caused
+    ValueError: min() iterable argument is empty in _min_gap_for_perm.
+    """
+    step_map = {
+        0: {
+            "arm2": _make_step_data(cam_z=0.10),
+            "arm3": _make_step_data(cam_z=0.20),
+        },
+        1: {
+            "arm2": _make_step_data(cam_z=0.15),
+            "arm3": _make_step_data(cam_z=0.25),
+        },
+        2: {
+            "arm2": _make_step_data(cam_z=0.30),
+            "arm3": _make_step_data(cam_z=0.35),
+        },
+    }
+    arm1_steps = [0, 1, 2]  # primary arm (arm2)
+    arm2_steps = [0, 1, 2]  # secondary arm (arm3)
+
+    scheduler = SmartReorderScheduler()
+    # Must not raise ValueError
+    result = scheduler.reorder(
+        step_map, arm1_steps, arm2_steps,
+        primary_id="arm2", secondary_id="arm3",
+    )
+
+    assert len(result) == 3
+    # All steps must preserve arm2 and arm3 keys (not silently drop them)
+    for sid, arms in result.items():
+        assert "arm2" in arms, f"step {sid} missing arm2 key: {arms}"
+        assert "arm3" in arms, f"step {sid} missing arm3 key: {arms}"

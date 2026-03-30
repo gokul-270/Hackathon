@@ -1548,9 +1548,9 @@ def test_mode4_calls_reorder_before_step_loop():
     from smart_reorder_scheduler import SmartReorderScheduler
     original_reorder = SmartReorderScheduler.reorder
 
-    def track_reorder(self_inner, step_map, arm1_steps, arm2_steps):
+    def track_reorder(self_inner, step_map, arm1_steps, arm2_steps, **kwargs):
         reorder_called[0] = True
-        return original_reorder(self_inner, step_map, arm1_steps, arm2_steps)
+        return original_reorder(self_inner, step_map, arm1_steps, arm2_steps, **kwargs)
 
     with patch.object(
         SmartReorderScheduler, "reorder", track_reorder

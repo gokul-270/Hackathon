@@ -25,13 +25,17 @@ class SmartReorderScheduler:
         step_map: dict,
         arm1_steps: list[int],
         arm2_steps: list[int],
+        primary_id: str = "arm1",
+        secondary_id: str = "arm2",
     ) -> dict:
         """Reorder steps to maximize the minimum j4 gap across paired steps.
 
         Args:
-            step_map: dict mapping step_id -> {"arm1": {...}, "arm2": {...}}
-            arm1_steps: list of step IDs for arm1
-            arm2_steps: list of step IDs for arm2
+            step_map: dict mapping step_id -> {arm_id: {...}}
+            arm1_steps: list of step IDs for the primary arm
+            arm2_steps: list of step IDs for the secondary arm
+            primary_id: key used for the primary arm in step_map (default "arm1")
+            secondary_id: key used for the secondary arm in step_map (default "arm2")
 
         Returns:
             New step_map with sequential integer keys (0..N-1), paired steps
@@ -46,7 +50,7 @@ class SmartReorderScheduler:
         paired_count = min(len(arm1_steps), len(arm2_steps))
 
         for i, sid in enumerate(arm1_steps):
-            step_data = step_map[sid].get("arm1")
+            step_data = step_map[sid].get(primary_id)
             if step_data is None:
                 continue
             if i < paired_count:
@@ -55,7 +59,7 @@ class SmartReorderScheduler:
                 arm1_solo_data.append(copy.deepcopy(step_data))
 
         for i, sid in enumerate(arm2_steps):
-            step_data = step_map[sid].get("arm2")
+            step_data = step_map[sid].get(secondary_id)
             if step_data is None:
                 continue
             if i < paired_count:
@@ -65,7 +69,11 @@ class SmartReorderScheduler:
 
         # If no paired steps, return solo steps with sequential IDs
         if paired_count == 0:
-            return self._build_solo_only(arm1_solo_data, arm2_solo_data, arm1_steps, arm2_steps)
+            return self._build_solo_only(
+                arm1_solo_data, arm2_solo_data,
+                arm1_steps, arm2_steps,
+                primary_id=primary_id, secondary_id=secondary_id,
+            )
 
         # Compute j4 values for paired steps
         arm1_j4s = [self._cam_z_to_j4(d["cam_z"]) for d in arm1_paired_data]
@@ -83,17 +91,17 @@ class SmartReorderScheduler:
         # Paired steps first (IDs 0..paired_count-1)
         for i in range(paired_count):
             new_step_map[i] = {
-                "arm1": arm1_paired_data[i],
-                "arm2": arm2_paired_data[best_perm[i]],
+                primary_id: arm1_paired_data[i],
+                secondary_id: arm2_paired_data[best_perm[i]],
             }
 
         # Solo-tail steps
         solo_id = paired_count
         for data in arm1_solo_data:
-            new_step_map[solo_id] = {"arm1": data}
+            new_step_map[solo_id] = {primary_id: data}
             solo_id += 1
         for data in arm2_solo_data:
-            new_step_map[solo_id] = {"arm2": data}
+            new_step_map[solo_id] = {secondary_id: data}
             solo_id += 1
 
         return new_step_map
@@ -159,17 +167,19 @@ class SmartReorderScheduler:
         arm2_solo_data: list[dict],
         arm1_steps: list[int],
         arm2_steps: list[int],
+        primary_id: str = "arm1",
+        secondary_id: str = "arm2",
     ) -> dict:
         """Build step_map when there are no paired steps (one arm is empty)."""
         new_step_map = {}
         sid = 0
 
         for data in arm1_solo_data:
-            new_step_map[sid] = {"arm1": data}
+            new_step_map[sid] = {primary_id: data}
             sid += 1
 
         for data in arm2_solo_data:
-            new_step_map[sid] = {"arm2": data}
+            new_step_map[sid] = {secondary_id: data}
             sid += 1
 
         return new_step_map

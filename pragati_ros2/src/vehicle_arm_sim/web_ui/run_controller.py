@@ -217,6 +217,8 @@ class RunController:
                 reorder_input,
                 arm1_step_ids,
                 arm2_step_ids,
+                primary_id=self._primary_id,
+                secondary_id=self._secondary_id,
             )
 
             # Rebuild step_map from reordered result (which has sequential int keys)
