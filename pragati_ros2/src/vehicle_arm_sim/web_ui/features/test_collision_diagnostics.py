@@ -131,6 +131,19 @@ else:
 SCENARIOS = _PAIRED + _ARM1_SOLO + _ARM2_SOLO
 _IDS = _PAIRED_IDS + _ARM1_SOLO_IDS + _ARM2_SOLO_IDS
 
+# ── Mode 1 per-arm solo scenarios (all arm1 + all arm2, unpaired) ─────────
+# Mode 1's cosine j5 limit only uses the arm's own j3/j5; the peer is only a
+# gate (no peer → skip). Running Mode 1 as individual-arm solo tests ensures
+# every arm point is exercised independently of pairing order or CSV length.
+_MODE1_SOLO_SCENARIOS = (
+    [("arm1_solo", a1, None) for a1 in _ARM1_POINTS]
+    + [("arm2_solo", None, a2) for a2 in _ARM2_POINTS]
+)
+_MODE1_SOLO_IDS = (
+    [f"a1[{a[0]:.3f},{a[1]:.3f},{a[2]:.3f}]_m1solo" for a in _ARM1_POINTS]
+    + [f"a2[{a[0]:.3f},{a[1]:.3f},{a[2]:.3f}]_m1solo" for a in _ARM2_POINTS]
+)
+
 
 # ── Report cache (avoid recomputing FK 5x per scenario) ──────────────────
 
@@ -208,6 +221,35 @@ def test_collision_diagnostic(scenario_data, mode):
     # ── Print per-mode diagnostic ─────────────────────────────────────
     _print_mode_diagnostic(report, mode_key, mode, kind, arm1_cam, arm2_cam)
 
+
+@pytest.mark.parametrize(
+    "scenario",
+    _MODE1_SOLO_SCENARIOS,
+    ids=_MODE1_SOLO_IDS,
+)
+def test_mode1_per_arm_solo(scenario):
+    """Mode 1 cosine j5 limit check — one arm at a time, no peer.
+
+    Mode 1's formula only depends on the arm's own j3/j5.  The peer is only
+    used as a gate: when there is no peer the check is skipped and the arm
+    runs freely.  This test exercises every arm1 and arm2 point individually,
+    verifying that Mode 1 reports SAFE (no peer → skip) for each solo point.
+    """
+    kind, arm1_cam, arm2_cam = scenario
+    report = _get_report(arm1_cam, arm2_cam)
+
+    assert report["solo"] is True
+    mr = report["modes"]["mode_1"]
+    assert mr["verdict"] == "SAFE", (
+        f"Mode 1 solo expected SAFE (no peer → skip), got {mr['verdict']}: "
+        f"{mr['reason']}"
+    )
+    assert mr["intervention"] == "none", (
+        f"Mode 1 solo expected intervention=none, got {mr['intervention']}"
+    )
+
+    # Print diagnostic (visible with -s)
+    _print_mode_diagnostic(report, "mode_1", 1, kind, arm1_cam, arm2_cam)
 
 # ── Per-mode assertions ──────────────────────────────────────────────────
 
@@ -417,6 +459,27 @@ def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
     min_gap = min(gaps) if gaps else 0.0
     print(f"  {'─'*w}")
     print(f"  min paired gap: {min_gap:.4f} m\n")
+
+
+def test_mode1_solo_scenarios_cover_all_arm_points():
+    """Mode 1 solo scenarios must cover every arm1 point and every arm2 point.
+
+    Mode 1's cosine j5 limit only depends on the arm's own j3/j5 — the peer is
+    only used as a gate (no peer → skip). Testing Mode 1 per-arm (solo) rather
+    than in paired scenarios ensures every individual arm point is exercised
+    regardless of pairing order or CSV length.
+    """
+    import test_collision_diagnostics as _mod
+
+    expected = len(_ARM1_POINTS) + len(_ARM2_POINTS)
+    assert hasattr(_mod, "_MODE1_SOLO_SCENARIOS"), (
+        "_MODE1_SOLO_SCENARIOS list not found in test_collision_diagnostics"
+    )
+    actual = len(_mod._MODE1_SOLO_SCENARIOS)
+    assert actual == expected, (
+        f"_MODE1_SOLO_SCENARIOS has {actual} entries; "
+        f"expected {expected} (arm1={len(_ARM1_POINTS)}, arm2={len(_ARM2_POINTS)})"
+    )
 
 
 def test_test_options_dict_is_importable_from_conftest():
