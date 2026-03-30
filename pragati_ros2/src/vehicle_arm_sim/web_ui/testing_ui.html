@@ -473,6 +473,10 @@
                     <button id="run-start-btn" class="btn btn-primary">Start Run</button>
                     <span id="run-status-text" class="status-msg"></span>
                 </div>
+                <div class="form-row">
+                    <button id="run-all-modes-btn" class="btn btn-all-modes">Run All Modes</button>
+                    <span id="run-all-modes-status" class="status-msg"></span>
+                </div>
                 <div class="form-row" id="run-report-links" style="display:none;">
                     <a id="run-report-json-link" href="#" target="_blank">Download JSON Report</a>
                     &nbsp;|&nbsp;
@@ -485,6 +489,23 @@
                 <h2>📝 Log</h2>
                 <div id="log-area" class="log-area"></div>
             </section>
+        </div>
+    </div>
+
+    <!-- All-Modes Comparison Modal -->
+    <div id="all-modes-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <button id="all-modes-modal-close" class="modal-close-btn">&times;</button>
+            <h2>All-Modes Comparison</h2>
+            <div id="all-modes-table-container"></div>
+            <div id="all-modes-recommendation" class="recommendation-text"></div>
+            <div class="modal-downloads">
+                <a id="all-modes-dl-json" href="/api/run/report/all-modes/json"
+                   target="_blank">Download JSON</a>
+                &nbsp;|&nbsp;
+                <a id="all-modes-dl-md" href="/api/run/report/all-modes/markdown"
+                   target="_blank">Download Markdown</a>
+            </div>
         </div>
     </div>
 

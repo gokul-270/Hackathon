@@ -130,6 +130,7 @@ _TMP_URDF_PATH = Path("/tmp/vehicle_arm_testing.urdf")
 # UI Run Flow — module-level state
 # ---------------------------------------------------------------------------
 _current_run_result: dict | None = None
+_current_all_modes_result: dict | None = None
 _run_state: str = "idle"  # "idle" | "running" | "complete"
 _estop_event: threading.Event = threading.Event()  # set by /api/estop; cleared at run start
 
@@ -1192,6 +1193,12 @@ class RunStartRequest(BaseModel):
     enable_phi_compensation: bool = True
 
 
+class AllModesStartRequest(BaseModel):
+    scenario: dict
+    arm_pair: list = ["arm1", "arm2"]
+    enable_phi_compensation: bool = True
+
+
 def _gz_publish_subprocess(topic: str, value: float) -> None:
     """Fallback: publish via gz topic CLI subprocess (slow, ~1 s per call)."""
     cmd = [
@@ -1431,7 +1438,95 @@ async def run_report_markdown():
     if _current_run_result is None:
         raise HTTPException(status_code=404, detail="No run result available")
     from starlette.responses import Response as _Response
-    return _Response(content=_current_run_result["md_report"], media_type="text/plain")
+    return _Response(
+        content=_current_run_result["md_report"],
+        media_type="text/plain",
+    )
+
+
+# -------------------------------------------------------------------
+# All-Modes Dry-Run Comparison
+# -------------------------------------------------------------------
+
+@app.post("/api/run/start-all-modes")
+async def run_start_all_modes(req: AllModesStartRequest):
+    """Dry-run all 5 modes and return comparison results."""
+    global _current_all_modes_result
+
+    # Validate arm_pair
+    from fk_chain import ARM_CONFIGS as _arm_cfgs
+    valid_arm_ids = set(_arm_cfgs.keys())
+    if (
+        len(req.arm_pair) != 2
+        or len(set(req.arm_pair)) != 2
+        or not all(a in valid_arm_ids for a in req.arm_pair)
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid arm_pair {req.arm_pair}",
+        )
+
+    summaries: list[dict] = []
+    for mode in range(5):
+        ctrl = RunController(
+            mode,
+            executor=None,
+            arm_pair=tuple(req.arm_pair),
+            enable_phi_compensation=req.enable_phi_compensation,
+        )
+        ctrl.load_scenario(req.scenario)
+        summary = ctrl.run()
+        summaries.append(summary)
+
+    reporter = MarkdownReporter()
+    comparison_md = reporter.generate(summaries)
+
+    # Extract recommendation via regex from the markdown output
+    rec_match = re.search(
+        r"Best mode: `([^`]+)`", comparison_md
+    )
+    recommendation = (
+        rec_match.group(1) if rec_match else summaries[0]["mode"]
+    )
+
+    _current_all_modes_result = {
+        "summaries": summaries,
+        "comparison_markdown": comparison_md,
+        "recommendation": recommendation,
+    }
+
+    return {
+        "status": "complete",
+        "summaries": summaries,
+        "comparison_markdown": comparison_md,
+        "recommendation": recommendation,
+    }
+
+
+@app.get("/api/run/report/all-modes/json")
+async def run_report_all_modes_json():
+    """Return JSON summaries for the last all-modes dry-run."""
+    if _current_all_modes_result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No all-modes result available",
+        )
+    return {"summaries": _current_all_modes_result["summaries"]}
+
+
+@app.get("/api/run/report/all-modes/markdown")
+async def run_report_all_modes_markdown():
+    """Return comparison markdown for the last all-modes dry-run."""
+    if _current_all_modes_result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No all-modes result available",
+        )
+    from starlette.responses import Response as _Response
+    return _Response(
+        content=_current_all_modes_result["comparison_markdown"],
+        media_type="text/plain",
+    )
 
 
 # ---------------------------------------------------------------------------

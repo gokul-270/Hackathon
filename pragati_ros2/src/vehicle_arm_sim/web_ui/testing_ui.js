@@ -1450,6 +1450,7 @@
 
         // UI Run Flow
         setupRunFlow();
+        setupRunAllModes();
 
         // Load data
         loadUrdfList();
@@ -1607,6 +1608,183 @@
             } catch (e) {
                 statusEl.textContent = `Error: ${e.message}`;
                 evtSource.close();
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------------------
+    // All-Modes Comparison
+    // ---------------------------------------------------------------------------
+
+    function openModal() {
+        const modal = document.getElementById('all-modes-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('all-modes-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function renderComparisonTable(summaries, recommendation) {
+        const container = document.getElementById('all-modes-table-container');
+        const recEl = document.getElementById('all-modes-recommendation');
+        if (!container) return;
+
+        const cols = [
+            'Mode', 'Total Steps', 'Near-Collision', 'Collision',
+            'Blocked', 'Blocked+Skipped', 'Completed Picks'
+        ];
+        let html = '<table class="comparison-table"><thead><tr>';
+        cols.forEach(c => { html += `<th>${c}</th>`; });
+        html += '</tr></thead><tbody>';
+
+        summaries.forEach(s => {
+            const isBest = (s.mode === recommendation);
+            const rowCls = isBest ? ' class="row-best"' : '';
+            html += `<tr${rowCls}>`;
+            html += `<td>${s.mode}</td>`;
+            html += `<td>${s.total_steps}</td>`;
+            html += _colorCell(s.steps_with_near_collision, 'near');
+            html += _colorCell(s.steps_with_collision, 'collision');
+            html += `<td>${s.steps_with_motion_blocked}</td>`;
+            const bs = s.steps_with_blocked_or_skipped
+                       != null ? s.steps_with_blocked_or_skipped
+                       : s.steps_with_motion_blocked;
+            html += `<td>${bs}</td>`;
+            html += `<td>${s.completed_picks}</td>`;
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        if (recEl) {
+            recEl.textContent = recommendation
+                ? `Recommended mode: ${recommendation}`
+                : '';
+        }
+    }
+
+    function _colorCell(value, type) {
+        if (value === 0) {
+            return `<td class="cell-green">${value}</td>`;
+        }
+        if (type === 'collision') {
+            return `<td class="cell-red">${value}</td>`;
+        }
+        return `<td class="cell-amber">${value}</td>`;
+    }
+
+    function setupRunAllModes() {
+        const btn = document.getElementById('run-all-modes-btn');
+        const statusEl = document.getElementById('run-all-modes-status');
+        const modalCloseBtn = document.getElementById('all-modes-modal-close');
+        const modal = document.getElementById('all-modes-modal');
+
+        if (!btn) return;
+
+        // Close modal handlers
+        if (modalCloseBtn) {
+            modalCloseBtn.addEventListener('click', closeModal);
+        }
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        }
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.innerHTML =
+                '<span class="spinner"></span>Running...';
+            if (statusEl) statusEl.textContent = '';
+
+            // Resolve scenario: file input takes priority over preset
+            let scenario = null;
+            const fileInput = document.getElementById('run-scenario-file');
+            const presetSel = document.getElementById('run-scenario-select');
+
+            if (fileInput && fileInput.files.length > 0) {
+                try {
+                    const text = await fileInput.files[0].text();
+                    scenario = JSON.parse(text);
+                } catch (err) {
+                    if (statusEl) statusEl.textContent =
+                        `JSON parse error: ${err.message}`;
+                    btn.disabled = false;
+                    btn.textContent = 'Run All Modes';
+                    return;
+                }
+            } else if (presetSel && presetSel.value) {
+                try {
+                    const resp = await fetch(
+                        `/scenarios/${presetSel.value}.json`
+                    );
+                    if (!resp.ok) throw new Error(resp.statusText);
+                    scenario = await resp.json();
+                } catch (err) {
+                    if (statusEl) statusEl.textContent =
+                        `Preset load error: ${err.message}`;
+                    btn.disabled = false;
+                    btn.textContent = 'Run All Modes';
+                    return;
+                }
+            }
+
+            if (!scenario) {
+                if (statusEl) statusEl.textContent =
+                    'Select a preset or load a JSON file first.';
+                btn.disabled = false;
+                btn.textContent = 'Run All Modes';
+                return;
+            }
+
+            // Read arm pair and phi compensation from existing selects
+            const armPairSel =
+                document.getElementById('run-arm-pair-select');
+            const armPair = armPairSel
+                ? armPairSel.value.split(',')
+                : ['arm1', 'arm2'];
+
+            const phiCheckbox =
+                document.getElementById('run-phi-compensation');
+            const enablePhi = phiCheckbox
+                ? phiCheckbox.checked : true;
+
+            try {
+                const resp = await fetch('/api/run/start-all-modes', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        scenario: scenario,
+                        arm_pair: armPair,
+                        enable_phi_compensation: enablePhi,
+                    }),
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(
+                        err.detail || `HTTP ${resp.status}`
+                    );
+                }
+
+                const data = await resp.json();
+                renderComparisonTable(
+                    data.summaries, data.recommendation
+                );
+                openModal();
+                if (statusEl) statusEl.textContent = 'Complete';
+                log('All-modes comparison complete: recommended '
+                    + data.recommendation);
+            } catch (err) {
+                if (statusEl) statusEl.textContent =
+                    `Error: ${err.message}`;
+                log('All-modes run failed: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run All Modes';
             }
         });
     }

@@ -889,3 +889,145 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     gap: 8px;
 }
+
+/* -------------------------------------------------------------------
+   All-Modes Comparison Modal
+   ------------------------------------------------------------------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: var(--bg-panel, #1e2a45);
+    color: var(--text-primary, #e0e0e0);
+    border-radius: var(--radius, 8px);
+    padding: 24px 28px;
+    max-width: 820px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 8px 32px var(--shadow, rgba(0, 0, 0, 0.3));
+}
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    background: none;
+    border: none;
+    color: var(--text-secondary, #a0a0b0);
+    font-size: 1.6rem;
+    cursor: pointer;
+    line-height: 1;
+}
+.modal-close-btn:hover {
+    color: var(--danger, #ef5350);
+}
+
+/* Comparison table */
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.9rem;
+}
+.comparison-table th,
+.comparison-table td {
+    padding: 8px 10px;
+    border: 1px solid var(--border, #2a3a5c);
+    text-align: center;
+}
+.comparison-table th {
+    background: var(--bg-secondary, #16213e);
+    color: var(--accent, #4fc3f7);
+    font-weight: 600;
+}
+.comparison-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+}
+
+/* Cell colour classes */
+.cell-green {
+    background: rgba(102, 187, 106, 0.2);
+    color: var(--success, #66bb6a);
+}
+.cell-red {
+    background: rgba(239, 83, 80, 0.2);
+    color: var(--danger, #ef5350);
+}
+.cell-amber {
+    background: rgba(255, 167, 38, 0.2);
+    color: var(--warning, #ffa726);
+}
+
+/* Highlighted best-mode row */
+.row-best {
+    border-left: 4px solid #ffd54f;
+    background: rgba(255, 213, 79, 0.08);
+}
+
+/* Recommendation text */
+.recommendation-text {
+    margin: 12px 0 8px;
+    padding: 10px 14px;
+    background: var(--bg-secondary, #16213e);
+    border-left: 3px solid var(--accent, #4fc3f7);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Download links in modal */
+.modal-downloads {
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+.modal-downloads a {
+    color: var(--accent, #4fc3f7);
+    text-decoration: none;
+}
+.modal-downloads a:hover {
+    text-decoration: underline;
+}
+
+/* Run All Modes button */
+.btn-all-modes {
+    background: linear-gradient(135deg, #7c4dff, #536dfe);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius, 8px);
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+.btn-all-modes:hover {
+    opacity: 0.85;
+}
+.btn-all-modes:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.btn-all-modes .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin-all-modes 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+@keyframes spin-all-modes {
+    to { transform: rotate(360deg); }
+}
