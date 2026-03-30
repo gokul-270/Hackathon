@@ -207,7 +207,7 @@ def _diagnose_paired(
     arm1_j3 = fk1["j3"]
     theta1 = abs(arm1_j3)
     cos_theta1 = math.cos(theta1)
-    j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.01 else float("inf")
+    j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.1 else float("inf")
     bm = BaselineMode()
     bm.apply_with_skip(
         BaselineMode.BASELINE_J5_BLOCK_SKIP, dict(arm1_joints), peer_state
@@ -226,7 +226,7 @@ def _diagnose_paired(
             ),
         }
     else:
-        details_inf = " (near-vertical guard: cos<0.01 → limit=∞)" if cos_theta1 <= 0.01 else ""
+        details_inf = " (near-vertical guard: cos<0.1 → limit=∞)" if cos_theta1 <= 0.1 else ""
         modes["mode_1"] = {
             "verdict": "SAFE",
             "reason": (

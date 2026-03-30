@@ -7,7 +7,7 @@ Modes
 1  BASELINE_J5_BLOCK_SKIP : zero out j5 (extension) when peer arm is active at
                             this step AND j5_own > 0.20 / cos(|j3_own|).
                             This limits horizontal reach to 0.20 m regardless of
-                            arm tilt.  Guard: cos < 0.01 → limit = inf (always safe).
+                             arm tilt.  Guard: cos < 0.1 → limit = inf (always safe).
 2  GEOMETRY_BLOCK         : two-stage geometry check.  Stage 1 screens on lateral
                             distance (< 0.12 m → risky).  Stage 2 checks the
                             combined j5 extension (> 0.5) AND close lateral gap
@@ -125,7 +125,7 @@ class BaselineMode:
         """Block j5 if peer is active and own horizontal reach exceeds cosine limit.
 
         Limit: j5_limit = _MODE1_ADJ / cos(|j3_own|)
-        Guard: cos(|j3|) < 0.01 → limit = inf → always safe (near-vertical arm).
+        Guard: cos(|j3|) < 0.1 → limit = inf → always safe (near-vertical arm).
         """
         if peer_state is None:
             return own_joints
@@ -137,7 +137,7 @@ class BaselineMode:
 
         theta = abs(own_joints["j3"])
         cos_theta = math.cos(theta)
-        j5_limit = _MODE1_ADJ / cos_theta if cos_theta > 0.01 else float("inf")
+        j5_limit = _MODE1_ADJ / cos_theta if cos_theta > 0.1 else float("inf")
 
         if own_joints["j5"] > j5_limit:
             # Horizontal reach exceeds safe limit: suppress extension.

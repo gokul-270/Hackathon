@@ -108,6 +108,28 @@ def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_at_near_vertical_
     assert result["j5"] == 0.30
 
 
+def test_baselinemode_baseline_j5_block_skip_guard_floor_is_0_1():
+    """Mode 1 near-vertical guard: cos(|j3|) floored at 0.1, not 0.01.
+
+    When cos(|j3|) is between 0.01 and 0.1 (theta ≈ 84-89°), the guard must
+    activate (limit = inf → always safe), not apply a finite limit.
+
+    Setup: j3 = acos(0.05) ≈ 87.1°  → cos = 0.05  (between 0.01 and 0.1)
+      - floor 0.01 (wrong): cos=0.05 > 0.01 → limit = 0.20/0.05 = 4.0m → j5=5.0 BLOCKED
+      - floor 0.1  (spec):  cos=0.05 < 0.1  → limit = inf             → j5=5.0 SAFE
+    """
+    import math
+    mode = BaselineMode()
+    j3_steep = math.acos(0.05)   # cos ≈ 0.05, sits between 0.01 and 0.1
+    own = {"j3": j3_steep, "j4": 0.100, "j5": 5.0}   # j5 > 0.20/0.05 = 4.0m
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
+    result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
+    assert result["j5"] == 5.0, (
+        "Guard floor must be 0.1: cos(|j3|)=0.05 is below 0.1, "
+        "so limit should be inf and j5 must NOT be zeroed"
+    )
+
+
 def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_when_peer_candidate_joints_is_none():
     """Mode 1 must leave j5 unchanged when peer's candidate_joints is None (peer idle)."""
     mode = BaselineMode()

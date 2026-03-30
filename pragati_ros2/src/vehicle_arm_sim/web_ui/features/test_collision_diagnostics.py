@@ -282,7 +282,7 @@ def _assert_paired_mode(report, mode_key, mode):
         arm1_j3 = report["arm1_joints"]["j3"]
         theta1 = abs(arm1_j3)
         cos_theta1 = math.cos(theta1)
-        j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.01 else float("inf")
+        j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.1 else float("inf")
         arm1_j5_val = report["arm1_joints"]["j5"]
         if arm1_j5_val > j5_limit1:
             assert mr["verdict"] == "COLLISION"
