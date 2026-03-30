@@ -7,26 +7,26 @@ from sequential_pick_policy import SequentialPickPolicy
 # Helper joint dicts
 # ---------------------------------------------------------------------------
 
-# Both arms at j4=0.0, both extending (j5 > 0) → contention (gap 0.0 < 0.10)
+# Both arms at j4=0.0, both extending (j5 > 0) → contention (gap 0.0 < 0.08)
 OWN_CONTENTION = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
 PEER_CONTENTION = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
 
-# Far apart: |0.0 - 0.20| = 0.20 >= 0.10 → no contention
+# Far apart: |0.0 - 0.20| = 0.20 >= 0.08 → no contention
 OWN_FAR = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
 PEER_FAR = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.20, "j5": 1.0}
 
-# Peer not extending (j5 == 0) → no contention even when gap < 0.10
+# Peer not extending (j5 == 0) → no contention even when gap < 0.08
 PEER_J5_ZERO = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 0.0}
 
-# Own not extending (j5 == 0) → no contention even when gap < 0.10
+# Own not extending (j5 == 0) → no contention even when gap < 0.08
 OWN_J5_ZERO = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 0.0}
 
-# Boundary: gap exactly 0.10 → NOT contention (strictly less than)
+# Boundary: gap exactly 0.08 → NOT contention (strictly less than)
 OWN_BOUNDARY = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
-PEER_BOUNDARY_AT = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.10, "j5": 1.0}
+PEER_BOUNDARY_AT = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.08, "j5": 1.0}
 
-# Boundary: gap 0.099 → IS contention
-PEER_BOUNDARY_BELOW = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.099, "j5": 1.0}
+# Boundary: gap 0.079 → IS contention
+PEER_BOUNDARY_BELOW = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.079, "j5": 1.0}
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +48,7 @@ def test_no_peer_returns_no_contention():
 
 
 def test_gap_above_threshold_no_contention():
-    """When |j4_own - j4_peer| >= 0.10, returns no contention."""
+    """When |j4_own - j4_peer| >= 0.08, returns no contention."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0, arm_id="arm1", own_joints=OWN_FAR, peer_joints=PEER_FAR
@@ -62,7 +62,7 @@ def test_gap_above_threshold_no_contention():
 
 
 def test_peer_j5_zero_no_contention():
-    """When gap < 0.10 but peer j5 == 0, returns no contention."""
+    """When gap < 0.08 but peer j5 == 0, returns no contention."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0, arm_id="arm1", own_joints=OWN_CONTENTION, peer_joints=PEER_J5_ZERO
@@ -76,7 +76,7 @@ def test_peer_j5_zero_no_contention():
 
 
 def test_own_j5_zero_no_contention():
-    """When gap < 0.10 but own j5 == 0, returns no contention."""
+    """When gap < 0.08 but own j5 == 0, returns no contention."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0, arm_id="arm1", own_joints=OWN_J5_ZERO, peer_joints=PEER_CONTENTION
@@ -90,7 +90,7 @@ def test_own_j5_zero_no_contention():
 
 
 def test_contention_detected_arm1_wins_first():
-    """Gap < 0.10, both j5 > 0, arm1 called first → contention, is_winner."""
+    """Gap < 0.08, both j5 > 0, arm1 called first → contention, is_winner."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0,
@@ -256,7 +256,7 @@ def test_loser_joints_unmodified():
 
 
 def test_contention_threshold_boundary_at_010():
-    """Gap of exactly 0.10 is NOT contention (strictly less than)."""
+    """Gap of exactly 0.08 is NOT contention (strictly less than)."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0,
@@ -273,7 +273,7 @@ def test_contention_threshold_boundary_at_010():
 
 
 def test_contention_threshold_boundary_below_010():
-    """Gap of 0.099 IS contention."""
+    """Gap of 0.079 IS contention."""
     policy = SequentialPickPolicy()
     result = policy.apply(
         step_id=0,
@@ -369,3 +369,33 @@ def test_second_contention_step_does_not_crash_when_peer_skipped_at_first_conten
     # Exactly one winner
     assert is_winner1 or is_winner2, "At least one arm must be winner at step 1"
     assert not (is_winner1 and is_winner2), "Both arms cannot be winners simultaneously"
+
+
+# ---------------------------------------------------------------------------
+# Test 14: CONTENTION_THRESHOLD must be 0.08 m
+# ---------------------------------------------------------------------------
+
+
+def test_contention_threshold_constant_is_008m():
+    """CONTENTION_THRESHOLD must be 0.08 m."""
+    assert SequentialPickPolicy.CONTENTION_THRESHOLD == 0.08
+
+
+def test_contention_threshold_boundary_at_008():
+    """Gap of exactly 0.08 is NOT contention (strictly less than)."""
+    policy = SequentialPickPolicy()
+    own = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
+    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.08, "j5": 1.0}
+    result = policy.apply(step_id=0, arm_id="arm1", own_joints=own, peer_joints=peer)
+    assert result == (own, False, False, False)
+
+
+def test_contention_threshold_boundary_below_008():
+    """Gap of 0.079 IS contention."""
+    policy = SequentialPickPolicy()
+    own = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
+    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.079, "j5": 1.0}
+    result = policy.apply(step_id=0, arm_id="arm1", own_joints=own, peer_joints=peer)
+    applied, skipped, is_contention, is_winner = result
+    assert is_contention is True
+    assert is_winner is True

@@ -27,10 +27,10 @@ from sequential_pick_policy import SequentialPickPolicy
 
 # ── Thresholds (from source) ──────────────────────────────────────────────
 MODE1_ADJ = 0.20
-MODE2_STAGE1_THRESHOLD = 0.12
+MODE2_STAGE1_THRESHOLD = 0.08
 MODE2_STAGE2_LATERAL = 0.06
 MODE2_STAGE2_J5_SUM = 0.5
-MODE3_THRESHOLD = 0.10
+MODE3_THRESHOLD = 0.08
 
 
 @dataclasses.dataclass

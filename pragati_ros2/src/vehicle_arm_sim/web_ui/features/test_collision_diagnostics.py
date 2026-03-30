@@ -33,7 +33,7 @@ import pytest
 # Ensure web_ui source is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collision_diagnostics import MODE1_ADJ, diagnose_collision
+from collision_diagnostics import MODE1_ADJ, MODE2_STAGE1_THRESHOLD, MODE3_THRESHOLD, diagnose_collision
 from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
@@ -292,7 +292,7 @@ def _assert_paired_mode(report, mode_key, mode):
             assert mr["verdict"] == "SAFE"
             assert mr["intervention"] == "none"
     elif mode == 2:
-        if gap >= 0.12:
+        if gap >= MODE2_STAGE1_THRESHOLD:
             assert mr["verdict"] == "SAFE"
         elif gap < 0.06 and cj5 > 0.5:
             assert mr["verdict"] == "COLLISION"
@@ -300,7 +300,7 @@ def _assert_paired_mode(report, mode_key, mode):
         else:
             assert mr["verdict"] == "SAFE"
     elif mode == 3:
-        if gap < 0.10 and arm1_j5 > 0 and arm2_j5 > 0:
+        if gap < MODE3_THRESHOLD and arm1_j5 > 0 and arm2_j5 > 0:
             assert mr["verdict"] == "CONTENTION"
             assert mr["intervention"] == "sequenced"
         else:
