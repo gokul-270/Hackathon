@@ -135,6 +135,8 @@ _estop_event: threading.Event = threading.Event()  # set by /api/estop; cleared 
 
 from run_event_bus import RunEventBus
 _event_bus: RunEventBus = RunEventBus()
+# Interval (seconds) between SSE keep-alive comment lines.  Overridable in tests.
+_SSE_HEARTBEAT_INTERVAL: float = 5.0
 
 
 # ---------------------------------------------------------------------------
@@ -1236,13 +1238,24 @@ async def run_events():
     async def _generator():
         import json as _json
         import asyncio
+        import concurrent.futures
+
         loop = asyncio.get_event_loop()
         _event_bus.reset()  # Re-arm bus so second (and subsequent) runs work correctly.
         gen = _event_bus.subscribe()
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         try:
             while True:
                 try:
-                    event = await loop.run_in_executor(None, next, gen)
+                    future = loop.run_in_executor(executor, next, gen)
+                    while True:
+                        try:
+                            event = await asyncio.wait_for(
+                                asyncio.shield(future), timeout=_SSE_HEARTBEAT_INTERVAL
+                            )
+                            break
+                        except asyncio.TimeoutError:
+                            yield ": heartbeat\n\n"
                     yield f"data: {_json.dumps(event)}\n\n"
                     if event.get("type") == "run_complete":
                         return
@@ -1250,6 +1263,8 @@ async def run_events():
                     return
         except asyncio.CancelledError:
             return
+        finally:
+            executor.shutdown(wait=False)
 
     return StreamingResponse(
         _generator(),

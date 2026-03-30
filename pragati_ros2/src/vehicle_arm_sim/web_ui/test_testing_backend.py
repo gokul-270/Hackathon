@@ -159,3 +159,85 @@ def test_run_complete_emit_is_preceded_by_logger_info():
 
     assert hasattr(tb, "logger"), "testing_backend must have a module-level logger"
     assert isinstance(tb.logger, logging.Logger), "tb.logger must be a logging.Logger instance"
+
+
+def test_sse_stream_emits_heartbeat_comment_during_idle_period():
+    """GET /api/run/events must emit SSE comment heartbeats while waiting for events.
+
+    A long quiet gap between step events (e.g. step 4 parallel dispatch) must not
+    cause the TCP connection to time out. The SSE generator must emit ': heartbeat'
+    comment lines at regular intervals to keep the connection alive.
+    """
+    import json as _json
+    import threading
+    import time as _time
+    from fastapi.testclient import TestClient
+    import testing_backend as tb
+
+    # Re-arm bus for test; shorten heartbeat interval so test completes quickly.
+    tb._event_bus.close()
+    tb._event_bus.reset()
+    original_interval = tb._SSE_HEARTBEAT_INTERVAL
+    tb._SSE_HEARTBEAT_INTERVAL = 1.0  # fire heartbeat after 1 s of silence
+
+    heartbeat_seen = threading.Event()
+    done = threading.Event()
+
+    def _delayed_emit():
+        # Wait until heartbeat received by test, then unblock the stream
+        heartbeat_seen.wait(timeout=5.0)
+        tb._event_bus.emit({"type": "run_complete", "run_id": "heartbeat-test"})
+        tb._event_bus.close()
+
+    emitter = threading.Thread(target=_delayed_emit, daemon=True)
+    emitter.start()
+
+    try:
+        with TestClient(tb.app) as client:
+            with client.stream("GET", "/api/run/events") as resp:
+                for raw_line in resp.iter_lines():
+                    if raw_line.startswith(": heartbeat"):
+                        heartbeat_seen.set()
+                    if raw_line.startswith("data:"):
+                        evt = _json.loads(raw_line[len("data:"):].strip())
+                        if evt.get("type") == "run_complete":
+                            done.set()
+                            break
+    finally:
+        tb._SSE_HEARTBEAT_INTERVAL = original_interval
+
+    emitter.join(timeout=5.0)
+    assert heartbeat_seen.is_set(), (
+        "SSE stream did not emit any heartbeat comment during idle; "
+        "connection would time out during long steps"
+    )
+    assert done.is_set(), "SSE stream did not deliver run_complete after heartbeats"
+
+
+def test_sse_onerror_handler_does_not_close_evtsource_permanently():
+    """testing_ui.js onerror handler must not call evtSource.close() unconditionally.
+
+    If onerror calls close(), the browser's built-in EventSource reconnect is
+    disabled and any mid-run SSE blip permanently kills the log stream.
+    The handler should NOT close the stream on transient errors.
+    """
+    from pathlib import Path
+    import re
+
+    js_path = Path(__file__).resolve().parent / "testing_ui.js"
+    js = js_path.read_text()
+
+    # Find the onerror handler block
+    onerror_match = re.search(
+        r'evtSource\.onerror\s*=\s*function\s*\([^)]*\)\s*\{([^}]*)\}',
+        js,
+        re.DOTALL,
+    )
+    assert onerror_match is not None, "evtSource.onerror handler not found in testing_ui.js"
+
+    handler_body = onerror_match.group(1)
+    assert "evtSource.close()" not in handler_body, (
+        "evtSource.onerror calls evtSource.close() unconditionally — "
+        "this permanently disables EventSource reconnect on any transient error. "
+        "Remove the close() call from onerror so the browser can auto-reconnect."
+    )
