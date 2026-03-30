@@ -192,3 +192,41 @@ def test_report_markdown_returns_200_after_run():
     body = resp.text
     assert "Comparison Report" in body
     assert "Recommendation" in body
+
+
+# -------------------------------------------------------------------
+# Preset scenario integration
+# -------------------------------------------------------------------
+
+# The frontend presetMap maps select values to scenario URLs.
+# These must match the actual files served by the backend.
+_PRESET_MAP = {
+    "contention": "/scenarios/contention_pack.json",
+    "geometry": "/scenarios/geometry_pack.json",
+}
+
+
+@pytest.mark.parametrize("preset_key", _PRESET_MAP.keys())
+def test_all_modes_with_preset_scenario(preset_key):
+    """Loading a preset and running all-modes succeeds end-to-end.
+
+    This mirrors the frontend flow:
+      1. fetch(presetMap[key])  → get scenario JSON
+      2. POST /api/run/start-all-modes with that scenario
+    If the preset URL mapping is wrong, step 1 returns 404.
+    """
+    url = _PRESET_MAP[preset_key]
+    load_resp = client.get(url)
+    assert load_resp.status_code == 200, (
+        f"Preset {preset_key!r} → {url} returned "
+        f"{load_resp.status_code}"
+    )
+    scenario = load_resp.json()
+    resp = client.post(
+        "/api/run/start-all-modes",
+        json={"scenario": scenario},
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["summaries"]) == 5
+    assert data["recommendation"] in _ALL_MODE_NAMES

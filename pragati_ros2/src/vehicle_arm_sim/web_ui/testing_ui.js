@@ -21,6 +21,13 @@
     var STATUS_POLL_MS = 3000;   // backend status poll
     var RECONNECT_MS   = 3000;   // rosbridge reconnect interval
 
+    // Preset scenario URL map — single source of truth for both
+    // "Start Run" and "Run All Modes" buttons.
+    var _PRESET_MAP = {
+        contention: '/scenarios/contention_pack.json',
+        geometry:   '/scenarios/geometry_pack.json',
+    };
+
     // Arm cosine test — joint limits
     var J3_MIN = -0.9;   // rad (tilt lower limit)
     var J3_MAX =  0.0;   // rad
@@ -1499,12 +1506,8 @@
                 const presetSelect = document.getElementById('run-scenario-select');
                 const preset = presetSelect ? presetSelect.value : '';
                 if (preset) {
-                    const presetMap = {
-                        contention: '/scenarios/contention_pack.json',
-                        geometry: '/scenarios/geometry_pack.json',
-                    };
                     try {
-                        const resp = await fetch(presetMap[preset]);
+                        const resp = await fetch(_PRESET_MAP[preset]);
                         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                         scenarioData = await resp.json();
                     } catch (e) {
@@ -1718,9 +1721,11 @@
                 }
             } else if (presetSel && presetSel.value) {
                 try {
-                    const resp = await fetch(
-                        `/scenarios/${presetSel.value}.json`
+                    const url = _PRESET_MAP[presetSel.value];
+                    if (!url) throw new Error(
+                        'Unknown preset: ' + presetSel.value
                     );
+                    const resp = await fetch(url);
                     if (!resp.ok) throw new Error(resp.statusText);
                     scenario = await resp.json();
                 } catch (err) {
