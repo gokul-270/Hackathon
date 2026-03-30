@@ -129,18 +129,18 @@ def test_step_reports_both_arms():
 # Scenario bindings — threshold comparison
 # ===================================================================
 
-@scenario(FEATURE, "Mode 1 threshold (0.05m) is stricter than Mode 3 (0.10m)")
-def test_threshold_007():
+@scenario(FEATURE, "Mode 1 blocks when j5 exceeds cosine limit but Mode 3 is safe (large j4 gap)")
+def test_threshold_mode1_blocks_mode3_safe():
     pass
 
 
-@scenario(FEATURE, "Arms at j4 gap of 0.03m trigger both Mode 1 and Mode 3")
-def test_threshold_003():
+@scenario(FEATURE, "Both Mode 1 and Mode 3 trigger when j5 exceeds limit and j4 gap is small")
+def test_threshold_both_trigger():
     pass
 
 
-@scenario(FEATURE, "Arms at j4 gap of 0.11m trigger neither Mode 1 nor Mode 3")
-def test_threshold_011():
+@scenario(FEATURE, "Neither Mode 1 nor Mode 3 triggers when j5 is safe and j4 gap is large")
+def test_threshold_neither_triggers():
     pass
 
 
@@ -260,12 +260,13 @@ def then_both_arms_in_reports(ctx):
 # Threshold comparison steps
 # ===================================================================
 
-@given(parsers.re(r'arms at j4 gap of (?P<gap>[\d.]+)m with both extending'))
-def given_gap_arms(ctx, gap):
-    gap = float(gap)
-    base_j4 = 0.300
-    ctx["arm1_joints"] = {"j3": 1.0, "j4": base_j4, "j5": 0.5}
-    ctx["arm2_joints"] = {"j3": 0.8, "j4": base_j4 + gap, "j5": 0.4}
+@given(parsers.re(
+    r'arms with j3=(?P<j3a>[+-]?[\d.]+) j4=(?P<j4a>[\d.]+) j5=(?P<j5a>[\d.]+) '
+    r'vs j3=(?P<j3b>[+-]?[\d.]+) j4=(?P<j4b>[\d.]+) j5=(?P<j5b>[\d.]+)'
+))
+def given_arms_with_joints(ctx, j3a, j4a, j5a, j3b, j4b, j5b):
+    ctx["arm1_joints"] = {"j3": float(j3a), "j4": float(j4a), "j5": float(j5a)}
+    ctx["arm2_joints"] = {"j3": float(j3b), "j4": float(j4b), "j5": float(j5b)}
     ctx["mode"] = BaselineMode()
 
 
@@ -287,26 +288,21 @@ def when_mode1_and_mode3(ctx):
     ctx["mode3_contention"] = is_contention
 
 
-@then(parsers.re(r'mode 1 does NOT block \(gap >= 0\.05m\)'))
-def then_mode1_no_block(ctx):
-    assert ctx["mode1_result"]["j5"] == ctx["arm1_joints"]["j5"]
-
-
-@then(parsers.re(r'mode 3 DOES detect contention \(gap < 0\.10m\)'))
-def then_mode3_contention(ctx):
-    assert ctx["mode3_contention"] is True
-
-
-@then(parsers.re(r'mode 1 blocks j5 \(gap < 0\.05m\)'))
-def then_mode1_blocks(ctx):
+@then(parsers.re(r'mode 1 blocks j5 \(j5 exceeds cosine limit\)'))
+def then_mode1_blocks_cosine(ctx):
     assert ctx["mode1_result"]["j5"] == 0.0
 
 
-@then(parsers.re(r'mode 3 detects contention \(gap < 0\.10m\)'))
-def then_mode3_contention_alt(ctx):
-    assert ctx["mode3_contention"] is True
+@then(parsers.re(r'mode 1 does NOT block \(j5 within cosine limit\)'))
+def then_mode1_no_block_cosine(ctx):
+    assert ctx["mode1_result"]["j5"] == ctx["arm1_joints"]["j5"]
 
 
-@then(parsers.re(r'mode 3 does NOT detect contention \(gap >= 0\.10m\)'))
-def then_mode3_no_contention(ctx):
+@then(parsers.re(r'mode 3 does NOT detect contention \(j4 gap >= 0\.10m\)'))
+def then_mode3_no_contention_gap(ctx):
     assert ctx["mode3_contention"] is False
+
+
+@then(parsers.re(r'mode 3 detects contention \(j4 gap < 0\.10m\)'))
+def then_mode3_contention_gap(ctx):
+    assert ctx["mode3_contention"] is True

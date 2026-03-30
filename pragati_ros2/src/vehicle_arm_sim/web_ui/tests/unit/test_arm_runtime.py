@@ -248,27 +248,27 @@ def test_run_step_unrestricted_no_peer_returns_candidate_as_applied():
 
 
 def test_run_step_baseline_j5_block_skip_close_peer_zeroes_j5():
-    """run_step with BASELINE_J5_BLOCK_SKIP and a laterally-close peer sets j5=0 in applied."""
+    """run_step with BASELINE_J5_BLOCK_SKIP zeroes j5 when cosine reach limit is exceeded.
+
+    cam_z=0.35 produces j3≈-0.845rad, j5≈0.398m.
+    Cosine limit = 0.20/cos(0.845) ≈ 0.301m.  0.398 > 0.301 → j5 zeroed.
+    """
     from arm_runtime import ArmRuntime, PeerStatePacket
     from baseline_mode import BaselineMode
 
     rt = ArmRuntime("arm1")
-    # cam point that produces a non-zero j5 candidate
-    step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
+    # cam point that produces j5 > cosine limit (j5≈0.398, limit≈0.301)
+    step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.65, cam_y=0.0, cam_z=0.35)
     rt.load_scenario([step])
     baseline = BaselineMode()
-
-    # Compute candidate so we can place peer j4 within 0.05 m of own j4
-    own_cand = rt.compute_candidate_joints(step)
-    own_j4 = own_cand["j4"]
 
     peer_state = PeerStatePacket(
         arm_id="arm2",
         step_id=1,
         status="ready",
         timestamp=0.0,
-        current_joints={"j3": 0.0, "j4": own_j4, "j5": 0.0},
-        candidate_joints={"j3": 0.0, "j4": own_j4, "j5": 0.3},  # same j4 → gap = 0
+        current_joints={"j3": 0.0, "j4": 0.0, "j5": 0.0},
+        candidate_joints={"j3": 0.0, "j4": 0.0, "j5": 0.1},
     )
 
     applied_joints, skipped, candidate_joints = rt.run_step(

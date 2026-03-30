@@ -104,20 +104,20 @@ Feature: Cross-Mode Algorithm Comparison
   # Threshold comparison across modes
   # -------------------------------------------------------------------
 
-  Scenario: Mode 1 threshold (0.05m) is stricter than Mode 3 (0.10m)
-    Given arms at j4 gap of 0.07m with both extending
+  Scenario: Mode 1 blocks when j5 exceeds cosine limit but Mode 3 is safe (large j4 gap)
+    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=0.450 j5=0.4
     When mode 1 and mode 3 are both applied
-    Then mode 1 does NOT block (gap >= 0.05m)
-    And mode 3 DOES detect contention (gap < 0.10m)
+    Then mode 1 blocks j5 (j5 exceeds cosine limit)
+    And mode 3 does NOT detect contention (j4 gap >= 0.10m)
 
-  Scenario: Arms at j4 gap of 0.03m trigger both Mode 1 and Mode 3
-    Given arms at j4 gap of 0.03m with both extending
+  Scenario: Both Mode 1 and Mode 3 trigger when j5 exceeds limit and j4 gap is small
+    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=0.360 j5=0.4
     When mode 1 and mode 3 are both applied
-    Then mode 1 blocks j5 (gap < 0.05m)
-    And mode 3 detects contention (gap < 0.10m)
+    Then mode 1 blocks j5 (j5 exceeds cosine limit)
+    And mode 3 detects contention (j4 gap < 0.10m)
 
-  Scenario: Arms at j4 gap of 0.11m trigger neither Mode 1 nor Mode 3
-    Given arms at j4 gap of 0.11m with both extending
+  Scenario: Neither Mode 1 nor Mode 3 triggers when j5 is safe and j4 gap is large
+    Given arms with j3=0.0 j4=0.300 j5=0.19 vs j3=0.0 j4=0.450 j5=0.4
     When mode 1 and mode 3 are both applied
-    Then mode 1 does NOT block (gap >= 0.05m)
-    And mode 3 does NOT detect contention (gap >= 0.10m)
+    Then mode 1 does NOT block (j5 within cosine limit)
+    And mode 3 does NOT detect contention (j4 gap >= 0.10m)

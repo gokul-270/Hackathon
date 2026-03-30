@@ -24,6 +24,7 @@ product). Additionally, each arm1 point and each arm2 point is tested solo
 (no peer) to cover the unpaired-step case.
 """
 import itertools
+import math
 import sys
 from pathlib import Path
 
@@ -32,7 +33,7 @@ import pytest
 # Ensure web_ui source is importable
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from collision_diagnostics import diagnose_collision
+from collision_diagnostics import MODE1_ADJ, diagnose_collision
 from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
 
@@ -208,7 +209,12 @@ def _assert_paired_mode(report, mode_key, mode):
     if mode == 0:
         assert mr["verdict"] == "NO_CHECK"
     elif mode == 1:
-        if gap < 0.05:
+        arm1_j3 = report["arm1_joints"]["j3"]
+        theta1 = abs(arm1_j3)
+        cos_theta1 = math.cos(theta1)
+        j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.01 else float("inf")
+        arm1_j5_val = report["arm1_joints"]["j5"]
+        if arm1_j5_val > j5_limit1:
             assert mr["verdict"] == "COLLISION"
             assert mr["intervention"] == "j5_zeroed"
         else:

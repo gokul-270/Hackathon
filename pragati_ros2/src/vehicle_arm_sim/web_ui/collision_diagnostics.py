@@ -26,7 +26,7 @@ from sequential_pick_policy import SequentialPickPolicy
 
 
 # ── Thresholds (from source) ──────────────────────────────────────────────
-MODE1_THRESHOLD = 0.05
+MODE1_ADJ = 0.20
 MODE2_STAGE1_THRESHOLD = 0.12
 MODE2_STAGE2_LATERAL = 0.06
 MODE2_STAGE2_J5_SUM = 0.5
@@ -204,32 +204,38 @@ def _diagnose_paired(
     }
 
     # ── Mode 1: Baseline j5 block ────────────────────────────────────
+    arm1_j3 = fk1["j3"]
+    theta1 = abs(arm1_j3)
+    cos_theta1 = math.cos(theta1)
+    j5_limit1 = MODE1_ADJ / cos_theta1 if cos_theta1 > 0.01 else float("inf")
     bm = BaselineMode()
     bm.apply_with_skip(
         BaselineMode.BASELINE_J5_BLOCK_SKIP, dict(arm1_joints), peer_state
     )
-    if j4_gap < MODE1_THRESHOLD:
+    if arm1_j5 > j5_limit1:
         modes["mode_1"] = {
             "verdict": "COLLISION",
             "reason": (
-                f"j4 gap {j4_gap:.4f}m < {MODE1_THRESHOLD}m threshold"
+                f"j5 {arm1_j5:.4f}m > cosine limit "
+                f"{j5_limit1:.4f}m (adj={MODE1_ADJ}m / cos({theta1:.4f}rad)={cos_theta1:.4f})"
             ),
             "intervention": "j5_zeroed",
             "details": (
                 f"j5 set to 0 (was {arm1_j5:.4f}). "
-                f"Gap shortfall: {MODE1_THRESHOLD - j4_gap:.4f}m"
+                f"Reach excess: {arm1_j5 - j5_limit1:.4f}m"
             ),
         }
     else:
+        details_inf = " (near-vertical guard: cos<0.01 → limit=∞)" if cos_theta1 <= 0.01 else ""
         modes["mode_1"] = {
             "verdict": "SAFE",
             "reason": (
-                f"j4 gap {j4_gap:.4f}m >= {MODE1_THRESHOLD}m threshold"
+                f"j5 {arm1_j5:.4f}m <= cosine limit "
+                f"{j5_limit1:.4f}m (adj={MODE1_ADJ}m / cos({theta1:.4f}rad)={cos_theta1:.4f})"
             ),
             "intervention": "none",
             "details": (
-                f"Gap margin: "
-                f"{j4_gap - MODE1_THRESHOLD:.4f}m above threshold"
+                f"Reach margin: {j5_limit1 - arm1_j5:.4f}m below limit{details_inf}"
             ),
         }
 
