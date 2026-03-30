@@ -1,7 +1,10 @@
 """Parametrized collision diagnostic test.
 
-For any set of camera points (cam_z) and j5 extensions, runs all 5 collision
-avoidance modes and prints a detailed report explaining:
+For any set of camera coordinates (cam_x, cam_y, cam_z) for two arms, converts
+them to joint values (j3, j4, j5) using the real FK pipeline (camera_to_arm +
+polar_decompose), then runs all 5 collision avoidance modes and prints a
+detailed report explaining:
+  - The FK conversion result (cam → joints)
   - Which point pairs collide
   - WHY they collide (which threshold was violated)
   - HOW each mode avoids or handles the collision
@@ -12,7 +15,7 @@ Usage:
 The -s flag is essential — it lets print() reach the terminal.
 
 To change test inputs, edit test_scenarios.json in this directory.
-Each object needs: label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5.
+Each object needs: label, arm1: {cam_x, cam_y, cam_z}, arm2: {cam_x, cam_y, cam_z}.
 """
 import json
 import sys
@@ -32,44 +35,61 @@ if not _SCENARIO_FILE.exists():
     raise FileNotFoundError(
         f"Scenario file not found: {_SCENARIO_FILE}\n"
         f"Create it with an array of objects, each having: "
-        f"label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5"
+        f"label, arm1: {{cam_x, cam_y, cam_z}}, arm2: {{cam_x, cam_y, cam_z}}"
     )
 
 with open(_SCENARIO_FILE) as _f:
     _raw = json.load(_f)
 
 SCENARIOS = [
-    (s["label"], s["arm1_cam_z"], s["arm1_j5"], s["arm2_cam_z"], s["arm2_j5"])
+    (s["label"], s["arm1"], s["arm2"])
     for s in _raw
 ]
 
 
 @pytest.fixture(params=SCENARIOS, ids=[s[0] for s in SCENARIOS])
 def scenario_data(request):
-    """Yield (label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5)."""
+    """Yield (label, arm1_cam_dict, arm2_cam_dict)."""
     return request.param
 
 
-def test_collision_diagnostic(scenario_data, capsys):
+def test_collision_diagnostic(scenario_data):
     """Run all 5 modes on a single cam-point pair and print diagnostics."""
-    label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5 = scenario_data
+    label, arm1_cam, arm2_cam = scenario_data
 
     report = diagnose_collision(
-        arm1_cam_z=arm1_cam_z,
-        arm1_j5=arm1_j5,
-        arm2_cam_z=arm2_cam_z,
-        arm2_j5=arm2_j5,
+        arm1_cam_x=arm1_cam["cam_x"],
+        arm1_cam_y=arm1_cam["cam_y"],
+        arm1_cam_z=arm1_cam["cam_z"],
+        arm2_cam_x=arm2_cam["cam_x"],
+        arm2_cam_y=arm2_cam["cam_y"],
+        arm2_cam_z=arm2_cam["cam_z"],
     )
 
     # ── Structure assertions ──────────────────────────────────────────
-    assert report["arm1_j4"] == pytest.approx(0.1005 - arm1_cam_z, abs=1e-9)
-    assert report["arm2_j4"] == pytest.approx(0.1005 - arm2_cam_z, abs=1e-9)
-    assert report["j4_gap"] == pytest.approx(
-        abs(report["arm1_j4"] - report["arm2_j4"]), abs=1e-9
-    )
-    assert report["combined_j5"] == pytest.approx(arm1_j5 + arm2_j5, abs=1e-9)
+    # FK conversion produced valid joint dicts
+    assert "arm1_joints" in report
+    assert "arm2_joints" in report
+    for key in ("j3", "j4", "j5"):
+        assert key in report["arm1_joints"]
+        assert key in report["arm2_joints"]
 
-    # Every mode must be present
+    assert "j4_gap" in report
+    assert report["j4_gap"] == pytest.approx(
+        abs(report["arm1_joints"]["j4"] - report["arm2_joints"]["j4"]),
+        abs=1e-9,
+    )
+    assert "combined_j5" in report
+    assert report["combined_j5"] == pytest.approx(
+        report["arm1_joints"]["j5"] + report["arm2_joints"]["j5"],
+        abs=1e-9,
+    )
+
+    # Reachability flags present
+    assert "arm1_reachable" in report
+    assert "arm2_reachable" in report
+
+    # Every mode must be present with required fields
     for mode_id in range(5):
         mode_key = f"mode_{mode_id}"
         assert mode_key in report["modes"], f"Missing {mode_key}"
@@ -81,9 +101,11 @@ def test_collision_diagnostic(scenario_data, capsys):
     # ── Per-mode correctness assertions ───────────────────────────────
     gap = report["j4_gap"]
     cj5 = report["combined_j5"]
+    arm1_j5 = report["arm1_joints"]["j5"]
+    arm2_j5 = report["arm2_joints"]["j5"]
     m = report["modes"]
 
-    # Mode 0: always SAFE, passthrough
+    # Mode 0: always NO_CHECK, passthrough
     assert m["mode_0"]["verdict"] == "NO_CHECK"
 
     # Mode 1: gap < 0.05 → COLLISION, else SAFE
