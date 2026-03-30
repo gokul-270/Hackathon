@@ -49,6 +49,10 @@ def test_sequential_pick_e2e_run_completes_without_errors():
     assert summary["total_steps"] > 0
     assert "step_reports" in summary
     assert len(summary["step_reports"]) > 0
+    # Verify step_reports outnumber total_steps (multiple arms per step)
+    assert len(summary["step_reports"]) >= summary["total_steps"], (
+        f"step_reports ({len(summary['step_reports'])}) must be >= total_steps ({summary['total_steps']})"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -72,6 +76,14 @@ def test_sequential_pick_e2e_skipped_count_bounded_by_unrestricted():
     rc_unr = RunController(mode=BaselineMode.UNRESTRICTED)
     rc_unr.load_scenario(scenario)
     unr_summary = rc_unr.run()
+
+    # Guard: the comparison is only meaningful if steps were actually processed
+    assert seq_summary["total_steps"] > 0, (
+        "Sequential pick must process at least one step (scenario may be empty)"
+    )
+    assert unr_summary["total_steps"] > 0, (
+        "Unrestricted must process at least one step (scenario may be empty)"
+    )
 
     assert seq_summary["steps_with_skipped"] <= unr_summary["steps_with_skipped"], (
         f"Sequential pick must not produce more skipped steps than unrestricted; "
@@ -101,6 +113,14 @@ def test_sequential_pick_e2e_collisions_not_worse_than_unrestricted():
     rc_unr = RunController(mode=BaselineMode.UNRESTRICTED)
     rc_unr.load_scenario(scenario)
     unr_summary = rc_unr.run()
+
+    # Guard: the comparison is only meaningful if steps were actually processed
+    assert seq_summary["total_steps"] > 0, (
+        "Sequential pick must process at least one step (scenario may be empty)"
+    )
+    assert unr_summary["total_steps"] > 0, (
+        "Unrestricted must process at least one step (scenario may be empty)"
+    )
 
     assert seq_summary["steps_with_collision"] <= unr_summary["steps_with_collision"], (
         f"Sequential pick must not produce more collisions than unrestricted; "

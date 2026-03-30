@@ -55,7 +55,7 @@ def test_run_start_returns_200():
 
 
 def test_run_start_response_has_run_id():
-    """POST /api/run/start response contains a run_id field."""
+    """POST /api/run/start response contains a non-empty run_id string."""
     payload = {
         "mode": 0,
         "scenario": {
@@ -68,6 +68,8 @@ def test_run_start_response_has_run_id():
     resp = client.post("/api/run/start", json=payload)
     data = resp.json()
     assert "run_id" in data
+    assert data["run_id"] is not None
+    assert len(data["run_id"]) > 0
 
 
 def test_run_start_rejects_invalid_mode():
@@ -91,17 +93,21 @@ def test_run_status_returns_200():
 
 
 def test_run_status_has_state_field():
-    """GET /api/run/status response contains a state field."""
+    """GET /api/run/status response contains a state field with a valid value, idle before any run."""
+    import testing_backend as tb
+    tb._run_state = "idle"
     resp = client.get("/api/run/status")
     data = resp.json()
     assert "state" in data
+    assert data["state"] in ("idle", "running", "complete")
+    assert data["state"] == "idle"
 
 
 def test_run_status_idle_when_no_run():
     """GET /api/run/status returns state=idle when no run is in progress."""
     resp = client.get("/api/run/status")
     data = resp.json()
-    assert data["state"] in ("idle", "running", "complete")
+    assert data["state"] == "idle"
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +132,7 @@ def test_run_report_json_returns_200_after_run():
 
 
 def test_run_report_json_contains_steps():
-    """GET /api/run/report/json returns a list of step records."""
+    """GET /api/run/report/json returns a list of step records with the expected count."""
     payload = {
         "mode": 0,
         "scenario": {
@@ -140,6 +146,8 @@ def test_run_report_json_contains_steps():
     resp = client.get("/api/run/report/json")
     data = resp.json()
     assert "steps" in data
+    assert isinstance(data["steps"], list)
+    assert len(data["steps"]) == 2
 
 
 # ---------------------------------------------------------------------------

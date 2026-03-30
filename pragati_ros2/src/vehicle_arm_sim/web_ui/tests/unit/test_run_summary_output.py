@@ -53,6 +53,7 @@ def test_run_summary_includes_completed_picks_key():
     reporter.add_step(_make_step(step_id=2, pick_completed=True))
     summary = reporter.build_run_summary("unrestricted", total_steps=2)
     assert "completed_picks" in summary
+    assert summary["completed_picks"] == 2
 
 
 def test_run_summary_completed_picks_counts_only_pick_completed_true():
@@ -103,7 +104,7 @@ def test_run_report_markdown_includes_completed_picks_text():
     assert md_resp.status_code == 200
     md_text = md_resp.text
     # Must include completed picks in the markdown output
-    assert "Completed picks" in md_text or "completed_picks" in md_text or "completed pick" in md_text.lower()
+    assert "Completed picks" in md_text
 
 
 def test_run_report_json_summary_includes_completed_picks():
@@ -127,6 +128,7 @@ def test_run_report_json_summary_includes_completed_picks():
     )
     data = fresh_client.get("/api/run/report/json").json()
     assert "completed_picks" in data["summary"]
+    assert data["summary"]["completed_picks"] == 2
 
 
 # ---------------------------------------------------------------------------

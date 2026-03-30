@@ -59,7 +59,7 @@ def test_markdown_report_contains_heading():
 
 
 def test_markdown_report_contains_table_header():
-    """Report must include a Markdown table header row."""
+    """Report must include a Markdown table header row with all required column names."""
     reporter = MarkdownReporter()
     runs = [
         _make_run("unrestricted"),
@@ -68,11 +68,16 @@ def test_markdown_report_contains_table_header():
     ]
     md = reporter.generate(runs)
     assert "| Mode |" in md
-    assert "| --- |" in md or "|---|" in md or "| :---" in md
+    assert "| Total Steps |" in md
+    assert "| Near-Collision Steps |" in md
+    assert "| Collision Steps |" in md
+    assert "| Blocked Steps |" in md
+    # Separator row must use standard markdown table separator syntax
+    assert "| --- |" in md
 
 
 def test_markdown_report_contains_recommendation_section():
-    """Report must include a Recommendation section."""
+    """Report must include a Recommendation section as a heading."""
     reporter = MarkdownReporter()
     runs = [
         _make_run("unrestricted"),
@@ -80,7 +85,8 @@ def test_markdown_report_contains_recommendation_section():
         _make_run("geometry_block"),
     ]
     md = reporter.generate(runs)
-    assert "Recommendation" in md or "recommendation" in md
+    # Must appear as a heading (## or ### prefix), not just anywhere in prose
+    assert "### Recommendation" in md or "## Recommendation" in md
 
 
 # ---------------------------------------------------------------------------
@@ -128,7 +134,7 @@ def test_markdown_report_contains_geometry_block_row():
 # ---------------------------------------------------------------------------
 
 def test_markdown_report_includes_collision_counts():
-    """Report must include the collision and near-collision counts from the runs."""
+    """Report must include the collision and near-collision counts in the correct table rows."""
     reporter = MarkdownReporter()
     runs = [
         _make_run("unrestricted", near=4, collision=2, blocked=0),
@@ -136,9 +142,10 @@ def test_markdown_report_includes_collision_counts():
         _make_run("geometry_block", near=1, collision=0, blocked=1),
     ]
     md = reporter.generate(runs)
-    assert "4" in md
-    assert "2" in md
-    assert "3" in md
+    # Check digits appear in the correct table row context, not just anywhere
+    assert "| unrestricted |" in md and "| 4 |" in md.split("| unrestricted |")[1].split("\n")[0]
+    assert "| baseline_j5_block_skip |" in md and "| 3 |" in md.split("| baseline_j5_block_skip |")[1].split("\n")[0]
+    assert "| unrestricted |" in md and "| 2 |" in md.split("| unrestricted |")[1].split("\n")[0]
 
 
 # ---------------------------------------------------------------------------
@@ -287,5 +294,8 @@ def test_five_mode_recommendation_works():
         _make_run_with_blocked_or_skipped("smart_reorder", collision=0, near=0, blocked=0, blocked_or_skipped=0),
     ]
     md = reporter.generate(runs)
-    assert "Recommendation" in md
-    assert "smart_reorder" in md
+    # Recommendation must appear as a section heading
+    assert "### Recommendation" in md or "## Recommendation" in md
+    # smart_reorder must appear in the Recommendation section, not just anywhere in the report
+    recommendation_section = md.split("### Recommendation")[-1] if "### Recommendation" in md else md.split("## Recommendation")[-1]
+    assert "smart_reorder" in recommendation_section

@@ -35,6 +35,11 @@ def test_load_scenario_filters_steps_to_own_arm_id():
     rt.load_scenario(steps)
     own = rt.get_own_steps()
     assert len(own) == 2
+    assert all(s.arm_id == "arm1" for s in own), (
+        f"Expected only arm1 steps, got arm_ids={[s.arm_id for s in own]!r}"
+    )
+    got_ids = {s.step_id for s in own}
+    assert got_ids == {1, 3}, f"Expected step_ids {{1, 3}}, got {got_ids!r}"
 
 
 def test_load_scenario_with_wrong_arm_id_keeps_zero_steps():
@@ -69,43 +74,58 @@ def test_get_own_steps_returns_empty_list_when_no_steps_for_arm():
 
 
 def test_compute_candidate_joints_returns_j3_key():
-    """compute_candidate_joints result contains the j3 key."""
+    """compute_candidate_joints result contains j3 with a finite float value."""
+    import math
     from arm_runtime import ArmRuntime
 
     rt = ArmRuntime("arm1")
     step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
     result = rt.compute_candidate_joints(step)
     assert "j3" in result
+    assert isinstance(result["j3"], float), f"j3 must be float, got {type(result['j3'])}"
+    assert math.isfinite(result["j3"]), f"j3 must be finite, got {result['j3']}"
 
 
 def test_compute_candidate_joints_returns_j4_key():
-    """compute_candidate_joints result contains the j4 key."""
+    """compute_candidate_joints result contains j4 with a finite float value."""
+    import math
     from arm_runtime import ArmRuntime
 
     rt = ArmRuntime("arm1")
     step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
     result = rt.compute_candidate_joints(step)
     assert "j4" in result
+    assert isinstance(result["j4"], float), f"j4 must be float, got {type(result['j4'])}"
+    assert math.isfinite(result["j4"]), f"j4 must be finite, got {result['j4']}"
 
 
 def test_compute_candidate_joints_returns_j5_key():
-    """compute_candidate_joints result contains the j5 key."""
+    """compute_candidate_joints result contains j5 with a finite float value."""
+    import math
     from arm_runtime import ArmRuntime
 
     rt = ArmRuntime("arm1")
     step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
     result = rt.compute_candidate_joints(step)
     assert "j5" in result
+    assert isinstance(result["j5"], float), f"j5 must be float, got {type(result['j5'])}"
+    assert math.isfinite(result["j5"]), f"j5 must be finite, got {result['j5']}"
 
 
 def test_compute_candidate_joints_result_has_reachable_key():
-    """compute_candidate_joints result contains the reachable key."""
+    """compute_candidate_joints result contains reachable as a bool with correct value."""
     from arm_runtime import ArmRuntime
 
     rt = ArmRuntime("arm1")
     step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
     result = rt.compute_candidate_joints(step)
     assert "reachable" in result
+    assert isinstance(result["reachable"], bool), (
+        f"reachable must be bool, got {type(result['reachable'])}"
+    )
+    assert result["reachable"] is True, (
+        f"Known-good cam coords should be reachable, got reachable={result['reachable']}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -128,17 +148,24 @@ def test_build_peer_state_returns_packet_with_correct_arm_id():
 
 
 def test_build_peer_state_sets_timestamp_as_float():
-    """build_peer_state packet timestamp is a float."""
+    """build_peer_state packet timestamp is a recent wall-clock time (not hardcoded 0.0)."""
+    import time
     from arm_runtime import ArmRuntime
 
     rt = ArmRuntime("arm2")
+    before = time.time()
     packet = rt.build_peer_state(
         step_id=2,
         status="computing",
         current_joints={"j3": -0.3, "j4": 0.1, "j5": 0.05},
         candidate_joints={"j3": -0.4, "j4": 0.12, "j5": 0.08},
     )
+    after = time.time()
     assert isinstance(packet.timestamp, float)
+    assert before <= packet.timestamp <= after, (
+        f"timestamp={packet.timestamp} must be between {before} and {after} "
+        "(must use time.time(), not a hardcoded constant)"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -147,15 +174,26 @@ def test_build_peer_state_sets_timestamp_as_float():
 
 
 def test_run_step_method_exists_on_arm_runtime():
-    """ArmRuntime exposes a run_step method."""
+    """ArmRuntime exposes a run_step method that accepts the expected signature."""
     from arm_runtime import ArmRuntime
+    from baseline_mode import BaselineMode
 
     rt = ArmRuntime("arm1")
-    assert callable(getattr(rt, "run_step", None))
+    step = ScenarioStep(step_id=1, arm_id="arm1", cam_x=0.494, cam_y=-0.001, cam_z=0.004)
+    rt.load_scenario([step])
+    # Not just callable: must actually execute without error and return a tuple
+    result = rt.run_step(
+        step_id=1,
+        peer_state=None,
+        mode=BaselineMode.UNRESTRICTED,
+        baseline_mode_obj=BaselineMode(),
+        current_joints={"j3": 0.0, "j4": 0.0, "j5": 0.0},
+    )
+    assert isinstance(result, tuple), f"run_step must return a tuple, got {type(result)}"
 
 
 def test_run_step_returns_three_tuple():
-    """run_step returns a 3-tuple (applied_joints, skipped, candidate_joints)."""
+    """run_step returns a 3-tuple (applied_joints dict, skipped bool, candidate_joints dict)."""
     from arm_runtime import ArmRuntime
     from baseline_mode import BaselineMode
 
@@ -174,6 +212,17 @@ def test_run_step_returns_three_tuple():
 
     assert isinstance(result, tuple)
     assert len(result) == 3
+    applied_joints, skipped, candidate_joints = result
+    assert isinstance(applied_joints, dict), (
+        f"applied_joints must be a dict, got {type(applied_joints)}"
+    )
+    assert isinstance(skipped, bool), (
+        f"skipped must be a bool, got {type(skipped)}"
+    )
+    assert isinstance(candidate_joints, dict), (
+        f"candidate_joints must be a dict, got {type(candidate_joints)}"
+    )
+    assert "j3" in applied_joints and "j4" in applied_joints and "j5" in applied_joints
 
 
 def test_run_step_unrestricted_no_peer_returns_candidate_as_applied():

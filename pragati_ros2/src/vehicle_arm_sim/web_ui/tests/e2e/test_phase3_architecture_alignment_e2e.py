@@ -100,6 +100,13 @@ def test_e2e_arm_runtime_run_step_is_self_contained():
     assert isinstance(skipped, bool), "skipped must be a bool"
     assert isinstance(candidate_joints, dict), "candidate_joints must be a dict"
     assert "j3" in applied_joints and "j4" in applied_joints and "j5" in applied_joints
+    # In UNRESTRICTED mode with no peer, candidate must be applied and step not skipped
+    assert applied_joints == candidate_joints, (
+        "In UNRESTRICTED mode with no peer, applied_joints must equal candidate_joints"
+    )
+    assert skipped is False, (
+        "In UNRESTRICTED mode with no peer, step must not be skipped"
+    )
 
 
 def test_e2e_run_controller_manages_two_distinct_arm_runtime_units():
@@ -125,18 +132,20 @@ def test_e2e_run_controller_manages_two_distinct_arm_runtime_units():
 
 
 def test_e2e_peer_state_flows_through_transport_during_run():
-    """After a run with a paired scenario, the transport contains at least one packet."""
+    """After a run with a paired scenario, the transport contains packets for both arms."""
     rc = RunController(mode=BaselineMode.UNRESTRICTED)
     rc.load_scenario(_PAIRED_SCENARIO)
     rc.run()
 
     assert hasattr(rc, "_transport"), "RunController must expose _transport"
-    # The transport mailbox should have packets for the last published step
     transport: LocalPeerTransport = rc._transport
     packet_arm1 = transport.receive("arm1")
     packet_arm2 = transport.receive("arm2")
-    assert packet_arm1 is not None or packet_arm2 is not None, (
-        "Transport must hold at least one peer-state packet after a run"
+    assert packet_arm1 is not None, (
+        "Transport must hold an arm1 peer-state packet after a paired run"
+    )
+    assert packet_arm2 is not None, (
+        "Transport must hold an arm2 peer-state packet after a paired run"
     )
 
 
@@ -146,8 +155,13 @@ def test_e2e_transport_reset_clears_peer_state_between_runs():
     rc.load_scenario(_PAIRED_SCENARIO)
     rc.run()
 
-    # Confirm something was published
-    assert rc._transport.receive("arm1") is not None or rc._transport.receive("arm2") is not None
+    # Confirm both arms published (paired scenario guarantees both)
+    assert rc._transport.receive("arm1") is not None, (
+        "Pre-reset: transport must hold an arm1 packet after a paired run"
+    )
+    assert rc._transport.receive("arm2") is not None, (
+        "Pre-reset: transport must hold an arm2 packet after a paired run"
+    )
 
     rc.reset()
 
@@ -217,16 +231,17 @@ def test_e2e_runtime_manifest_port_matches_backend_constant():
 
 
 def test_e2e_full_architecture_run_produces_reports_for_all_modes():
-    """Running a paired scenario through all 5 modes produces non-empty step reports."""
-    modes = [
-        BaselineMode.UNRESTRICTED,
-        BaselineMode.BASELINE_J5_BLOCK_SKIP,
-        BaselineMode.GEOMETRY_BLOCK,
-        BaselineMode.SEQUENTIAL_PICK,
-        BaselineMode.SMART_REORDER,
-    ]
+    """Running a paired scenario through all 5 modes produces non-empty step reports
+    with the correct mode name and expected total_steps count."""
+    mode_to_name = {
+        BaselineMode.UNRESTRICTED: "unrestricted",
+        BaselineMode.BASELINE_J5_BLOCK_SKIP: "baseline_j5_block_skip",
+        BaselineMode.GEOMETRY_BLOCK: "geometry_block",
+        BaselineMode.SEQUENTIAL_PICK: "sequential_pick",
+        BaselineMode.SMART_REORDER: "smart_reorder",
+    }
 
-    for mode in modes:
+    for mode, expected_name in mode_to_name.items():
         rc = RunController(mode=mode)
         rc.load_scenario(_PAIRED_SCENARIO)
         summary = rc.run()
@@ -235,6 +250,14 @@ def test_e2e_full_architecture_run_produces_reports_for_all_modes():
         step_reports = summary.get("step_reports", [])
         assert len(step_reports) > 0, (
             f"Mode {mode}: run() produced zero step reports — expected non-empty step_reports"
+        )
+        assert summary.get("mode") == expected_name, (
+            f"Summary mode name mismatch: expected {expected_name!r}, "
+            f"got {summary.get('mode')!r}"
+        )
+        assert summary.get("total_steps") == 2, (
+            f"Mode {mode}: expected total_steps=2 for a 2-step scenario, "
+            f"got {summary.get('total_steps')!r}"
         )
 
 

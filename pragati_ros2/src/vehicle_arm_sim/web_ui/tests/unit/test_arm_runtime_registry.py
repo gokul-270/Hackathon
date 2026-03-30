@@ -2,7 +2,11 @@
 
 
 def test_arm_runtime_registry_can_be_imported():
-    import arm_runtime_registry  # noqa: F401
+    """arm_runtime_registry exposes ARM_RUNTIME_IDS, HACKATHON_BACKEND_PORT, and get_runtime_manifest."""
+    from arm_runtime_registry import ARM_RUNTIME_IDS, HACKATHON_BACKEND_PORT, get_runtime_manifest
+    assert ARM_RUNTIME_IDS is not None
+    assert HACKATHON_BACKEND_PORT is not None
+    assert callable(get_runtime_manifest)
 
 
 def test_arm_runtime_ids_is_tuple_with_arm1_arm2_and_arm3():
@@ -64,24 +68,45 @@ def test_manifest_contains_descriptor_for_arm2():
 
 
 def test_each_descriptor_has_arm_id_attribute():
-    from arm_runtime_registry import get_runtime_manifest
+    from arm_runtime_registry import get_runtime_manifest, ARM_RUNTIME_IDS
 
     for descriptor in get_runtime_manifest():
         assert hasattr(descriptor, "arm_id")
+        assert isinstance(descriptor.arm_id, str), (
+            f"arm_id must be str, got {type(descriptor.arm_id)}"
+        )
+        assert descriptor.arm_id in ARM_RUNTIME_IDS, (
+            f"arm_id {descriptor.arm_id!r} not in ARM_RUNTIME_IDS {ARM_RUNTIME_IDS!r}"
+        )
 
 
 def test_each_descriptor_has_port_attribute():
-    from arm_runtime_registry import get_runtime_manifest
+    from arm_runtime_registry import get_runtime_manifest, HACKATHON_BACKEND_PORT
 
     for descriptor in get_runtime_manifest():
         assert hasattr(descriptor, "port")
+        assert isinstance(descriptor.port, int), (
+            f"port must be int, got {type(descriptor.port)}"
+        )
+        assert descriptor.port == HACKATHON_BACKEND_PORT, (
+            f"port must be HACKATHON_BACKEND_PORT ({HACKATHON_BACKEND_PORT}), "
+            f"got {descriptor.port} for arm_id={descriptor.arm_id!r}"
+        )
 
 
 def test_each_descriptor_has_role_attribute():
     from arm_runtime_registry import get_runtime_manifest
 
+    valid_roles = {"primary", "secondary", "tertiary"}
     for descriptor in get_runtime_manifest():
         assert hasattr(descriptor, "role")
+        assert isinstance(descriptor.role, str), (
+            f"role must be str, got {type(descriptor.role)}"
+        )
+        assert descriptor.role in valid_roles, (
+            f"role {descriptor.role!r} for arm_id={descriptor.arm_id!r} "
+            f"not in expected roles {valid_roles!r}"
+        )
 
 
 def test_arm_runtime_descriptor_is_a_dataclass():

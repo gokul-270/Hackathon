@@ -83,11 +83,23 @@ def _make_close_j4_paired_scenario():
 
 
 def test_load_scenario_with_valid_data_does_not_raise():
-    """load_scenario with a valid scenario dict does not raise any exception."""
+    """load_scenario with a valid scenario dict distributes steps to arm runtimes."""
     from run_controller import RunController
 
     rc = RunController()
-    rc.load_scenario(_make_paired_scenario())  # must not raise
+    rc.load_scenario(_make_paired_scenario())
+
+    # Verify steps were actually distributed to each arm runtime
+    arm1_steps = rc._arm1.get_own_steps()
+    arm2_steps = rc._arm2.get_own_steps()
+    assert len(arm1_steps) == 1, (
+        f"arm1 should have 1 step after load, got {len(arm1_steps)}"
+    )
+    assert len(arm2_steps) == 1, (
+        f"arm2 should have 1 step after load, got {len(arm2_steps)}"
+    )
+    assert arm1_steps[0].arm_id == "arm1"
+    assert arm2_steps[0].arm_id == "arm2"
 
 
 # ---------------------------------------------------------------------------
@@ -126,16 +138,22 @@ def test_run_with_only_arm2_steps_returns_correct_total_steps():
 
 
 def test_run_with_paired_steps_generates_truth_monitor_observations():
-    """run() with both arms at same step_id produces a non-None min_j4_distance for that step."""
+    """run() with both arms at same step_id produces a finite non-negative min_j4_distance."""
+    import math
     from run_controller import RunController
 
     rc = RunController()
     rc.load_scenario(_make_same_step_paired_scenario())
     summary = rc.run()
     step_reports = summary["step_reports"]
-    # Both arms report at step_id 0; min_j4_distance must not be None
+    # Both arms report at step_id 0; min_j4_distance must be a finite non-negative float
     reports_for_step0 = [r for r in step_reports if r["step_id"] == 0]
-    assert all(r["min_j4_distance"] is not None for r in reports_for_step0)
+    for r in reports_for_step0:
+        dist = r["min_j4_distance"]
+        assert dist is not None, f"min_j4_distance must not be None for arm={r['arm_id']}"
+        assert isinstance(dist, float), f"min_j4_distance must be float, got {type(dist)}"
+        assert math.isfinite(dist), f"min_j4_distance must be finite, got {dist}"
+        assert dist >= 0.0, f"min_j4_distance must be non-negative, got {dist}"
 
 
 # ---------------------------------------------------------------------------
@@ -179,14 +197,21 @@ def test_run_in_unrestricted_mode_never_blocks_j5():
 
 
 def test_run_in_baseline_j5_block_skip_mode_blocks_j5_when_arms_close():
-    """In baseline_j5_block_skip mode, j5_blocked is True when arms are within 0.05m."""
+    """In baseline_j5_block_skip mode, both step reports have j5_blocked=True when arms are within 0.05m.
+
+    The scenario has one paired step with 2 arms both within the 0.05m j4 threshold,
+    so exactly 2 step reports must have j5_blocked=True.
+    """
     from run_controller import RunController
     from baseline_mode import BaselineMode
 
     rc = RunController(mode=BaselineMode.BASELINE_J5_BLOCK_SKIP)
     rc.load_scenario(_make_close_j4_paired_scenario())
     summary = rc.run()
-    assert summary["steps_with_j5_blocked"] > 0
+    assert summary["steps_with_j5_blocked"] == 2, (
+        f"Expected exactly 2 j5-blocked reports for close paired scenario, "
+        f"got {summary['steps_with_j5_blocked']}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -195,15 +220,19 @@ def test_run_in_baseline_j5_block_skip_mode_blocks_j5_when_arms_close():
 
 
 def test_get_json_report_returns_valid_json_string_after_run():
-    """get_json_report() returns a valid JSON string after run() has been called."""
+    """get_json_report() returns a valid JSON string after run() with the correct mode value."""
     from run_controller import RunController
+    from baseline_mode import BaselineMode
 
-    rc = RunController()
+    rc = RunController()  # default mode = UNRESTRICTED
     rc.load_scenario(_make_paired_scenario())
     rc.run()
     json_str = rc.get_json_report()
     parsed = json.loads(json_str)  # must not raise
-    assert "mode" in parsed
+    assert "mode" in parsed, "JSON report must contain 'mode' key"
+    assert parsed["mode"] == "unrestricted", (
+        f"Default RunController mode must serialize to 'unrestricted', got {parsed['mode']!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -267,6 +296,7 @@ def test_e2e_baseline_j5_block_skip_mode_blocks_j5_when_arms_laterally_close():
     cam_z=0.25 → j4≈-0.150 m, cam_z=0.27 → j4≈-0.170 m.  Lateral separation ≈ 0.02 m,
     which is less than the 0.05 m blocking threshold, so j5 must be zeroed.
     Both steps are reachable (j5≈0.128 m > 0) so the block condition can fire.
+    The scenario has one paired step with 2 arms, so exactly 2 step reports must be blocked.
     """
     from run_controller import RunController
     from baseline_mode import BaselineMode
@@ -282,7 +312,10 @@ def test_e2e_baseline_j5_block_skip_mode_blocks_j5_when_arms_laterally_close():
     rc.load_scenario(scenario)
     summary = rc.run()
     j5_blocked_count = sum(1 for r in summary["step_reports"] if r["j5_blocked"])
-    assert j5_blocked_count > 0
+    assert j5_blocked_count == 2, (
+        f"Expected exactly 2 j5-blocked step reports for laterally-close paired step, "
+        f"got {j5_blocked_count}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -416,7 +449,13 @@ def test_run_controller_calls_spawn_fn_for_each_step_before_execution():
     rc.run()
 
     # spawn must have been called exactly once per step-arm pair
-    assert len(spawn_calls) == 2
+    assert len(spawn_calls) == 2, (
+        f"Expected exactly 2 spawn calls (one per arm), got {len(spawn_calls)}"
+    )
+    # Both arm1 and arm2 must have been spawned
+    spawned_arm_ids = {call[0] for call in spawn_calls}
+    assert "arm1" in spawned_arm_ids, f"spawn_fn was never called for arm1; calls={spawn_calls}"
+    assert "arm2" in spawned_arm_ids, f"spawn_fn was never called for arm2; calls={spawn_calls}"
 
 
 def test_run_controller_passes_cotton_model_to_executor():

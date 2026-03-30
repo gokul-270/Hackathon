@@ -64,6 +64,8 @@ def test_run_start_invokes_run_controller_and_stores_result():
     assert resp.status_code == 200
     data = resp.json()
     assert "steps" in data
+    assert isinstance(data["steps"], list)
+    assert len(data["steps"]) == 4
 
 
 def test_json_report_mode_name_matches_requested_mode():
@@ -96,10 +98,13 @@ def test_markdown_report_produced_after_run():
 
 
 def test_run_summary_stored_in_last_result():
-    """After a run, the backend stores the run summary dict."""
+    """After a run, the backend stores the run summary dict with required keys."""
     _run(1)
     assert tb._current_run_result is not None
     assert "summary" in tb._current_run_result
+    summary = tb._current_run_result["summary"]
+    assert "mode" in summary
+    assert "total_steps" in summary
 
 
 def test_run_result_overwritten_on_new_run():
@@ -113,12 +118,13 @@ def test_run_result_overwritten_on_new_run():
 
 
 def test_json_report_has_run_summary_with_mode_key():
-    """GET /api/run/report/json response includes a top-level summary object."""
+    """GET /api/run/report/json includes a top-level summary with the correct mode value."""
     _run(2)
     resp = client.get("/api/run/report/json")
     data = resp.json()
     assert "summary" in data
     assert "mode" in data["summary"]
+    assert data["summary"]["mode"] == "geometry_block"
 
 
 # ---------------------------------------------------------------------------

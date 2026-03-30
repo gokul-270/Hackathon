@@ -48,11 +48,13 @@ _SCENARIO = {
 
 
 def test_e2e_full_run_returns_200_with_run_id():
-    """Operator posts a scenario and gets a run_id back."""
+    """Operator posts a scenario and gets a non-None run_id back."""
     resp = client.post("/api/run/start", json={"mode": 0, "scenario": _SCENARIO})
     assert resp.status_code == 200
     data = resp.json()
     assert "run_id" in data
+    assert data["run_id"] is not None, "run_id must not be None"
+    assert data["run_id"] != "", "run_id must not be empty"
 
 
 def test_e2e_status_complete_after_run():
@@ -64,31 +66,63 @@ def test_e2e_status_complete_after_run():
 
 
 def test_e2e_json_report_accessible_after_run():
-    """JSON report is accessible after a run and contains steps + summary."""
+    """JSON report is accessible after a run; contains steps list and summary with mode and total_steps."""
     client.post("/api/run/start", json={"mode": 1, "scenario": _SCENARIO})
     resp = client.get("/api/run/report/json")
     assert resp.status_code == 200
     data = resp.json()
     assert "steps" in data
     assert "summary" in data
+    # steps must be a non-empty list (4 steps: 2 arms × 2 step_ids)
+    assert isinstance(data["steps"], list), "steps must be a list"
+    assert len(data["steps"]) == 4, (
+        f"Expected 4 step reports (2 arms × 2 steps), got {len(data['steps'])}"
+    )
+    summary = data["summary"]
+    assert summary.get("mode") == "baseline_j5_block_skip", (
+        f"mode in summary must be 'baseline_j5_block_skip' for mode=1, "
+        f"got {summary.get('mode')!r}"
+    )
+    assert summary.get("total_steps") == 2, (
+        f"total_steps must be 2, got {summary.get('total_steps')!r}"
+    )
 
 
 def test_e2e_markdown_report_accessible_after_run():
-    """Markdown report is accessible after a run and contains a heading."""
+    """Markdown report is accessible after a run and starts with the expected heading."""
     client.post("/api/run/start", json={"mode": 2, "scenario": _SCENARIO})
     resp = client.get("/api/run/report/markdown")
     assert resp.status_code == 200
     text = resp.text
-    assert "#" in text
+    assert text.startswith("## Run Report"), (
+        f"Markdown report must start with '## Run Report', got: {text[:80]!r}"
+    )
+    # Must contain the mode name (mode=2 is geometry_block)
+    assert "geometry_block" in text, (
+        f"Markdown report must contain mode name 'geometry_block', got: {text[:200]!r}"
+    )
 
 
 def test_e2e_all_five_modes_complete_successfully():
-    """All five modes can be run end-to-end without error."""
-    for mode in range(5):
+    """All five modes can be run end-to-end without error, completing with the correct mode."""
+    mode_to_name = {
+        0: "unrestricted",
+        1: "baseline_j5_block_skip",
+        2: "geometry_block",
+        3: "sequential_pick",
+        4: "smart_reorder",
+    }
+    for mode, expected_name in mode_to_name.items():
         resp = client.post("/api/run/start", json={"mode": mode, "scenario": _SCENARIO})
-        assert resp.status_code == 200, f"mode={mode} failed"
+        assert resp.status_code == 200, f"mode={mode} start failed"
         status = client.get("/api/run/status").json()
         assert status["state"] == "complete", f"mode={mode} did not complete"
+        # Verify mode in the report summary matches what was requested
+        report = client.get("/api/run/report/json").json()
+        assert report["summary"]["mode"] == expected_name, (
+            f"mode={mode}: expected summary mode {expected_name!r}, "
+            f"got {report['summary']['mode']!r}"
+        )
 
 
 def test_e2e_report_not_available_before_any_run():

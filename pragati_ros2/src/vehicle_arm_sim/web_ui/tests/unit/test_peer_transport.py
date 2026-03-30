@@ -26,8 +26,13 @@ def _make_packet(arm_id: str = "arm1", step_id: int = 0) -> PeerStatePacket:
 # ---------------------------------------------------------------------------
 
 def test_local_peer_transport_can_be_imported():
-    """LocalPeerTransport can be imported from peer_transport module."""
-    from peer_transport import LocalPeerTransport  # noqa: F401
+    """LocalPeerTransport can be imported and instantiated from peer_transport module."""
+    from peer_transport import LocalPeerTransport
+    transport = LocalPeerTransport()
+    assert transport is not None
+    assert hasattr(transport, "publish")
+    assert hasattr(transport, "receive")
+    assert hasattr(transport, "reset")
 
 
 # ---------------------------------------------------------------------------
@@ -157,7 +162,7 @@ def test_solo_step_arm_publishes_to_transport():
 # ---------------------------------------------------------------------------
 
 def test_run_controller_uses_transport_for_paired_step():
-    """After a paired run, the transport holds at least one arm's published packet."""
+    """After a paired run, the transport holds packets for both arms."""
     from arm_runtime import PeerStatePacket
     from baseline_mode import BaselineMode
     from run_controller import RunController
@@ -173,8 +178,12 @@ def test_run_controller_uses_transport_for_paired_step():
 
     arm1_packet = ctrl._transport.receive("arm1")
     arm2_packet = ctrl._transport.receive("arm2")
-    # At least one arm must have published a PeerStatePacket
-    assert isinstance(arm1_packet, PeerStatePacket) or isinstance(arm2_packet, PeerStatePacket)
+    assert isinstance(arm1_packet, PeerStatePacket), (
+        f"arm1 must publish a PeerStatePacket in a paired run, got {arm1_packet!r}"
+    )
+    assert isinstance(arm2_packet, PeerStatePacket), (
+        f"arm2 must publish a PeerStatePacket in a paired run, got {arm2_packet!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

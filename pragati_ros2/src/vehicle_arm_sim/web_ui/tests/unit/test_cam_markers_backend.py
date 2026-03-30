@@ -53,12 +53,17 @@ def clear_marker_list():
 # ---------------------------------------------------------------------------
 class TestCamToWorld:
     def test_cam_to_world_returns_finite_values(self):
-        """cam_to_world(0, 0, 0) must return finite world coordinates."""
-        wx, wy, wz = cam_to_world(0.0, 0.0, 0.0)
+        """cam_to_world with a non-zero input must return finite non-zero world coordinates."""
         import math
+        wx, wy, wz = cam_to_world(0.3, -0.065, 0.0)
         assert math.isfinite(wx), f"wx={wx}"
         assert math.isfinite(wy), f"wy={wy}"
         assert math.isfinite(wz), f"wz={wz}"
+        magnitude = math.sqrt(wx ** 2 + wy ** 2 + wz ** 2)
+        assert magnitude > 0.0, (
+            f"cam_to_world(0.3, -0.065, 0.0) returned zero-magnitude world vector "
+            f"({wx}, {wy}, {wz}); FK must produce a non-zero position for non-zero input"
+        )
 
     def test_cam_to_world_deterministic(self):
         """Two calls with same inputs return identical results."""
@@ -94,8 +99,12 @@ class TestCamMarkersPlace:
             )
         assert mock_run.called
         call_args = mock_run.call_args[0][0]  # first positional arg = list
-        assert "gz" in call_args
-        assert "create" in " ".join(call_args)
+        cmd_str = " ".join(call_args)
+        assert "gz" in call_args, "Command must start with 'gz'"
+        assert "create" in cmd_str, "Command must contain 'create' subcommand"
+        assert any("/world/" in str(a) for a in call_args), (
+            f"gz service call must use a /world/... service path; got args={call_args}"
+        )
 
     def test_place_appends_marker_name_to_internal_list(self, client):
         """Successful place → marker name appears in _spawned_marker_names."""
@@ -177,7 +186,8 @@ class TestCamMarkersClearEmpty:
 # ---------------------------------------------------------------------------
 class TestCottonSpawn:
     def test_spawn_returns_200_with_world_coords(self, client):
-        """POST /api/cotton/spawn with valid cam coords returns 200 + world position."""
+        """POST /api/cotton/spawn with valid cam coords returns 200 + finite world position."""
+        import math
         with mock.patch("testing_backend.subprocess.run") as mock_run:
             mock_run.return_value = mock.Mock(returncode=0, stdout="data: true", stderr="")
             resp = client.post(
@@ -189,6 +199,15 @@ class TestCottonSpawn:
         assert "world_x" in body
         assert "world_y" in body
         assert "world_z" in body
+        assert math.isfinite(body["world_x"]), f"world_x must be finite, got {body['world_x']}"
+        assert math.isfinite(body["world_y"]), f"world_y must be finite, got {body['world_y']}"
+        assert math.isfinite(body["world_z"]), f"world_z must be finite, got {body['world_z']}"
+        # World coords must be non-zero for a known-reachable cam point
+        total_mag = abs(body["world_x"]) + abs(body["world_y"]) + abs(body["world_z"])
+        assert total_mag > 0.01, (
+            f"World coords should be non-trivial for cam(0.494, -0.001, 0.004), "
+            f"got ({body['world_x']}, {body['world_y']}, {body['world_z']})"
+        )
 
     def test_spawn_calls_gz_create(self, client):
         """POST /api/cotton/spawn calls gz service create."""
@@ -231,7 +250,8 @@ class TestCottonRemove:
 # ---------------------------------------------------------------------------
 class TestCottonCompute:
     def test_compute_returns_polar_values(self, client):
-        """POST /api/cotton/compute returns r, theta, phi, j3, j4, j5, reachable."""
+        """POST /api/cotton/compute returns r, theta, phi, j3, j4, j5, reachable with finite values."""
+        import math
         resp = client.post(
             "/api/cotton/compute",
             json={"cam_x": 0.328, "cam_y": -0.011, "cam_z": -0.003, "arm": "arm1", "j4_pos": 0.0},
@@ -240,6 +260,19 @@ class TestCottonCompute:
         body = resp.json()
         for key in ("r", "theta", "phi", "j3", "j4", "j5", "reachable"):
             assert key in body, f"Missing key: {key}"
+        # Numeric fields must be finite (not None, NaN, or Inf)
+        for key in ("r", "theta", "phi", "j3", "j4", "j5"):
+            assert isinstance(body[key], float), (
+                f"{key} must be float, got {type(body[key])}"
+            )
+            assert math.isfinite(body[key]), (
+                f"{key} must be finite, got {body[key]}"
+            )
+        assert isinstance(body["reachable"], bool), (
+            f"reachable must be bool, got {type(body['reachable'])}"
+        )
+        # r must be positive (polar radius)
+        assert body["r"] > 0, f"r must be positive, got {body['r']}"
 
     def test_compute_unreachable_returns_reachable_false(self, client):
         """Extreme camera coords produce reachable=false."""
@@ -256,7 +289,8 @@ class TestCottonCompute:
 # ---------------------------------------------------------------------------
 class TestCottonPick:
     def test_pick_returns_200_with_compute_only_response(self, client):
-        """POST /api/cotton/pick returns 200 with computed joint values and 'ready' status."""
+        """POST /api/cotton/pick returns 200 with computed finite joint values and 'ready' status."""
+        import math
         import testing_backend
         testing_backend._last_cotton_cam = (0.328, -0.011, -0.003)
         testing_backend._last_cotton_arm = "arm1"
@@ -271,6 +305,14 @@ class TestCottonPick:
         assert "j4" in body
         assert "j5" in body
         assert body["status"] == "ready"
+        # Joint values must be finite floats, not None or garbage
+        for key in ("j3", "j4", "j5"):
+            assert isinstance(body[key], float), (
+                f"{key} must be float, got {type(body[key])}"
+            )
+            assert math.isfinite(body[key]), (
+                f"{key} must be finite, got {body[key]}"
+            )
 
     def test_pick_rejects_when_no_cotton_spawned(self, client):
         """POST /api/cotton/pick returns 400 when no cotton has been spawned."""
@@ -562,27 +604,26 @@ class TestCottonStateFields:
         testing_backend._cotton_counter = 0
 
     def test_cotton_state_has_arm_coords_field(self):
-        """CottonState dataclass must have an arm_coords field."""
+        """CottonState dataclass must declare arm_coords as a field (not just an attribute)."""
+        from dataclasses import fields
         import testing_backend
-        cs = testing_backend.CottonState(
-            name="test",
-            cam_x=0.5, cam_y=0.0, cam_z=0.0,
-            arm="arm1",
+        field_names = {f.name for f in fields(testing_backend.CottonState)}
+        assert "arm_coords" in field_names, (
+            f"CottonState is missing 'arm_coords' declared field; fields={field_names!r}"
         )
-        assert hasattr(cs, "arm_coords"), "CottonState missing 'arm_coords' field"
 
     def test_cotton_state_has_joint_values_field(self):
-        """CottonState dataclass must have a joint_values field."""
+        """CottonState dataclass must declare joint_values as a field (not just an attribute)."""
+        from dataclasses import fields
         import testing_backend
-        cs = testing_backend.CottonState(
-            name="test",
-            cam_x=0.5, cam_y=0.0, cam_z=0.0,
-            arm="arm1",
+        field_names = {f.name for f in fields(testing_backend.CottonState)}
+        assert "joint_values" in field_names, (
+            f"CottonState is missing 'joint_values' declared field; fields={field_names!r}"
         )
-        assert hasattr(cs, "joint_values"), "CottonState missing 'joint_values' field"
 
     def test_spawn_stores_arm_coords_in_cotton_state(self, client):
-        """POST /api/cotton/spawn stores arm_coords in CottonState."""
+        """POST /api/cotton/spawn stores arm_coords in CottonState with non-zero values."""
+        import math
         import testing_backend
         self._reset_cotton_state()
 
@@ -595,10 +636,15 @@ class TestCottonStateFields:
         cs = testing_backend._cottons["cotton_0"]
         assert cs.arm_coords is not None, "arm_coords not stored at spawn time"
         assert len(cs.arm_coords) == 3, "arm_coords should be (ax, ay, az)"
+        magnitude = math.sqrt(sum(x ** 2 for x in cs.arm_coords))
+        assert magnitude > 0.0, (
+            f"arm_coords must be non-zero for non-zero cam input; got {cs.arm_coords}"
+        )
         self._reset_cotton_state()
 
     def test_spawn_stores_joint_values_in_cotton_state(self, client):
-        """POST /api/cotton/spawn stores joint_values in CottonState."""
+        """POST /api/cotton/spawn stores joint_values in CottonState with finite float values."""
+        import math
         import testing_backend
         self._reset_cotton_state()
 
@@ -613,10 +659,19 @@ class TestCottonStateFields:
         assert "j3" in cs.joint_values
         assert "j4" in cs.joint_values
         assert "j5" in cs.joint_values
+        for jname in ("j3", "j4", "j5"):
+            val = cs.joint_values[jname]
+            assert isinstance(val, float), (
+                f"{jname} must be a float, got {type(val).__name__}: {val!r}"
+            )
+            assert math.isfinite(val), (
+                f"{jname} must be finite, got {val}"
+            )
         self._reset_cotton_state()
 
     def test_cotton_list_includes_arm_coords_and_joint_values(self, client):
-        """GET /api/cotton/list returns arm_coords and joint_values per cotton."""
+        """GET /api/cotton/list returns arm_coords and joint_values per cotton with valid j3."""
+        import math
         import testing_backend
         self._reset_cotton_state()
 
@@ -632,6 +687,11 @@ class TestCottonStateFields:
         assert "arm_coords" in c0, "cotton list missing arm_coords"
         assert "joint_values" in c0, "cotton list missing joint_values"
         assert "j3" in c0["joint_values"]
+        j3 = c0["joint_values"]["j3"]
+        assert isinstance(j3, float), (
+            f"j3 in cotton list must be a float, got {type(j3).__name__}: {j3!r}"
+        )
+        assert math.isfinite(j3), f"j3 in cotton list must be finite, got {j3}"
         self._reset_cotton_state()
 
 

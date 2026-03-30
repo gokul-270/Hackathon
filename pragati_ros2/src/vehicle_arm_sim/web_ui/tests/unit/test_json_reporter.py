@@ -84,6 +84,15 @@ def test_json_reporter_build_run_summary_includes_step_reports_list():
     assert "step_reports" in summary
     assert isinstance(summary["step_reports"], list)
     assert len(summary["step_reports"]) == 2
+    # Each item must be a dict with the required StepReport fields
+    required_fields = {"step_id", "arm_id", "mode", "candidate_joints", "applied_joints",
+                       "j5_blocked", "near_collision", "collision"}
+    for item in summary["step_reports"]:
+        assert isinstance(item, dict), f"Expected dict, got {type(item)}"
+        for field in required_fields:
+            assert field in item, f"step_reports item missing field '{field}'"
+    assert summary["step_reports"][0]["step_id"] == 10
+    assert summary["step_reports"][1]["step_id"] == 20
 
 
 def test_json_reporter_to_json_returns_valid_json_string():
@@ -93,6 +102,13 @@ def test_json_reporter_to_json_returns_valid_json_string():
     # Must not raise
     parsed = json.loads(result)
     assert isinstance(parsed, dict)
+    # Must contain all required top-level keys
+    required_keys = {"mode", "total_steps", "step_reports"}
+    for key in required_keys:
+        assert key in parsed, f"to_json output missing required key '{key}'"
+    assert parsed["mode"] == "unrestricted"
+    assert parsed["total_steps"] == 1
+    assert isinstance(parsed["step_reports"], list)
 
 
 def test_json_reporter_to_json_output_deserializes_to_dict_with_mode_key():

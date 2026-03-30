@@ -149,7 +149,7 @@ def test_run_controller_emits_blocked_outcome_when_mode_blocks_step():
     summary = rc.run()
 
     blocked_reports = [r for r in summary["step_reports"] if r["terminal_status"] == "blocked"]
-    assert len(blocked_reports) > 0
+    assert len(blocked_reports) == 2
     for r in blocked_reports:
         assert r["pick_completed"] is False
 
@@ -178,9 +178,9 @@ def test_run_controller_step_reports_include_terminal_status_for_all_arms():
     summary = rc.run()
 
     for r in summary["step_reports"]:
-        assert "terminal_status" in r
-        assert "pick_completed" in r
-        assert "executed_in_gazebo" in r
+        assert r["terminal_status"] == "completed"
+        assert r["pick_completed"] is True
+        assert r["executed_in_gazebo"] is True
 
 
 # ---------------------------------------------------------------------------
