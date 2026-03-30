@@ -5,7 +5,9 @@ Modes
 -----
 0  UNRESTRICTED           : pass joints through unchanged.
 1  BASELINE_J5_BLOCK_SKIP : zero out j5 (extension) when peer arm is active at
-                            this step AND the lateral gap |j4_own - j4_peer| < 0.05 m.
+                            this step AND j5_own > 0.20 / cos(|j3_own|).
+                            This limits horizontal reach to 0.20 m regardless of
+                            arm tilt.  Guard: cos < 0.01 → limit = inf (always safe).
 2  GEOMETRY_BLOCK         : two-stage geometry check.  Stage 1 screens on lateral
                             distance (< 0.12 m → risky).  Stage 2 checks the
                             combined j5 extension (> 0.5) AND close lateral gap
@@ -20,6 +22,7 @@ Modes
 """
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 from geometry_check import GeometryStage1Screen, GeometryStage2Check
@@ -30,6 +33,9 @@ if TYPE_CHECKING:  # pragma: no cover
 
 _stage1 = GeometryStage1Screen()
 _stage2 = GeometryStage2Check()
+
+# Mode 1 constant: maximum allowed horizontal reach (metres).
+_MODE1_ADJ = 0.20
 
 
 class BaselineMode:
@@ -116,7 +122,11 @@ class BaselineMode:
         own_joints: dict,
         peer_state: "PeerStatePacket | None",
     ) -> dict:
-        """Block j5 if peer is active and laterally close (|j4_own - j4_peer| < 0.05)."""
+        """Block j5 if peer is active and own horizontal reach exceeds cosine limit.
+
+        Limit: j5_limit = _MODE1_ADJ / cos(|j3_own|)
+        Guard: cos(|j3|) < 0.01 → limit = inf → always safe (near-vertical arm).
+        """
         if peer_state is None:
             return own_joints
 
@@ -125,9 +135,12 @@ class BaselineMode:
             # Peer is idle at this step – no collision risk.
             return own_joints
 
-        lateral_gap = abs(own_joints["j4"] - peer_joints["j4"])
-        if lateral_gap < 0.05:
-            # Collision risk: suppress extension.
+        theta = abs(own_joints["j3"])
+        cos_theta = math.cos(theta)
+        j5_limit = _MODE1_ADJ / cos_theta if cos_theta > 0.01 else float("inf")
+
+        if own_joints["j5"] > j5_limit:
+            # Horizontal reach exceeds safe limit: suppress extension.
             return {**own_joints, "j5": 0.0}
 
         return own_joints

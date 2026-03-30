@@ -1,71 +1,66 @@
-Feature: Mode 1 — Baseline J5 Block/Skip
+Feature: Mode 1 — Baseline J5 Block/Skip (Cosine Reach Limit)
   Mode 1 zeros j5 (blocks the pick extension) when the peer arm is active
-  and the lateral j4 gap is below 0.05m. j3 and j4 are never modified.
+  and the arm's candidate j5 exceeds the cosine-derived horizontal reach limit:
+    J5_limit = 0.20 / cos(|j3|)
+  j3 and j4 are never modified.
 
   # -------------------------------------------------------------------
-  # Collision detected — j4 gap BELOW 0.05m threshold
+  # Collision detected — j5 exceeds cosine limit
   # -------------------------------------------------------------------
 
-  Scenario: j5 blocked when j4 gap is 0.040m (below 0.05m)
+  Scenario: j5 blocked when arm is vertical and extension exceeds 0.20m
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.340 j5=0.4
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.25
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is zeroed
-    And j3 is unchanged at 1.0
-    And j4 is unchanged at 0.300
+    And j3 is unchanged at 0.0
+    And j4 is unchanged at 0.100
 
-  Scenario: j5 blocked when j4 gap is 0.01m (well below threshold)
+  Scenario: j5 blocked when tilted 30 degrees and j5 exceeds cosine limit
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.4
-    When the algorithm is applied for arm1
-    Then j5 is zeroed
-
-  Scenario: j5 blocked when j4 gap is exactly 0.0m (identical positions)
-    Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.300 j5=0.4
+    And arm1 has joints j3=0.5236 j4=0.100 j5=0.24
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is zeroed
 
-  Scenario: j5 blocked when j4 gap is 0.049m (just below threshold)
+  Scenario: large j5 is zeroed when horizontal reach exceeds limit
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.349 j5=0.4
-    When the algorithm is applied for arm1
-    Then j5 is zeroed
-
-  Scenario: j5 blocked when arm2 j4 is less than arm1 j4 (negative gap)
-    Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.340 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.300 j5=0.4
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.45
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is zeroed
 
   # -------------------------------------------------------------------
-  # No collision — j4 gap AT or ABOVE 0.05m threshold
+  # No collision — j5 within cosine limit
   # -------------------------------------------------------------------
 
-  Scenario: j5 unchanged when j4 gap is 0.060m (above 0.05m)
+  Scenario: j5 unchanged when arm is vertical and extension is within 0.20m
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.360 j5=0.4
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.19
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is not zeroed
-    And the returned joints are j3=1.0 j4=0.300 j5=0.5
+    And the returned joints are j3=0.0 j4=0.100 j5=0.19
 
-  Scenario: j5 unchanged when j4 gap is exactly 0.05m (boundary — at threshold)
+  Scenario: j5 unchanged at boundary when extension equals limit exactly
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.351 j5=0.4
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.20
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
-  Scenario: j5 unchanged when j4 gap is 0.200m (well above threshold)
+  Scenario: j5 unchanged when tilted 30 degrees and j5 within cosine limit
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.100 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.300 j5=0.4
+    And arm1 has joints j3=0.5236 j4=0.100 j5=0.22
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
+    When the algorithm is applied for arm1
+    Then j5 is not zeroed
+
+  Scenario: j5 unchanged at near-vertical tilt where cosine limit is very large
+    Given the collision avoidance mode is 1 (baseline_j5_block_skip)
+    And arm1 has joints j3=0.89 j4=0.100 j5=0.30
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
@@ -75,15 +70,15 @@ Feature: Mode 1 — Baseline J5 Block/Skip
 
   Scenario: j5 unchanged when no peer arm is active
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.45
     And no peer arm is active
     When the algorithm is applied for arm1
     Then j5 is not zeroed
-    And the returned joints are j3=1.0 j4=0.300 j5=0.5
+    And the returned joints are j3=0.0 j4=0.100 j5=0.45
 
   Scenario: j5 unchanged when peer arm is present but idle
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.45
     And the peer arm is present but idle
     When the algorithm is applied for arm1
     Then j5 is not zeroed
@@ -92,16 +87,9 @@ Feature: Mode 1 — Baseline J5 Block/Skip
   # j5 edge values
   # -------------------------------------------------------------------
 
-  Scenario: j5 already zero remains zero even below threshold
+  Scenario: j5 already zero remains zero
     Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.0
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.4
+    And arm1 has joints j3=0.0 j4=0.100 j5=0.0
+    And arm2 has joints j3=0.0 j4=0.200 j5=0.1
     When the algorithm is applied for arm1
     Then the returned j5 is 0.0
-
-  Scenario: Large j5 is zeroed when below threshold
-    Given the collision avoidance mode is 1 (baseline_j5_block_skip)
-    And arm1 has joints j3=1.0 j4=0.300 j5=1.0
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.4
-    When the algorithm is applied for arm1
-    Then j5 is zeroed

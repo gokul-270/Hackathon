@@ -51,26 +51,61 @@ def test_baselinemode_baseline_j5_block_skip_no_peer_returns_joints_unchanged():
     assert result == own
 
 
-def test_baselinemode_baseline_j5_block_skip_blocks_j5_when_peer_active_and_j4_within_0_05m():
-    """Mode 1 must zero j5 when peer has candidate joints and |j4_own - j4_peer| < 0.05."""
+def test_baselinemode_baseline_j5_block_skip_blocks_j5_when_horizontal_reach_exceeds_limit():
+    """Mode 1 must zero j5 when arm is vertical (j3=0) and j5=0.25 > 0.20/cos(0)=0.20."""
     mode = BaselineMode()
-    own = {"j3": 1.0, "j4": 0.300, "j5": 0.5}
-    peer = PeerStatePacket(candidate_joints={"j3": 0.8, "j4": 0.340, "j5": 0.4})
-    # |0.300 - 0.340| = 0.040 < 0.05 → should block
+    own = {"j3": 0.0, "j4": 0.100, "j5": 0.25}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
     result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
     assert result["j5"] == 0.0
     assert result["j3"] == own["j3"]
     assert result["j4"] == own["j4"]
 
 
-def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_when_j4_difference_exceeds_0_05m():
-    """Mode 1 must leave j5 unchanged when |j4_own - j4_peer| >= 0.05."""
+def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_when_horizontal_reach_within_limit():
+    """Mode 1 must leave j5 unchanged when arm is vertical (j3=0) and j5=0.19 < 0.20."""
     mode = BaselineMode()
-    own = {"j3": 1.0, "j4": 0.300, "j5": 0.5}
-    peer = PeerStatePacket(candidate_joints={"j3": 0.8, "j4": 0.360, "j5": 0.4})
-    # |0.300 - 0.360| = 0.060 >= 0.05 → should not block
+    own = {"j3": 0.0, "j4": 0.100, "j5": 0.19}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.110, "j5": 0.1})
     result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
-    assert result["j5"] == 0.5
+    assert result["j5"] == 0.19
+
+
+def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_at_exact_limit_boundary():
+    """Mode 1 must leave j5 unchanged when j5 equals the limit exactly (strictly greater than)."""
+    mode = BaselineMode()
+    own = {"j3": 0.0, "j4": 0.100, "j5": 0.20}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
+    result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
+    assert result["j5"] == 0.20
+
+
+def test_baselinemode_baseline_j5_block_skip_blocks_j5_when_tilted_30deg_and_j5_exceeds_cosine_limit():
+    """Mode 1 must zero j5 when j3=-0.5236rad (30°) and j5=0.24 > 0.20/cos(30°)≈0.231."""
+    import math
+    mode = BaselineMode()
+    own = {"j3": -0.5236, "j4": 0.100, "j5": 0.24}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
+    result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
+    assert result["j5"] == 0.0
+
+
+def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_when_tilted_30deg_and_j5_within_cosine_limit():
+    """Mode 1 must leave j5 unchanged when j3=-0.5236rad (30°) and j5=0.22 < 0.20/cos(30°)≈0.231."""
+    mode = BaselineMode()
+    own = {"j3": -0.5236, "j4": 0.100, "j5": 0.22}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
+    result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
+    assert result["j5"] == 0.22
+
+
+def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_at_near_vertical_tilt():
+    """Mode 1 must leave j5 unchanged when j3=-0.89rad (~51°) and j5=0.30 < 0.20/cos(51°)≈0.318."""
+    mode = BaselineMode()
+    own = {"j3": -0.89, "j4": 0.100, "j5": 0.30}
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.200, "j5": 0.1})
+    result = mode.apply(BaselineMode.BASELINE_J5_BLOCK_SKIP, own, peer_state=peer)
+    assert result["j5"] == 0.30
 
 
 def test_baselinemode_baseline_j5_block_skip_does_not_block_j5_when_peer_candidate_joints_is_none():

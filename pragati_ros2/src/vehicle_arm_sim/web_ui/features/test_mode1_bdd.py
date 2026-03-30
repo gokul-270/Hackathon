@@ -1,50 +1,45 @@
-"""BDD test: Mode 1 — Baseline J5 Block/Skip."""
+"""BDD test: Mode 1 — Baseline J5 Block/Skip (Cosine Reach Limit)."""
 from pytest_bdd import scenario
 
 FEATURE = "mode1_baseline_j5_block.feature"
 
 
-# -- Collision detected: j4 gap BELOW 0.05m --
+# -- Collision detected: j5 exceeds cosine limit --
 
-@scenario(FEATURE, "j5 blocked when j4 gap is 0.040m (below 0.05m)")
-def test_blocked_040():
+@scenario(FEATURE, "j5 blocked when arm is vertical and extension exceeds 0.20m")
+def test_blocked_vertical_exceeds():
     pass
 
 
-@scenario(FEATURE, "j5 blocked when j4 gap is 0.01m (well below threshold)")
-def test_blocked_010():
+@scenario(FEATURE, "j5 blocked when tilted 30 degrees and j5 exceeds cosine limit")
+def test_blocked_tilted_30():
     pass
 
 
-@scenario(FEATURE, "j5 blocked when j4 gap is exactly 0.0m (identical positions)")
-def test_blocked_000():
+@scenario(FEATURE, "large j5 is zeroed when horizontal reach exceeds limit")
+def test_blocked_large_j5():
     pass
 
 
-@scenario(FEATURE, "j5 blocked when j4 gap is 0.049m (just below threshold)")
-def test_blocked_049():
+# -- No collision: j5 within cosine limit --
+
+@scenario(FEATURE, "j5 unchanged when arm is vertical and extension is within 0.20m")
+def test_safe_vertical_within():
     pass
 
 
-@scenario(FEATURE, "j5 blocked when arm2 j4 is less than arm1 j4 (negative gap)")
-def test_blocked_negative_gap():
+@scenario(FEATURE, "j5 unchanged at boundary when extension equals limit exactly")
+def test_safe_boundary():
     pass
 
 
-# -- No collision: j4 gap AT or ABOVE 0.05m --
-
-@scenario(FEATURE, "j5 unchanged when j4 gap is 0.060m (above 0.05m)")
-def test_safe_060():
+@scenario(FEATURE, "j5 unchanged when tilted 30 degrees and j5 within cosine limit")
+def test_safe_tilted_30():
     pass
 
 
-@scenario(FEATURE, "j5 unchanged when j4 gap is exactly 0.05m (boundary — at threshold)")
-def test_safe_boundary_050():
-    pass
-
-
-@scenario(FEATURE, "j5 unchanged when j4 gap is 0.200m (well above threshold)")
-def test_safe_200():
+@scenario(FEATURE, "j5 unchanged at near-vertical tilt where cosine limit is very large")
+def test_safe_near_vertical():
     pass
 
 
@@ -62,11 +57,6 @@ def test_peer_idle():
 
 # -- j5 edge values --
 
-@scenario(FEATURE, "j5 already zero remains zero even below threshold")
+@scenario(FEATURE, "j5 already zero remains zero")
 def test_already_zero():
-    pass
-
-
-@scenario(FEATURE, "Large j5 is zeroed when below threshold")
-def test_large_j5_blocked():
     pass
