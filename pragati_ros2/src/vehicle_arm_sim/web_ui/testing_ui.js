@@ -1577,7 +1577,9 @@
                 }
             };
             evtSource.onerror = function () {
-                evtSource.close();
+                // Do NOT call close() here — that permanently disables
+                // the browser's built-in EventSource auto-reconnect. Let the browser
+                // reconnect on its own; run_complete handler closes the stream cleanly.
             };
 
             try {
