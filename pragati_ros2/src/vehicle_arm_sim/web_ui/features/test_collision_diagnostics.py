@@ -33,6 +33,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collision_diagnostics import diagnose_collision
+from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
 
 # ── Load points from space-delimited CSV files ────────────────────────────
@@ -309,3 +310,140 @@ def _print_mode_diagnostic(report, mode_key, mode, kind, arm1_cam, arm2_cam):
     lines.append("-" * w)
 
     print("\n".join(lines))
+
+
+# ── Mode 4 helpers ────────────────────────────────────────────────────────
+
+
+def _compute_min_gap(step_map: dict, paired_count: int) -> float:
+    """Return the minimum j4 gap across paired steps only (ignores solo tail)."""
+    gaps = []
+    for i in range(paired_count):
+        row = step_map.get(i, {})
+        if "arm1" in row and "arm2" in row:
+            j4_a1 = FK_OFFSET - row["arm1"]["cam_z"]
+            j4_a2 = FK_OFFSET - row["arm2"]["cam_z"]
+            gaps.append(abs(j4_a1 - j4_a2))
+    return min(gaps) if gaps else 0.0
+
+
+def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
+    """Print a fixed-width before/after table for the reorder diagnostic."""
+    w = 72
+    hdr = (
+        f"{'Step':>4}  {'arm1 cam_z':>10}  {'arm1 j4':>8}  "
+        f"{'arm2 cam_z':>10}  {'arm2 j4':>8}  {'j4 gap':>8}"
+    )
+    print(f"\n── Mode 4: Smart Reorder – {title} {'─' * (w - 28 - len(title))}")
+    print(f" {hdr}")
+    print(f" {'─'*4}  {'─'*10}  {'─'*8}  {'─'*10}  {'─'*8}  {'─'*8}")
+
+    total_steps = max(step_map.keys()) + 1 if step_map else 0
+    gaps = []
+    for i in range(total_steps):
+        row = step_map.get(i, {})
+        has_a1 = "arm1" in row
+        has_a2 = "arm2" in row
+
+        if has_a1:
+            cz1 = row["arm1"]["cam_z"]
+            j4_1 = FK_OFFSET - cz1
+            s_cz1 = f"{cz1:>10.4f}"
+            s_j4_1 = f"{j4_1:>8.4f}"
+        else:
+            s_cz1 = f"{'---':>10}"
+            s_j4_1 = f"{'---':>8}"
+
+        if has_a2:
+            cz2 = row["arm2"]["cam_z"]
+            j4_2 = FK_OFFSET - cz2
+            s_cz2 = f"{cz2:>10.4f}"
+            s_j4_2 = f"{j4_2:>8.4f}"
+        else:
+            s_cz2 = f"{'---':>10}"
+            s_j4_2 = f"{'---':>8}"
+
+        if has_a1 and has_a2 and i < paired_count:
+            gap = abs((FK_OFFSET - cz1) - (FK_OFFSET - cz2))
+            gaps.append(gap)
+            s_gap = f"{gap:>8.4f}"
+            label = ""
+        elif has_a1 and not has_a2:
+            s_gap = f"{'---':>8}"
+            label = "  (solo arm1)"
+        elif has_a2 and not has_a1:
+            s_gap = f"{'---':>8}"
+            label = "  (solo arm2)"
+        else:
+            s_gap = f"{'---':>8}"
+            label = ""
+
+        print(f" {i:>4}  {s_cz1}  {s_j4_1}  {s_cz2}  {s_j4_2}  {s_gap}{label}")
+
+    min_gap = min(gaps) if gaps else 0.0
+    print(f"  {'─'*w}")
+    print(f"  min paired gap: {min_gap:.4f} m\n")
+
+
+def test_mode4_reorder_improves_gap():
+    """Mode 4: SmartReorderScheduler must not decrease the min j4 gap
+    when applied to the real arm1.csv / arm2.csv cam points.
+
+    Prints a before/after table (visible with -s) showing step order,
+    per-arm cam_z, j4, and gap values, plus a summary delta line.
+    """
+    paired_count = min(len(_ARM1_POINTS), len(_ARM2_POINTS))
+    if paired_count < 2:
+        pytest.skip(
+            f"Need at least 2 paired steps to test reorder benefit "
+            f"(arm1={len(_ARM1_POINTS)}, arm2={len(_ARM2_POINTS)})"
+        )
+
+    # Build original step_map (sequential pairing: arm1[i] ↔ arm2[i])
+    step_map = {
+        i: {
+            "arm1": {
+                "cam_z": _ARM1_POINTS[i][2],
+                "cam_x": _ARM1_POINTS[i][0],
+                "cam_y": _ARM1_POINTS[i][1],
+            },
+            "arm2": {
+                "cam_z": _ARM2_POINTS[i][2],
+                "cam_x": _ARM2_POINTS[i][0],
+                "cam_y": _ARM2_POINTS[i][1],
+            },
+        }
+        for i in range(paired_count)
+    }
+    # Append solo-tail steps for whichever arm has more rows
+    solo_id = paired_count
+    for pt in _ARM1_POINTS[paired_count:]:
+        step_map[solo_id] = {"arm1": {"cam_z": pt[2], "cam_x": pt[0], "cam_y": pt[1]}}
+        solo_id += 1
+    for pt in _ARM2_POINTS[paired_count:]:
+        step_map[solo_id] = {"arm2": {"cam_z": pt[2], "cam_x": pt[0], "cam_y": pt[1]}}
+        solo_id += 1
+
+    arm1_steps = list(range(paired_count))
+    arm2_steps = list(range(paired_count))
+
+    original_min_gap = _compute_min_gap(step_map, paired_count)
+    _print_reorder_table("BEFORE REORDER", step_map, paired_count)
+
+    reordered = SmartReorderScheduler().reorder(step_map, arm1_steps, arm2_steps)
+
+    reordered_min_gap = _compute_min_gap(reordered, paired_count)
+    _print_reorder_table("AFTER REORDER", reordered, paired_count)
+
+    delta = reordered_min_gap - original_min_gap
+    sign = "+" if delta >= 0 else ""
+    print(
+        f"\n  Mode 4 reorder result:  "
+        f"min_gap  {original_min_gap:.4f}m  →  {reordered_min_gap:.4f}m  "
+        f"(delta: {sign}{delta:.4f}m)"
+    )
+
+    assert reordered_min_gap >= original_min_gap, (
+        f"Reorder degraded min j4 gap: "
+        f"before={original_min_gap:.4f}m, after={reordered_min_gap:.4f}m"
+    )

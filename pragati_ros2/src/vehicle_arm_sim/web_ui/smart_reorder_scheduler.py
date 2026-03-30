@@ -159,7 +159,16 @@ class SmartReorderScheduler:
             arm2_orig_idx = arm2_indexed[n - 1 - i][0]
             perm[arm1_orig_idx] = arm2_orig_idx
 
-        return tuple(perm)
+        greedy_perm = tuple(perm)
+
+        # Safety: greedy must never degrade the original ordering.
+        # If the greedy result is worse than the identity permutation, keep
+        # the original order rather than making things worse.
+        identity_perm = tuple(range(n))
+        greedy_gap = self._min_gap_for_perm(arm1_j4s, arm2_j4s, greedy_perm)
+        identity_gap = self._min_gap_for_perm(arm1_j4s, arm2_j4s, identity_perm)
+
+        return greedy_perm if greedy_gap >= identity_gap else identity_perm
 
     def _build_solo_only(
         self,
