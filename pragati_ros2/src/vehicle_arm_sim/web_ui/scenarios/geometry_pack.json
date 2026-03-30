@@ -1,13 +1,15 @@
 {
-  "description": "Geometry pack: asymmetric independent-arm scenarios mixing colliding and safe positions",
+  "description": "Geometry pack: 2 safe (steps 0-1, J4 gap >0.08 m) + 3 collision (steps 2-4, J4 gap <0.05 m). Real field data 2026-03-25.",
   "steps": [
-    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
-    {"step_id": 0, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.070},
-    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.150},
-    {"step_id": 1, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.290},
-    {"step_id": 2, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.250},
-    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.220},
-    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.130},
-    {"step_id": 4, "arm_id": "arm2", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.350}
+    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004},
+    {"step_id": 0, "arm_id": "arm2", "cam_x": 0.598, "cam_y":  0.020, "cam_z": 0.178},
+    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.578, "cam_y":  0.056, "cam_z": 0.004},
+    {"step_id": 1, "arm_id": "arm2", "cam_x": 0.577, "cam_y":  0.004, "cam_z": 0.169},
+    {"step_id": 2, "arm_id": "arm1", "cam_x": 0.494, "cam_y":  0.009, "cam_z": 0.078},
+    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.541, "cam_y": -0.008, "cam_z": 0.080},
+    {"step_id": 3, "arm_id": "arm1", "cam_x": 0.533, "cam_y":  0.048, "cam_z": 0.067},
+    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.524, "cam_y":  0.026, "cam_z": 0.112},
+    {"step_id": 4, "arm_id": "arm1", "cam_x": 0.501, "cam_y": -0.011, "cam_z": 0.060},
+    {"step_id": 4, "arm_id": "arm2", "cam_x": 0.532, "cam_y":  0.010, "cam_z": 0.053}
   ]
 }
