@@ -10,8 +10,11 @@ Usage:
     python3 -m pytest features/test_collision_diagnostics.py -s -v
 
 The -s flag is essential — it lets print() reach the terminal.
-Add new scenarios by appending rows to SCENARIOS below.
+
+To change test inputs, edit test_scenarios.json in this directory.
+Each object needs: label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5.
 """
+import json
 import sys
 from pathlib import Path
 
@@ -22,16 +25,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collision_diagnostics import diagnose_collision
 
-# ── Scenarios: (label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5) ──────────
+# ── Load scenarios from JSON file ──────────────────────────────────────────
+_SCENARIO_FILE = Path(__file__).parent / "test_scenarios.json"
+
+if not _SCENARIO_FILE.exists():
+    raise FileNotFoundError(
+        f"Scenario file not found: {_SCENARIO_FILE}\n"
+        f"Create it with an array of objects, each having: "
+        f"label, arm1_cam_z, arm1_j5, arm2_cam_z, arm2_j5"
+    )
+
+with open(_SCENARIO_FILE) as _f:
+    _raw = json.load(_f)
+
 SCENARIOS = [
-    ("identical positions — worst case", 0.10, 0.3, 0.10, 0.3),
-    ("well separated arms", 0.10, 0.3, 0.02, 0.3),
-    ("one arm retracted (j5=0)", 0.10, 0.0, 0.10, 0.3),
-    ("close but above mode-1 threshold", 0.055, 0.3, 0.05, 0.3),
-    ("inside mode-2 stage-2 zone, low j5", 0.07, 0.2, 0.065, 0.2),
-    ("inside mode-3 zone, one arm retracted", 0.08, 0.5, 0.075, 0.0),
-    ("boundary: exactly at mode-1 threshold", 0.10, 0.3, 0.05, 0.3),
-    ("both arms at cam_z=0, max j4", 0.0, 0.5, 0.0, 0.5),
+    (s["label"], s["arm1_cam_z"], s["arm1_j5"], s["arm2_cam_z"], s["arm2_j5"])
+    for s in _raw
 ]
 
 
