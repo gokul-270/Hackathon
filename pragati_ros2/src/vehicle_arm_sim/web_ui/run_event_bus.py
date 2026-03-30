@@ -30,17 +30,30 @@ class RunEventBus:
             self._lock.notify_all()
 
     def subscribe(self) -> Generator[dict, None, None]:
-        """Yield events as they arrive. Returns when close() is called."""
+        """Yield events as they arrive. Returns when close() is called.
+
+        The lock is released before each yield so that producers (emit/close)
+        are never blocked by a suspended consumer.  Without this, calling
+        emit() from the asyncio event-loop thread while the SSE generator is
+        suspended mid-yield causes a deadlock: the event loop cannot re-enter
+        next(gen) to release the lock, and emit() cannot acquire it.
+        """
         cursor = 0
         while True:
+            # Collect the next batch of available events under the lock,
+            # then yield them outside the lock so producers can proceed.
             with self._lock:
                 while cursor >= len(self._queue) and not self._closed:
                     self._lock.wait()
-                while cursor < len(self._queue):
-                    yield self._queue[cursor]
-                    cursor += 1
-                if self._closed:
-                    return
+                pending = list(self._queue)[cursor:]
+                cursor += len(pending)
+                closed = self._closed
+
+            for event in pending:
+                yield event
+
+            if closed:
+                return
 
     def close(self) -> None:
         """Signal all subscribers to stop. Idempotent."""

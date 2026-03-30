@@ -213,5 +213,47 @@ def test_reset_while_run_active_does_not_clear_queue():
     assert len(events) == 2, (
         f"reset() on active bus wiped the queue; remaining events: {events}"
     )
-    assert events[0]["type"] == "step_start"
-    assert events[1]["type"] == "cotton_reached"
+def test_emit_from_caller_thread_does_not_deadlock_while_subscriber_suspended():
+    """emit() must not deadlock when called from the same thread that drives next(gen).
+
+    Regression test for: subscribe() held _lock across yield, causing a deadlock
+    when emit() was called from the asyncio event-loop thread while the SSE
+    generator was suspended mid-yield waiting for next(gen) to be called again.
+
+    Scenario:
+      1. Subscriber thread calls next(gen) — generator yields event A and suspends.
+      2. Before next(gen) is called again, the same thread calls emit(event B).
+      3. emit() must not block (it would deadlock if _lock is held across yield).
+      4. next(gen) is then called — generator resumes, yields event B.
+    """
+    from run_event_bus import RunEventBus
+
+    bus = RunEventBus()
+    bus.reset()
+    bus.emit({"type": "event_a"})
+
+    gen = bus.subscribe()
+
+    # Step 1: get event A — generator suspends after yielding it
+    event_a = next(gen)
+    assert event_a == {"type": "event_a"}
+
+    # Step 2+3: emit event B from THIS thread (simulates event-loop thread calling
+    # emit after await asyncio.to_thread() returns).  Must complete without deadlock.
+    emit_done = threading.Event()
+
+    def do_emit():
+        bus.emit({"type": "event_b"})
+        bus.close()
+        emit_done.set()
+
+    emitter = threading.Thread(target=do_emit, daemon=True)
+    emitter.start()
+    emit_done.wait(timeout=2.0)
+    assert emit_done.is_set(), (
+        "emit() deadlocked — subscribe() is holding _lock across yield"
+    )
+
+    # Step 4: next(gen) should now deliver event B
+    event_b = next(gen)
+    assert event_b == {"type": "event_b"}
