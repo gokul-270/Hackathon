@@ -2,14 +2,16 @@
 
 For any set of camera coordinates (cam_x, cam_y, cam_z) for two arms, converts
 them to joint values (j3, j4, j5) using the real FK pipeline (camera_to_arm +
-polar_decompose), then runs all 5 collision avoidance modes and prints a
-detailed report explaining:
-  - The FK conversion result (cam -> joints)
-  - Which point pairs collide
-  - WHY they collide (which threshold was violated)
-  - HOW each mode avoids or handles the collision
+polar_decompose), then evaluates collision avoidance modes and prints a
+detailed report.
 
-Usage:
+Each mode is a **separate test**, so you can filter by mode:
+
+    python3 -m pytest features/test_collision_diagnostics.py -s -v -k "mode_2"
+    python3 -m pytest features/test_collision_diagnostics.py -s -v -k "mode_1"
+    python3 -m pytest features/test_collision_diagnostics.py -s -v -k "mode_3 and solo"
+
+Run all modes for all scenarios:
     python3 -m pytest features/test_collision_diagnostics.py -s -v
 
 The -s flag is essential — it lets print() reach the terminal.
@@ -100,136 +102,210 @@ SCENARIOS = _PAIRED + _ARM1_SOLO + _ARM2_SOLO
 _IDS = _PAIRED_IDS + _ARM1_SOLO_IDS + _ARM2_SOLO_IDS
 
 
+# ── Report cache (avoid recomputing FK 5x per scenario) ──────────────────
+
+_REPORT_CACHE: dict[tuple, dict] = {}
+
+
+def _get_report(arm1_cam, arm2_cam) -> dict:
+    """Return cached diagnostic report for a given point pair."""
+    cache_key = (arm1_cam, arm2_cam)
+    if cache_key not in _REPORT_CACHE:
+        _REPORT_CACHE[cache_key] = diagnose_collision(
+            arm1_cam_x=arm1_cam[0] if arm1_cam else None,
+            arm1_cam_y=arm1_cam[1] if arm1_cam else None,
+            arm1_cam_z=arm1_cam[2] if arm1_cam else None,
+            arm2_cam_x=arm2_cam[0] if arm2_cam else None,
+            arm2_cam_y=arm2_cam[1] if arm2_cam else None,
+            arm2_cam_z=arm2_cam[2] if arm2_cam else None,
+        )
+    return _REPORT_CACHE[cache_key]
+
+
+# ── Mode labels for output ───────────────────────────────────────────────
+
+_MODE_NAMES = {
+    0: "Mode 0 (unrestricted)",
+    1: "Mode 1 (baseline_j5_block)",
+    2: "Mode 2 (geometry_block)",
+    3: "Mode 3 (sequential_pick)",
+    4: "Mode 4 (smart_reorder)",
+}
+
+_VERDICT_SYMBOLS = {
+    "NO_CHECK": "  ",
+    "SAFE": "\u2705",
+    "COLLISION": "\u274c",
+    "CONTENTION": "\u26a0\ufe0f ",
+    "REORDER_CANDIDATE": "\u2194\ufe0f ",
+}
+
+
+# ── Test function ─────────────────────────────────────────────────────────
+
+
 @pytest.fixture(params=range(len(SCENARIOS)), ids=_IDS)
 def scenario_data(request):
     """Yield (kind, arm1_cam_or_None, arm2_cam_or_None)."""
     return SCENARIOS[request.param]
 
 
-def test_collision_diagnostic(scenario_data):
-    """Run all 5 modes on a cam-point pair (or solo) and print diagnostics."""
+@pytest.mark.parametrize(
+    "mode",
+    [0, 1, 2, 3, 4],
+    ids=[f"mode_{i}" for i in range(5)],
+)
+def test_collision_diagnostic(scenario_data, mode):
+    """Run a single mode on a cam-point pair (or solo) and print diagnostics."""
     kind, arm1_cam, arm2_cam = scenario_data
 
-    report = diagnose_collision(
-        arm1_cam_x=arm1_cam[0] if arm1_cam else None,
-        arm1_cam_y=arm1_cam[1] if arm1_cam else None,
-        arm1_cam_z=arm1_cam[2] if arm1_cam else None,
-        arm2_cam_x=arm2_cam[0] if arm2_cam else None,
-        arm2_cam_y=arm2_cam[1] if arm2_cam else None,
-        arm2_cam_z=arm2_cam[2] if arm2_cam else None,
-    )
+    report = _get_report(arm1_cam, arm2_cam)
+
+    mode_key = f"mode_{mode}"
 
     # ── Structure assertions ──────────────────────────────────────────
-    assert "modes" in report
-    assert "formatted_output" in report
-
-    # Every mode must be present with required fields
-    for mode_id in range(5):
-        mode_key = f"mode_{mode_id}"
-        assert mode_key in report["modes"], f"Missing {mode_key}"
-        mode_report = report["modes"][mode_key]
-        assert "verdict" in mode_report
-        assert "reason" in mode_report
-        assert "intervention" in mode_report
-
-    m = report["modes"]
+    assert mode_key in report["modes"], f"Missing {mode_key}"
+    mr = report["modes"][mode_key]
+    assert "verdict" in mr
+    assert "reason" in mr
+    assert "intervention" in mr
 
     if kind == "paired":
-        _assert_paired(report, m)
+        _assert_paired_mode(report, mode_key, mode)
     else:
-        _assert_solo(report, m, kind)
+        _assert_solo_mode(report, mode_key, mode, kind)
 
-    # ── Print human-readable diagnostic ───────────────────────────────
-    print(report["formatted_output"])
+    # ── Print per-mode diagnostic ─────────────────────────────────────
+    _print_mode_diagnostic(report, mode_key, mode, kind, arm1_cam, arm2_cam)
 
 
-def _assert_paired(report, m):
-    """Assertions for paired (both arms have targets) scenarios."""
-    # FK conversion produced valid joint dicts
-    assert "arm1_joints" in report
-    assert "arm2_joints" in report
-    for key in ("j3", "j4", "j5"):
-        assert key in report["arm1_joints"]
-        assert key in report["arm2_joints"]
+# ── Per-mode assertions ──────────────────────────────────────────────────
 
-    assert "j4_gap" in report
+
+def _assert_paired_mode(report, mode_key, mode):
+    """Assertions for a specific mode in a paired scenario."""
+    for arm in ("arm1_joints", "arm2_joints"):
+        assert arm in report
+        for key in ("j3", "j4", "j5"):
+            assert key in report[arm]
+
     assert report["j4_gap"] == pytest.approx(
         abs(report["arm1_joints"]["j4"] - report["arm2_joints"]["j4"]),
         abs=1e-9,
     )
-    assert "combined_j5" in report
     assert report["combined_j5"] == pytest.approx(
         report["arm1_joints"]["j5"] + report["arm2_joints"]["j5"],
         abs=1e-9,
     )
 
-    assert "arm1_reachable" in report
-    assert "arm2_reachable" in report
-
     gap = report["j4_gap"]
     cj5 = report["combined_j5"]
     arm1_j5 = report["arm1_joints"]["j5"]
     arm2_j5 = report["arm2_joints"]["j5"]
+    mr = report["modes"][mode_key]
 
-    # Mode 0: always NO_CHECK
-    assert m["mode_0"]["verdict"] == "NO_CHECK"
-
-    # Mode 1: gap < 0.05 -> COLLISION, else SAFE
-    if gap < 0.05:
-        assert m["mode_1"]["verdict"] == "COLLISION"
-        assert m["mode_1"]["intervention"] == "j5_zeroed"
-    else:
-        assert m["mode_1"]["verdict"] == "SAFE"
-        assert m["mode_1"]["intervention"] == "none"
-
-    # Mode 2: two-stage
-    if gap >= 0.12:
-        assert m["mode_2"]["verdict"] == "SAFE"
-    elif gap < 0.06 and cj5 > 0.5:
-        assert m["mode_2"]["verdict"] == "COLLISION"
-        assert m["mode_2"]["intervention"] == "j5_zeroed"
-    else:
-        assert m["mode_2"]["verdict"] == "SAFE"
-
-    # Mode 3: gap < 0.10 AND both j5 > 0 -> CONTENTION
-    if gap < 0.10 and arm1_j5 > 0 and arm2_j5 > 0:
-        assert m["mode_3"]["verdict"] == "CONTENTION"
-        assert m["mode_3"]["intervention"] == "sequenced"
-    else:
-        assert m["mode_3"]["verdict"] == "SAFE"
-        assert m["mode_3"]["intervention"] == "none"
-
-    # Mode 4: per-step passthrough
-    assert m["mode_4"]["verdict"] == "REORDER_CANDIDATE"
+    if mode == 0:
+        assert mr["verdict"] == "NO_CHECK"
+    elif mode == 1:
+        if gap < 0.05:
+            assert mr["verdict"] == "COLLISION"
+            assert mr["intervention"] == "j5_zeroed"
+        else:
+            assert mr["verdict"] == "SAFE"
+            assert mr["intervention"] == "none"
+    elif mode == 2:
+        if gap >= 0.12:
+            assert mr["verdict"] == "SAFE"
+        elif gap < 0.06 and cj5 > 0.5:
+            assert mr["verdict"] == "COLLISION"
+            assert mr["intervention"] == "j5_zeroed"
+        else:
+            assert mr["verdict"] == "SAFE"
+    elif mode == 3:
+        if gap < 0.10 and arm1_j5 > 0 and arm2_j5 > 0:
+            assert mr["verdict"] == "CONTENTION"
+            assert mr["intervention"] == "sequenced"
+        else:
+            assert mr["verdict"] == "SAFE"
+            assert mr["intervention"] == "none"
+    elif mode == 4:
+        assert mr["verdict"] == "REORDER_CANDIDATE"
 
 
-def _assert_solo(report, m, kind):
-    """Assertions for solo (one arm has no peer) scenarios."""
+def _assert_solo_mode(report, mode_key, mode, kind):
+    """Assertions for a specific mode in a solo scenario."""
     assert report["solo"] is True
 
-    # The active arm must have joints
     if kind == "arm1_solo":
-        assert "arm1_joints" in report
+        assert report["arm1_joints"] is not None
         assert report["arm2_joints"] is None
         for key in ("j3", "j4", "j5"):
             assert key in report["arm1_joints"]
     else:
-        assert "arm2_joints" in report
+        assert report["arm2_joints"] is not None
         assert report["arm1_joints"] is None
         for key in ("j3", "j4", "j5"):
             assert key in report["arm2_joints"]
 
-    # No gap or combined j5 for solo
     assert report["j4_gap"] is None
     assert report["combined_j5"] is None
 
-    # All modes: no peer -> SAFE / NO_CHECK (no collision possible)
-    assert m["mode_0"]["verdict"] == "NO_CHECK"
-    assert m["mode_1"]["verdict"] == "SAFE"
-    assert m["mode_1"]["intervention"] == "none"
-    assert m["mode_2"]["verdict"] == "SAFE"
-    assert m["mode_2"]["intervention"] == "none"
-    assert m["mode_3"]["verdict"] == "SAFE"
-    assert m["mode_3"]["intervention"] == "none"
-    assert m["mode_4"]["verdict"] == "SAFE"
-    assert m["mode_4"]["intervention"] == "none"
+    mr = report["modes"][mode_key]
+    if mode == 0:
+        assert mr["verdict"] == "NO_CHECK"
+    else:
+        assert mr["verdict"] == "SAFE"
+        assert mr["intervention"] == "none"
+
+
+# ── Per-mode diagnostic printer ──────────────────────────────────────────
+
+
+def _print_mode_diagnostic(report, mode_key, mode, kind, arm1_cam, arm2_cam):
+    """Print a concise diagnostic for a single mode."""
+    mr = report["modes"][mode_key]
+    sym = _VERDICT_SYMBOLS.get(mr["verdict"], "?")
+    w = 72
+    lines = ["-" * w]
+
+    # FK header
+    if kind == "paired":
+        a1j = report["arm1_joints"]
+        a2j = report["arm2_joints"]
+        lines.append(
+            f"  arm1: cam({arm1_cam[0]:.3f}, {arm1_cam[1]:.3f}, "
+            f"{arm1_cam[2]:.3f}) -> "
+            f"j3={a1j['j3']:+.4f}  j4={a1j['j4']:.4f}  "
+            f"j5={a1j['j5']:.4f}"
+        )
+        lines.append(
+            f"  arm2: cam({arm2_cam[0]:.3f}, {arm2_cam[1]:.3f}, "
+            f"{arm2_cam[2]:.3f}) -> "
+            f"j3={a2j['j3']:+.4f}  j4={a2j['j4']:.4f}  "
+            f"j5={a2j['j5']:.4f}"
+        )
+        lines.append(
+            f"  j4_gap={report['j4_gap']:.4f}m  "
+            f"combined_j5={report['combined_j5']:.4f}m"
+        )
+    else:
+        active = "arm1" if kind == "arm1_solo" else "arm2"
+        cam = arm1_cam if kind == "arm1_solo" else arm2_cam
+        joints = report[f"{active}_joints"]
+        lines.append(
+            f"  {active} (solo): cam({cam[0]:.3f}, {cam[1]:.3f}, "
+            f"{cam[2]:.3f}) -> "
+            f"j3={joints['j3']:+.4f}  j4={joints['j4']:.4f}  "
+            f"j5={joints['j5']:.4f}"
+        )
+
+    # Mode verdict
+    lines.append(
+        f"  {sym} {_MODE_NAMES[mode]:<30s} {mr['verdict']}"
+    )
+    lines.append(f"     Reason:       {mr['reason']}")
+    lines.append(f"     Intervention: {mr['intervention']}")
+    lines.append(f"     Details:      {mr['details']}")
+    lines.append("-" * w)
+
+    print("\n".join(lines))
