@@ -21,7 +21,7 @@ import math
 from typing import Optional
 
 from baseline_mode import BaselineMode
-from fk_chain import camera_to_arm, polar_decompose
+from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 from sequential_pick_policy import SequentialPickPolicy
 
 
@@ -44,12 +44,16 @@ def _cam_to_joints(cam_x: float, cam_y: float, cam_z: float) -> dict:
     """Convert camera coordinates to joint values using real FK pipeline.
 
     Uses j4_pos=0.0 (arm at home position before run starts).
+    Applies phi_compensation() to j3, matching ArmRuntime.compute_candidate_joints()
+    so Mode 1 diagnostic verdicts are consistent with runtime behaviour.
 
-    Returns dict with j3, j4, j5, reachable, r, phi, and the intermediate
-    arm-frame coordinates (ax, ay, az).
+    Returns dict with j3 (compensated), j4, j5, reachable, r, phi (raw), and
+    the intermediate arm-frame coordinates (ax, ay, az).
     """
     ax, ay, az = camera_to_arm(cam_x, cam_y, cam_z, j4_pos=0.0)
     result = polar_decompose(ax, ay, az)
+    # Apply compensation to j3 (phi key retains the raw geometric value).
+    result["j3"] = phi_compensation(result["j3"], result["j5"])
     result["ax"] = ax
     result["ay"] = ay
     result["az"] = az

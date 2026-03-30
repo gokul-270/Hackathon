@@ -34,6 +34,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collision_diagnostics import MODE1_ADJ, diagnose_collision
+from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
 
@@ -459,6 +460,30 @@ def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
     min_gap = min(gaps) if gaps else 0.0
     print(f"  {'─'*w}")
     print(f"  min paired gap: {min_gap:.4f} m\n")
+
+
+def test_diagnostic_j3_uses_compensated_phi():
+    """collision_diagnostics._cam_to_joints must apply phi_compensation to j3.
+
+    At runtime, ArmRuntime.compute_candidate_joints() calls phi_compensation()
+    on j3 before passing joints to BaselineMode.  The diagnostics engine must
+    do the same so Mode 1 verdicts are consistent with the real run.
+
+    Uses the first arm1 CSV point as a concrete example.
+    """
+    cam_x, cam_y, cam_z = _ARM1_POINTS[0]
+    ax, ay, az = camera_to_arm(cam_x, cam_y, cam_z, j4_pos=0.0)
+    raw = polar_decompose(ax, ay, az)
+    expected_j3 = phi_compensation(raw["j3"], raw["j5"])
+
+    report = _get_report((cam_x, cam_y, cam_z), None)  # solo arm1
+    actual_j3 = report["arm1_joints"]["j3"]
+
+    assert actual_j3 == pytest.approx(expected_j3, abs=1e-9), (
+        f"Diagnostic j3 {actual_j3:.6f} != compensated phi {expected_j3:.6f} "
+        f"(raw={raw['j3']:.6f}). "
+        f"collision_diagnostics._cam_to_joints() must call phi_compensation()."
+    )
 
 
 def test_mode1_solo_scenarios_cover_all_arm_points():
