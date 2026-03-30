@@ -215,3 +215,25 @@ def test_contention_pack_arm2_cotton_positions_are_spread_at_least_5cm_apart(con
                 f"arm2 steps {i} and {j} are only {dist:.4f} m apart "
                 f"(cam_z: {arm2_steps[i]['cam_z']}, {arm2_steps[j]['cam_z']})"
             )
+
+
+# ---------------------------------------------------------------------------
+# Group 8 — Reachability guard
+# ---------------------------------------------------------------------------
+
+
+def test_contention_pack_all_steps_are_reachable(contention_pack):
+    """Every step must be within the arm's physical workspace (j3/j4/j5 limits)."""
+    from fk_chain import camera_to_arm, polar_decompose
+
+    for step in contention_pack["steps"]:
+        joints = polar_decompose(
+            *camera_to_arm(
+                step["cam_x"], step["cam_y"], step["cam_z"], j4_pos=0.0
+            )
+        )
+        assert joints["reachable"], (
+            f"Step {step['step_id']} {step['arm_id']} is unreachable: "
+            f"j3={joints['j3']:.4f} j4={joints['j4']:.4f} j5={joints['j5']:.4f} "
+            f"(cam: x={step['cam_x']}, y={step['cam_y']}, z={step['cam_z']})"
+        )

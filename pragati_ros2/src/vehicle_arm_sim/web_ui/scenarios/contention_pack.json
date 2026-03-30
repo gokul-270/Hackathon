@@ -1,15 +1,15 @@
 {
   "description": "Contention pack: randomized 3D positions with 3 collision pairs and 1 safe pair",
   "steps": [
-    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.55, "cam_y": -0.10, "cam_z": 0.080},
+    {"step_id": 0, "arm_id": "arm1", "cam_x": 0.55, "cam_y": -0.02, "cam_z": 0.080},
     {"step_id": 0, "arm_id": "arm2", "cam_x": 0.60, "cam_y": 0.05, "cam_z": 0.090},
-    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.20, "cam_z": 0.180},
+    {"step_id": 1, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.03, "cam_z": 0.180},
     {"step_id": 1, "arm_id": "arm2", "cam_x": 0.50, "cam_y": 0.15, "cam_z": 0.175},
     {"step_id": 2, "arm_id": "arm1", "cam_x": 0.45, "cam_y": -0.001, "cam_z": 0.300},
-    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.70, "cam_y": -0.15, "cam_z": 0.100},
+    {"step_id": 2, "arm_id": "arm2", "cam_x": 0.70, "cam_y": -0.03, "cam_z": 0.100},
     {"step_id": 3, "arm_id": "arm1", "cam_x": 0.60, "cam_y": 0.10, "cam_z": 0.250},
-    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.55, "cam_y": -0.05, "cam_z": 0.240},
+    {"step_id": 3, "arm_id": "arm2", "cam_x": 0.55, "cam_y": -0.02, "cam_z": 0.240},
     {"step_id": 4, "arm_id": "arm2", "cam_x": 0.65, "cam_y": 0.08, "cam_z": 0.340},
-    {"step_id": 5, "arm_id": "arm2", "cam_x": 0.50, "cam_y": -0.12, "cam_z": 0.150}
+    {"step_id": 5, "arm_id": "arm2", "cam_x": 0.50, "cam_y": -0.02, "cam_z": 0.150}
   ]
 }
