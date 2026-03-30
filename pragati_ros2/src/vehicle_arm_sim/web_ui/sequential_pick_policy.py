@@ -66,14 +66,20 @@ class SequentialPickPolicy:
             self._step_turn = self._turn
 
         # Winner is the arm in slot _step_turn.
-        # If the roster is not yet fully populated (only one arm seen so far),
-        # the winner defaults to the one arm known — safe because the second arm
-        # will be added to the roster before the next step.
-        winner_arm = self._arm_slots[self._step_turn] if self._arm_slots else arm_id
+        # If the roster is not yet fully populated (only one arm seen so far,
+        # e.g. because the peer was skipped as unreachable at the previous step),
+        # clamp _step_turn to the last valid index so we never IndexError.
+        # Write the clamped value back so all calls within this step agree on
+        # the same winner slot. Once the peer registers, normal alternation resumes.
+        if self._arm_slots:
+            self._step_turn = min(self._step_turn, len(self._arm_slots) - 1)
+            winner_arm = self._arm_slots[self._step_turn]
+        else:
+            winner_arm = arm_id
         is_winner = arm_id == winner_arm
 
         if is_winner:
-            # Advance turn for next step
+            # Advance turn for next step using the (possibly clamped) step_turn.
             self._turn = 1 - self._step_turn
 
         return (own_joints, False, True, is_winner)

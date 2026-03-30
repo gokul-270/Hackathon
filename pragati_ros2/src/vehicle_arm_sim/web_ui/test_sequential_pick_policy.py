@@ -327,3 +327,45 @@ def test_contention_with_arm2_arm3_pair_produces_a_winner():
         )
     )
     assert not (is_winner2 and is_winner3), "Both arms cannot be winners simultaneously"
+
+
+def test_second_contention_step_does_not_crash_when_peer_skipped_at_first_contention_step():
+    """No IndexError when the peer arm was skipped (unreachable) at the first contention step.
+
+    Regression: if arm1 enters contention at step 0 but arm2 is skipped (unreachable),
+    _arm_slots ends up with only ["arm1"]. On the next contention step _turn=1, which
+    causes _arm_slots[1] IndexError.
+    """
+    p = SequentialPickPolicy()
+
+    # Step 0: arm1 enters contention, arm2 is unreachable and NEVER calls apply().
+    # arm1 wins, _turn advances to 1, _arm_slots = ["arm1"].
+    p.apply(
+        step_id=0,
+        arm_id="arm1",
+        own_joints=OWN_CONTENTION,
+        peer_joints=PEER_CONTENTION,
+    )
+
+    # Step 1: both arms call apply() — _turn=1, _arm_slots still only has "arm1".
+    # Must not raise IndexError.
+    result1 = p.apply(
+        step_id=1,
+        arm_id="arm1",
+        own_joints=OWN_CONTENTION,
+        peer_joints=PEER_CONTENTION,
+    )
+    result2 = p.apply(
+        step_id=1,
+        arm_id="arm2",
+        own_joints=PEER_CONTENTION,
+        peer_joints=OWN_CONTENTION,
+    )
+
+    _, _, is_contention1, is_winner1 = result1
+    _, _, is_contention2, is_winner2 = result2
+    assert is_contention1 is True
+    assert is_contention2 is True
+    # Exactly one winner
+    assert is_winner1 or is_winner2, "At least one arm must be winner at step 1"
+    assert not (is_winner1 and is_winner2), "Both arms cannot be winners simultaneously"
