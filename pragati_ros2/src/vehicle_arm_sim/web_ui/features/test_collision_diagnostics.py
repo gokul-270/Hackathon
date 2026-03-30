@@ -67,9 +67,15 @@ def _load_csv(path: Path) -> list[tuple[float, float, float]]:
     return points
 
 
+from conftest import _csv_paths
+
 _FEATURES_DIR = Path(__file__).parent
-_ARM1_POINTS = _load_csv(_FEATURES_DIR / "arm1.csv")
-_ARM2_POINTS = _load_csv(_FEATURES_DIR / "arm2.csv")
+_ARM1_POINTS = _load_csv(
+    Path(_csv_paths["arm1"]) if _csv_paths["arm1"] else _FEATURES_DIR / "arm1.csv"
+)
+_ARM2_POINTS = _load_csv(
+    Path(_csv_paths["arm2"]) if _csv_paths["arm2"] else _FEATURES_DIR / "arm2.csv"
+)
 
 
 # ── Build scenario lists ──────────────────────────────────────────────────
@@ -389,6 +395,14 @@ def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
     min_gap = min(gaps) if gaps else 0.0
     print(f"  {'─'*w}")
     print(f"  min paired gap: {min_gap:.4f} m\n")
+
+
+def test_csv_paths_dict_is_importable_from_conftest():
+    """Confirm conftest exposes _csv_paths with arm1/arm2 keys."""
+    from conftest import _csv_paths
+
+    assert "arm1" in _csv_paths
+    assert "arm2" in _csv_paths
 
 
 def test_mode4_reorder_improves_gap():

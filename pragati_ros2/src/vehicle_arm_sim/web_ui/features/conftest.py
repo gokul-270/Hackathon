@@ -19,6 +19,37 @@ from smart_reorder_scheduler import SmartReorderScheduler
 
 
 # ---------------------------------------------------------------------------
+# CSV path overrides (populated by pytest_configure from --arm1-csv/--arm2-csv)
+# ---------------------------------------------------------------------------
+_csv_paths: dict[str, str | None] = {"arm1": None, "arm2": None}
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    """Register --arm1-csv and --arm2-csv CLI options."""
+    parser.addoption(
+        "--arm1-csv",
+        default=None,
+        metavar="PATH",
+        help="Path to arm1 CSV file (overrides default features/arm1.csv)",
+    )
+    parser.addoption(
+        "--arm2-csv",
+        default=None,
+        metavar="PATH",
+        help="Path to arm2 CSV file (overrides default features/arm2.csv)",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Store resolved CSV paths so test modules can read them at import time."""
+    try:
+        _csv_paths["arm1"] = config.getoption("--arm1-csv")
+        _csv_paths["arm2"] = config.getoption("--arm2-csv")
+    except ValueError:
+        pass  # option not registered (e.g. running via collect-only without plugin)
+
+
+# ---------------------------------------------------------------------------
 # Minimal PeerStatePacket for testing (avoids importing arm_runtime)
 # ---------------------------------------------------------------------------
 @dataclasses.dataclass
