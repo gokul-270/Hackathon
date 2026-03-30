@@ -24,18 +24,17 @@ These tests fail until the scenario file is created.
 import json
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
-# Add web_ui to path so we can import fk_chain
-_WEB_UI = os.path.dirname(__file__)
-if _WEB_UI not in sys.path:
-    sys.path.insert(0, _WEB_UI)
+# web_ui/ is injected by tests/conftest.py; no per-file sys.path hack needed
+_WEB_UI = str(Path(__file__).resolve().parent.parent.parent)
 
 from fk_chain import camera_to_arm, polar_decompose
 
 _SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "geometry_pack.json"
+    _WEB_UI, "scenarios", "geometry_pack.json"
 )
 
 

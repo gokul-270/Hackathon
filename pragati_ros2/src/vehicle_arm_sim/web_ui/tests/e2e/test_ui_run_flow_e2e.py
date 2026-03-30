@@ -11,15 +11,10 @@ using the FastAPI TestClient, covering the complete operator workflow:
 """
 
 import json
-import sys
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-
-# Make web_ui importable
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import testing_backend as tb
 from testing_backend import app

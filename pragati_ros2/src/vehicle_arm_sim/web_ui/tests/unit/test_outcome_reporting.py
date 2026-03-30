@@ -6,13 +6,9 @@ Tests that:
 3.2  RunController emits correct completed, blocked, and skipped outcomes.
 """
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from json_reporter import StepReport, JsonReporter
 

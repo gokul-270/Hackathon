@@ -10,14 +10,10 @@ Verifies that the backend wires RunController end-to-end:
 """
 
 import json
-import sys
 import threading
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fastapi.testclient import TestClient
 import testing_backend as tb

@@ -8,13 +8,9 @@ Tests that:
 2.4  Solo-tail step: controller advances after the single active arm reaches terminal outcome.
 """
 
-import sys
-from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 # ---------------------------------------------------------------------------

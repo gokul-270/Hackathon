@@ -21,12 +21,7 @@ Covers the full stack integration of all three Phase 2 correction groups:
     - The four-mode Markdown report names the actual best mode
 """
 
-import sys
-from pathlib import Path
-
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from run_controller import RunController
 from baseline_mode import BaselineMode

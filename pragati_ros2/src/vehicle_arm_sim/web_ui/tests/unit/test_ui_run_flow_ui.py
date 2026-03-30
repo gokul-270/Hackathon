@@ -12,7 +12,7 @@ DOM elements and wiring for:
 import re
 from pathlib import Path
 
-_WEB_DIR = Path(__file__).resolve().parent
+_WEB_DIR = Path(__file__).resolve().parent.parent.parent
 _HTML = (_WEB_DIR / "testing_ui.html").read_text()
 _JS = (_WEB_DIR / "testing_ui.js").read_text()
 

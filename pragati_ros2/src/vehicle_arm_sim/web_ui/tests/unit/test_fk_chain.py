@@ -216,7 +216,7 @@ def test_phi_compensation_zone3():
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-_PKG_DIR = Path(__file__).resolve().parent.parent
+_PKG_DIR = Path(__file__).resolve().parent.parent.parent.parent
 _URDF_PATH = _PKG_DIR / "urdf" / "vehicle_arm_merged.urdf"
 
 

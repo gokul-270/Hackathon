@@ -14,18 +14,15 @@ through RunController end-to-end.
 """
 import json
 import os
-import sys
 from pathlib import Path
 
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from baseline_mode import BaselineMode
 from run_controller import RunController
 
 _CONTENTION_SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "contention_pack.json"
+    str(Path(__file__).resolve().parent.parent.parent), "scenarios", "contention_pack.json"
 )
 
 

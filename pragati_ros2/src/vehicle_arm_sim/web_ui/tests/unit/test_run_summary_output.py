@@ -7,12 +7,7 @@ Tests that:
 4.3  blocked and skipped remain combined while completed picks are summarized separately.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from json_reporter import StepReport, JsonReporter
 

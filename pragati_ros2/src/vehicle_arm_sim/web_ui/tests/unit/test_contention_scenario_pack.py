@@ -22,19 +22,18 @@ These tests fail until the scenario file is created.
 import json
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
-# Add web_ui to path so we can import fk_chain, run_controller, baseline_mode
-_WEB_UI = os.path.dirname(__file__)
-if _WEB_UI not in sys.path:
-    sys.path.insert(0, _WEB_UI)
+# web_ui/ is injected by tests/conftest.py; no per-file sys.path hack needed
+_WEB_UI = str(Path(__file__).resolve().parent.parent.parent)
 
 from baseline_mode import BaselineMode
 from run_controller import RunController
 
 _SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "contention_pack.json"
+    _WEB_UI, "scenarios", "contention_pack.json"
 )
 
 
@@ -137,11 +136,6 @@ def test_contention_pack_has_asymmetric_arm_counts(contention_pack):
 
 def _j4_for_contention_step(step: dict) -> float:
     """Compute the j4 for a step using FK (starting from j4_pos=0)."""
-    import os
-    import sys
-    _WEB_UI = os.path.dirname(__file__)
-    if _WEB_UI not in sys.path:
-        sys.path.insert(0, _WEB_UI)
     from fk_chain import camera_to_arm, polar_decompose
     joints = polar_decompose(*camera_to_arm(step["cam_x"], step["cam_y"], step["cam_z"], j4_pos=0.0))
     return joints["j4"]

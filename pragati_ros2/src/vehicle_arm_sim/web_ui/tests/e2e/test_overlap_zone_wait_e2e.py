@@ -18,6 +18,7 @@ These tests fail until:
 """
 import json
 import os
+from pathlib import Path
 
 import pytest
 
@@ -26,11 +27,11 @@ from baseline_mode import BaselineMode
 from markdown_reporter import MarkdownReporter
 
 _CONTENTION_SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "contention_pack.json"
+    str(Path(__file__).resolve().parent.parent.parent), "scenarios", "contention_pack.json"
 )
 
 _GEOMETRY_SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "geometry_pack.json"
+    str(Path(__file__).resolve().parent.parent.parent), "scenarios", "geometry_pack.json"
 )
 
 

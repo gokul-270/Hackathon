@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 """Tests for testing_backend cotton colour SDF generation."""
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
 
 def test_arm1_cotton_sdf_is_red():
     """Cotton SDF for arm1 must use red colour (1 0 0 1)."""
@@ -130,7 +125,7 @@ def test_phi_comp_checkbox_checked_by_default_in_html():
     """The cotton-phi-comp checkbox in testing_ui.html has checked attribute."""
     from pathlib import Path
 
-    html_path = Path(__file__).resolve().parent / "testing_ui.html"
+    html_path = Path(__file__).resolve().parent.parent.parent / "testing_ui.html"
     html_content = html_path.read_text()
     # Find the input element with id="cotton-phi-comp"
     import re
@@ -224,7 +219,7 @@ def test_sse_onerror_handler_does_not_close_evtsource_permanently():
     from pathlib import Path
     import re
 
-    js_path = Path(__file__).resolve().parent / "testing_ui.js"
+    js_path = Path(__file__).resolve().parent.parent.parent / "testing_ui.js"
     js = js_path.read_text()
 
     # Find the onerror handler block

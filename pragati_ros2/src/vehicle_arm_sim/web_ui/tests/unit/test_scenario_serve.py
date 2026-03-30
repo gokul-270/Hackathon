@@ -8,13 +8,8 @@ Without a matching route these requests return 404, silently breaking the
 preset dropdown in the Scenario Run panel.
 """
 
-import sys
-from pathlib import Path
-
 import pytest
 from fastapi.testclient import TestClient
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from testing_backend import app
 

@@ -15,6 +15,7 @@ These tests fail until:
 """
 import json
 import os
+from pathlib import Path
 
 import pytest
 
@@ -23,7 +24,7 @@ from baseline_mode import BaselineMode
 from markdown_reporter import MarkdownReporter
 
 _SCENARIO_PATH = os.path.join(
-    os.path.dirname(__file__), "scenarios", "geometry_pack.json"
+    str(Path(__file__).resolve().parent.parent.parent), "scenarios", "geometry_pack.json"
 )
 
 
