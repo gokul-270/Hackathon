@@ -1244,9 +1244,12 @@ async def run_events():
         _event_bus.reset()  # Re-arm bus so second (and subsequent) runs work correctly.
         gen = _event_bus.subscribe()
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        logger.info("SSE _generator: started, bus reset, subscribing")
+        event_count = 0
         try:
             while True:
                 try:
+                    logger.info("SSE _generator: waiting for next event (event_count=%d)", event_count)
                     future = loop.run_in_executor(executor, next, gen)
                     while True:
                         try:
@@ -1255,16 +1258,26 @@ async def run_events():
                             )
                             break
                         except asyncio.TimeoutError:
+                            logger.info("SSE _generator: heartbeat (waiting, event_count=%d)", event_count)
                             yield ": heartbeat\n\n"
+                    event_count += 1
+                    logger.info("SSE _generator: got event #%d type=%s", event_count, event.get("type"))
                     yield f"data: {_json.dumps(event)}\n\n"
                     if event.get("type") == "run_complete":
+                        logger.info("SSE _generator: run_complete received, closing stream")
                         return
                 except StopIteration:
+                    logger.info("SSE _generator: StopIteration after %d events", event_count)
+                    return
+                except Exception as exc:
+                    logger.error("SSE _generator: unexpected exception %s: %s", type(exc).__name__, exc)
                     return
         except asyncio.CancelledError:
+            logger.info("SSE _generator: CancelledError after %d events", event_count)
             return
         finally:
             executor.shutdown(wait=False)
+            logger.info("SSE _generator: finished (event_count=%d)", event_count)
 
     return StreamingResponse(
         _generator(),
