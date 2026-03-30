@@ -286,3 +286,44 @@ def test_contention_threshold_boundary_below_010():
     assert skipped is False
     assert is_contention is True
     assert is_winner is True
+
+
+# ---------------------------------------------------------------------------
+# Test 13: non-default arm IDs (arm2 + arm3) — winner must be one of them
+# ---------------------------------------------------------------------------
+
+
+def test_contention_with_arm2_arm3_pair_produces_a_winner():
+    """When arm_ids are arm2 and arm3, exactly one must be winner per step.
+
+    Regression: SequentialPickPolicy hardcoded winner_arm as 'arm1'/'arm2',
+    so arm2+arm3 pairs always got is_winner=False for both arms — causing
+    next(a for a in arm_execute_args if winner_flags[a]) to raise StopIteration
+    in RunController, hanging the run permanently.
+    """
+    policy = SequentialPickPolicy()
+    result2 = policy.apply(
+        step_id=1,
+        arm_id="arm2",
+        own_joints=OWN_CONTENTION,
+        peer_joints=PEER_CONTENTION,
+    )
+    result3 = policy.apply(
+        step_id=1,
+        arm_id="arm3",
+        own_joints=OWN_CONTENTION,
+        peer_joints=PEER_CONTENTION,
+    )
+    _, _, is_contention2, is_winner2 = result2
+    _, _, is_contention3, is_winner3 = result3
+
+    assert is_contention2 is True, "arm2 must detect contention"
+    assert is_contention3 is True, "arm3 must detect contention"
+    # Exactly one of the two arms must be winner — never both False
+    assert is_winner2 or is_winner3, (
+        "At least one arm must be winner; got is_winner2=%s is_winner3=%s "
+        "(regression: hardcoded 'arm1'/'arm2' IDs caused both to be False)" % (
+            is_winner2, is_winner3
+        )
+    )
+    assert not (is_winner2 and is_winner3), "Both arms cannot be winners simultaneously"

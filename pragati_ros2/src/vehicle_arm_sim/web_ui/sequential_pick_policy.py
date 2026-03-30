@@ -10,6 +10,10 @@ Returns 4-tuple: (applied_joints, skipped, is_contention, is_winner)
 - skipped: always False (sequential pick never skips)
 - is_contention: True when gap < 0.10 and both j5 > 0
 - is_winner: True for the arm whose turn it is at this step
+
+The winner is determined by a two-slot roster (_arm_slots[0] / _arm_slots[1])
+built on first contention contact, rather than hardcoded "arm1"/"arm2" strings.
+This makes the policy correct for any arm pair (arm1+arm2, arm2+arm3, etc.).
 """
 
 
@@ -19,9 +23,12 @@ class SequentialPickPolicy:
     CONTENTION_THRESHOLD = 0.10
 
     def __init__(self) -> None:
-        self._turn: int = 0  # 0 = arm1's turn, 1 = arm2's turn
+        self._turn: int = 0  # index into _arm_slots: 0 or 1
         self._current_step_id: int | None = None
         self._step_turn: int = 0  # the locked turn for the current step
+        # Two-slot roster: populated on first contention contact.
+        # Slot 0 = first arm_id seen in contention; slot 1 = the other arm.
+        self._arm_slots: list[str] = []
 
     def apply(
         self,
@@ -49,12 +56,20 @@ class SequentialPickPolicy:
         ):
             return (own_joints, False, False, False)
 
+        # Register arm_id into the two-slot roster on first contact.
+        if arm_id not in self._arm_slots:
+            self._arm_slots.append(arm_id)
+
         # Contention detected — lock turn for this step_id
         if self._current_step_id != step_id:
             self._current_step_id = step_id
             self._step_turn = self._turn
 
-        winner_arm = "arm1" if self._step_turn == 0 else "arm2"
+        # Winner is the arm in slot _step_turn.
+        # If the roster is not yet fully populated (only one arm seen so far),
+        # the winner defaults to the one arm known — safe because the second arm
+        # will be added to the roster before the next step.
+        winner_arm = self._arm_slots[self._step_turn] if self._arm_slots else arm_id
         is_winner = arm_id == winner_arm
 
         if is_winner:
@@ -62,6 +77,10 @@ class SequentialPickPolicy:
             self._turn = 1 - self._step_turn
 
         return (own_joints, False, True, is_winner)
+
+
+# Backward-compatible alias for existing imports
+WaitModePolicy = SequentialPickPolicy
 
 
 # Backward-compatible alias for existing imports

@@ -423,12 +423,25 @@ class RunController:
             )
 
             if step_has_contention:
-                # Two-phase sequential dispatch: winner arm first, then loser
+                # Two-phase sequential dispatch: winner arm first, then loser.
+                # Use next(..., None) to guard against StopIteration propagating
+                # into the asyncio thread (Python 3.12 TypeError).
                 winner_arm = next(
-                    a for a in arm_execute_args if winner_flags.get(a, False)
+                    (a for a in arm_execute_args if winner_flags.get(a, False)), None
                 )
+                if winner_arm is None:
+                    # Policy returned contention=True for all arms but no winner —
+                    # fall back to sorted-first arm so the run can continue.
+                    logger.warning(
+                        "step %s: contention flagged but no winner arm found "
+                        "(winner_flags=%s arm_ids=%s); falling back to first arm",
+                        step_id,
+                        winner_flags,
+                        sorted(arm_execute_args.keys()),
+                    )
+                    winner_arm = sorted(arm_execute_args.keys())[0]
                 loser_arm = next(
-                    a for a in arm_execute_args if a != winner_arm
+                    (a for a in arm_execute_args if a != winner_arm), winner_arm
                 )
                 # Compute j4 gap from candidate joints for observability
                 _j4_gap = abs(
