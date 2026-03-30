@@ -67,7 +67,7 @@ def _load_csv(path: Path) -> list[tuple[float, float, float]]:
     return points
 
 
-from conftest import _csv_paths
+from conftest import _csv_paths, _test_options
 
 _FEATURES_DIR = Path(__file__).parent
 _ARM1_POINTS = _load_csv(
@@ -80,31 +80,53 @@ _ARM2_POINTS = _load_csv(
 
 # ── Build scenario lists ──────────────────────────────────────────────────
 
-# Paired: every arm1 row × every arm2 row (cartesian product)
-_PAIRED = [
-    ("paired", a1, a2)
-    for a1, a2 in itertools.product(_ARM1_POINTS, _ARM2_POINTS)
-]
-_PAIRED_IDS = [
-    f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]"
-    f"_x_"
-    f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]"
-    for _, a1, a2 in _PAIRED
-]
-
-# Solo arm1: arm1 has a target, arm2 has no peer
-_ARM1_SOLO = [("arm1_solo", a1, None) for a1 in _ARM1_POINTS]
-_ARM1_SOLO_IDS = [
-    f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]_solo"
-    for _, a1, _ in _ARM1_SOLO
-]
-
-# Solo arm2: arm2 has a target, arm1 has no peer
-_ARM2_SOLO = [("arm2_solo", None, a2) for a2 in _ARM2_POINTS]
-_ARM2_SOLO_IDS = [
-    f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]_solo"
-    for _, _, a2 in _ARM2_SOLO
-]
+if _test_options["cartesian"]:
+    # Exhaustive: every arm1 row × every arm2 row
+    _PAIRED = [
+        ("paired", a1, a2)
+        for a1, a2 in itertools.product(_ARM1_POINTS, _ARM2_POINTS)
+    ]
+    _PAIRED_IDS = [
+        f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]"
+        f"_x_"
+        f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]"
+        for _, a1, a2 in _PAIRED
+    ]
+    # Solo: all arm1 and all arm2 points run solo
+    _ARM1_SOLO = [("arm1_solo", a1, None) for a1 in _ARM1_POINTS]
+    _ARM1_SOLO_IDS = [
+        f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]_solo"
+        for _, a1, _ in _ARM1_SOLO
+    ]
+    _ARM2_SOLO = [("arm2_solo", None, a2) for a2 in _ARM2_POINTS]
+    _ARM2_SOLO_IDS = [
+        f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]_solo"
+        for _, _, a2 in _ARM2_SOLO
+    ]
+else:
+    # Default: sequential 1-to-1 (arm1[i] ↔ arm2[i])
+    _paired_count = min(len(_ARM1_POINTS), len(_ARM2_POINTS))
+    _PAIRED = [
+        ("paired", _ARM1_POINTS[i], _ARM2_POINTS[i])
+        for i in range(_paired_count)
+    ]
+    _PAIRED_IDS = [
+        f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]"
+        f"_seq_"
+        f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]"
+        for _, a1, a2 in _PAIRED
+    ]
+    # Solo: arm1 tail (if arm1 is longer) and arm2 tail (if arm2 is longer)
+    _ARM1_SOLO = [("arm1_solo", a1, None) for a1 in _ARM1_POINTS[_paired_count:]]
+    _ARM1_SOLO_IDS = [
+        f"a1[{a1[0]:.3f},{a1[1]:.3f},{a1[2]:.3f}]_solo"
+        for _, a1, _ in _ARM1_SOLO
+    ]
+    _ARM2_SOLO = [("arm2_solo", None, a2) for a2 in _ARM2_POINTS[_paired_count:]]
+    _ARM2_SOLO_IDS = [
+        f"a2[{a2[0]:.3f},{a2[1]:.3f},{a2[2]:.3f}]_solo"
+        for _, _, a2 in _ARM2_SOLO
+    ]
 
 SCENARIOS = _PAIRED + _ARM1_SOLO + _ARM2_SOLO
 _IDS = _PAIRED_IDS + _ARM1_SOLO_IDS + _ARM2_SOLO_IDS
@@ -395,6 +417,14 @@ def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
     min_gap = min(gaps) if gaps else 0.0
     print(f"  {'─'*w}")
     print(f"  min paired gap: {min_gap:.4f} m\n")
+
+
+def test_test_options_dict_is_importable_from_conftest():
+    """Confirm conftest exposes _test_options with cartesian key."""
+    from conftest import _test_options
+
+    assert "cartesian" in _test_options
+    assert isinstance(_test_options["cartesian"], bool)
 
 
 def test_csv_paths_dict_is_importable_from_conftest():

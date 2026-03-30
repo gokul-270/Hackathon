@@ -23,9 +23,14 @@ from smart_reorder_scheduler import SmartReorderScheduler
 # ---------------------------------------------------------------------------
 _csv_paths: dict[str, str | None] = {"arm1": None, "arm2": None}
 
+# ---------------------------------------------------------------------------
+# Test behaviour options (populated by pytest_configure)
+# ---------------------------------------------------------------------------
+_test_options: dict[str, bool] = {"cartesian": False}
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    """Register --arm1-csv and --arm2-csv CLI options."""
+    """Register --arm1-csv, --arm2-csv, and --cartesian CLI options."""
     parser.addoption(
         "--arm1-csv",
         default=None,
@@ -38,13 +43,20 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         metavar="PATH",
         help="Path to arm2 CSV file (overrides default features/arm2.csv)",
     )
+    parser.addoption(
+        "--cartesian",
+        action="store_true",
+        default=False,
+        help="Pair arm1 × arm2 as cartesian product (default: sequential 1-to-1)",
+    )
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Store resolved CSV paths so test modules can read them at import time."""
+    """Store resolved paths and options so test modules can read them at import time."""
     try:
         _csv_paths["arm1"] = config.getoption("--arm1-csv")
         _csv_paths["arm2"] = config.getoption("--arm2-csv")
+        _test_options["cartesian"] = bool(config.getoption("--cartesian"))
     except ValueError:
         pass  # option not registered (e.g. running via collect-only without plugin)
 
