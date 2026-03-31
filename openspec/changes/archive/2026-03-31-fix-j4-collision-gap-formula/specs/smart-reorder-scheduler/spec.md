@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Reorder optimizer uses opposite-facing J4 formula
 The smart reorder scheduler SHALL compute minimum J4 gap using `j4_collision_gap(arm1_j4, arm2_j4)` from `collision_math` instead of inline `abs(arm1_j4 - arm2_j4)`.

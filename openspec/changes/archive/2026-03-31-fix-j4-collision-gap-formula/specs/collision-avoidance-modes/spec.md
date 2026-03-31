@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Geometry Stage 1 lateral gap screen
 The geometry check Stage 1 SHALL compute lateral gap using `j4_collision_gap(own_j4, peer_j4)` from `collision_math` instead of inline `abs(own_j4 - peer_j4)`.

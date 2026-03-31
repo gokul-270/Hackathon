@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Mode 1 uses cosine-derived horizontal reach as blocking criterion
 

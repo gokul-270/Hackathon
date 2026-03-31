@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Mode 1 Baseline J5 Block Uses Cosine Of Compensated Phi
 

@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines how the smart reorder scheduler rearranges cotton picking order before execution to maximize the minimum j4 gap across paired steps, reducing collision risk without runtime intervention.
-
 ## Requirements
-
 ### Requirement: Reorder Cotton Targets To Maximize Minimum J4 Gap
 
 The smart reorder scheduler SHALL rearrange the cotton picking order for both arms before execution starts to maximize the minimum absolute j4 gap across all paired steps.
@@ -77,3 +75,27 @@ The scheduler SHALL be invoked by RunController before the step execution loop w
 - **WHEN** the RunController begins a run
 - **THEN** the scheduler reorders the step map before any step is executed
 - **AND** the rest of the run proceeds with the reordered step map using parallel dispatch
+
+### Requirement: Verified Against Real Cam-Point Data
+The scheduler SHALL be exercised in an end-to-end test using real cam-point data from
+`arm1.csv` and `arm2.csv` (the same files used by `test_collision_diagnostics.py`),
+confirming that the gap improvement guarantee holds on field-representative data and not
+only on synthetic unit-test inputs.
+
+#### Scenario: Real CSV data produces non-degraded min gap
+- **WHEN** `SmartReorderScheduler.reorder()` is called with a step_map built from
+  `arm1.csv` and `arm2.csv` cam_z values
+- **THEN** the minimum j4 gap of the reordered result is >= the minimum j4 gap of the
+  original sequential pairing
+
+### Requirement: Reorder optimizer uses opposite-facing J4 formula
+The smart reorder scheduler SHALL compute minimum J4 gap using `j4_collision_gap(arm1_j4, arm2_j4)` from `collision_math` instead of inline `abs(arm1_j4 - arm2_j4)`.
+
+#### Scenario: Min gap computed with opposite-facing formula
+- **WHEN** the scheduler evaluates step permutations for collision risk
+- **THEN** it SHALL use `j4_collision_gap(arm1_j4s[i], arm2_j4s[perm[i]])` for each step pair
+
+#### Scenario: FK-derived J4 values produce correct gap
+- **WHEN** J4 values are computed via FK as `j4 = 0.1005 - cam_z` producing negative values
+- **THEN** gap SHALL be `abs(j4_a + j4_b)` with correct arithmetic on negative inputs
+

@@ -1,4 +1,10 @@
-## MODIFIED Requirements
+# Spec: Multi Cotton Management
+
+## Purpose
+
+Defines how multiple cotton targets are managed during pick operations, including spawning, picking, status tracking, and Gazebo model lifecycle.
+
+## Requirements
 
 ### Requirement: Sequential pick all cottons
 
@@ -42,8 +48,6 @@ The cotton's status transition to `"picked"` SHALL only occur when the frontend 
 - **AND** cotton_0 remains with status `"spawned"`
 - **AND** the cotton can be picked again by retrying
 
-## REMOVED Requirements
-
-### Requirement: Pick-all status endpoint
+### Requirement: Pick-all status endpoint (REMOVED)
 **Reason**: The `GET /api/cotton/pick-status` endpoint is removed because the frontend drives the animation directly and knows its own state. No backend polling is needed. The frontend updates its status display inline during the animation.
 **Migration**: Frontend `cottonPickAll()` updates the status div text at each animation step for each arm. Progress is tracked by counting completed cottons vs total in the frontend.

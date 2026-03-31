@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Truth monitor computes collision distance
 The truth monitor SHALL compute lateral collision distance using `j4_collision_gap(j4_arm1, j4_arm2)` from `collision_math` instead of inline `abs(j4_arm1 - j4_arm2)`.
