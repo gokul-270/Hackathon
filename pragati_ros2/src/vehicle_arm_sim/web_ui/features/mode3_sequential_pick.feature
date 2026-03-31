@@ -1,11 +1,11 @@
 Feature: Mode 3 — Sequential Pick (Contention Arbitration)
   Mode 3 detects contention when both arms are extending (j5 > 0) and the
-  j4 gap is below 0.10m. On contention, the winner arm is dispatched first,
+  j4 gap is below 0.110m. On contention, the winner arm is dispatched first,
   then the loser. Winner alternates each contention step (arm1 first, then arm2).
   Both arms always receive unmodified joints — dispatch order is the intervention.
 
   # -------------------------------------------------------------------
-  # Contention detected — j4 gap BELOW 0.10m, both arms extending
+  # Contention detected — j4 gap BELOW 0.110m, both arms extending
   # -------------------------------------------------------------------
 
   Scenario: Contention detected when j4 gap is 0.05m and both arms extend
@@ -30,15 +30,15 @@ Feature: Mode 3 — Sequential Pick (Contention Arbitration)
     When the policy evaluates contention for step 0
     Then contention is detected
 
-  Scenario: Contention detected when j4 gap is 0.099m (just below threshold)
+  Scenario: Contention detected when j4 gap is 0.109m (just below threshold)
     Given the collision avoidance mode is 3 (sequential_pick)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=-0.399 j5=0.4
+    And arm2 has joints j3=0.8 j4=-0.409 j5=0.4
     When the policy evaluates contention for step 0
     Then contention is detected
 
   # -------------------------------------------------------------------
-  # No contention — j4 gap AT or ABOVE 0.10m
+  # No contention — j4 gap AT or ABOVE 0.110m
   # -------------------------------------------------------------------
 
   Scenario: No contention when j4 gap is 0.15m (above threshold)
@@ -49,10 +49,10 @@ Feature: Mode 3 — Sequential Pick (Contention Arbitration)
     Then no contention is detected
     And joints are returned unchanged
 
-  Scenario: No contention when j4 gap is exactly 0.10m (boundary — at threshold)
+  Scenario: No contention when j4 gap is exactly 0.110m (boundary — at threshold)
     Given the collision avoidance mode is 3 (sequential_pick)
-    And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=-0.400 j5=0.4
+    And arm1 has joints j3=1.0 j4=0.050 j5=0.5
+    And arm2 has joints j3=0.8 j4=-0.160 j5=0.4
     When the policy evaluates contention for step 0
     Then no contention is detected
 

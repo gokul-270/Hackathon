@@ -1,6 +1,6 @@
 """Sequential-pick policy for Mode 3: SEQUENTIAL_PICK.
 
-Detects contention when both arms target nearby j4 positions (gap < 0.08m)
+Detects contention when both arms target nearby j4 positions (gap < 0.110m)
 and both are extending (j5 > 0). Alternates winner turn between arms.
 Winner and loser both receive unmodified joints — RunController handles
 dispatch ordering (winner first, then loser).
@@ -8,7 +8,7 @@ dispatch ordering (winner first, then loser).
 Returns 4-tuple: (applied_joints, skipped, is_contention, is_winner)
 - applied_joints: always the unmodified own_joints
 - skipped: always False (sequential pick never skips)
-- is_contention: True when gap < 0.08 and both j5 > 0
+- is_contention: True when gap < 0.110 and both j5 > 0
 - is_winner: True for the arm whose turn it is at this step
 
 The winner is determined by a two-slot roster (_arm_slots[0] / _arm_slots[1])
@@ -22,7 +22,7 @@ from collision_math import j4_collision_gap
 class SequentialPickPolicy:
     """Alternating-turn contention arbitration for sequential pick mode."""
 
-    CONTENTION_THRESHOLD = 0.08
+    CONTENTION_THRESHOLD = 0.110
 
     def __init__(self) -> None:
         self._turn: int = 0  # index into _arm_slots: 0 or 1

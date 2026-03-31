@@ -15,7 +15,7 @@ The file scenarios/geometry_pack.json must:
   2. Have at least 6 steps total.
   3. Have at least 3 paired steps (step_ids where BOTH arm1 and arm2 have entries).
   4. Among the paired steps, at least 2 must use camera coordinates where
-     the arms' j4 lateral gap will be small (< 0.12 m) — i.e., overlap-heavy.
+      the arms' j4 lateral gap will be small (< 0.110 m) — i.e., overlap-heavy.
      We test this by computing FK on the camera coords and checking j4 proximity.
   5. Use valid arm_ids ("arm1", "arm2") and numeric cam_x/cam_y/cam_z.
 
@@ -110,7 +110,7 @@ def _j4_for_step(step: dict) -> float:
 
 
 def test_geometry_pack_has_at_least_two_overlap_heavy_paired_steps(geometry_pack):
-    """At least 2 paired step_ids must have |j4_arm1 - j4_arm2| < 0.12 m (overlap-heavy)."""
+    """At least 2 paired step_ids must have |j4_arm1 - j4_arm2| < 0.110 m (overlap-heavy)."""
     step_map: dict[int, dict] = {}
     for step in geometry_pack["steps"]:
         step_map.setdefault(step["step_id"], {})[step["arm_id"]] = step
@@ -121,11 +121,11 @@ def test_geometry_pack_has_at_least_two_overlap_heavy_paired_steps(geometry_pack
             continue
         j4_arm1 = _j4_for_step(arms["arm1"])
         j4_arm2 = _j4_for_step(arms["arm2"])
-        if j4_collision_gap(j4_arm1, j4_arm2) < 0.12:
+        if j4_collision_gap(j4_arm1, j4_arm2) < 0.110:
             overlap_count += 1
 
     assert overlap_count >= 2, (
-        f"Expected >= 2 overlap-heavy paired steps (j4 gap < 0.12 m), got {overlap_count}"
+        f"Expected >= 2 overlap-heavy paired steps (j4 gap < 0.110 m), got {overlap_count}"
     )
 
 
@@ -147,7 +147,7 @@ def test_geometry_pack_has_asymmetric_arm_counts(geometry_pack):
 
 
 def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
-    """Must have at least 1 step with j4 gap < 0.05 m and 1 step with j4 gap > 0.08 m."""
+    """Must have at least 1 step with j4 gap < 0.05 m and 1 step with j4 gap > 0.110 m."""
     step_map: dict[int, dict] = {}
     for step in geometry_pack["steps"]:
         step_map.setdefault(step["step_id"], {})[step["arm_id"]] = step
@@ -162,7 +162,7 @@ def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
         gap = j4_collision_gap(j4_arm1, j4_arm2)
         if gap < 0.05:
             colliding += 1
-        if gap > 0.08:
+        if gap > 0.110:
             safe += 1
 
     assert colliding >= 1, (
@@ -171,7 +171,7 @@ def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
         f"{[round(j4_collision_gap(_j4_for_step(arms['arm1']), _j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
     assert safe >= 1, (
-        f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
+        f"Must have >= 1 paired step with j4 gap > 0.110 m (safe zone); "
         f"step_map j4 gaps: "
         f"{[round(j4_collision_gap(_j4_for_step(arms['arm1']), _j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )

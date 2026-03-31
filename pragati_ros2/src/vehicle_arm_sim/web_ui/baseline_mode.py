@@ -9,11 +9,11 @@ Modes
                             This limits horizontal reach to 0.20 m regardless of
                              arm tilt.  Guard: cos < 0.1 → limit = inf (always safe).
 2  GEOMETRY_BLOCK         : two-stage geometry check.  Stage 1 screens on lateral
-                            distance (< 0.12 m → risky).  Stage 2 checks the
+                            distance (< 0.110 m → risky).  Stage 2 checks the
                             combined j5 extension (> 0.5) AND close lateral gap
                             (< 0.06 m) → unsafe → zero out j5.
 3  SEQUENTIAL_PICK        : sequential two-phase dispatch.  When both arms contend
-                             at the same step (|j4_gap| < 0.10 m and both extending),
+                             at the same step (|j4_gap| < 0.110 m and both extending),
                              the winner arm is dispatched first, waits for completion,
                              then the loser arm is dispatched.
 4  SMART_REORDER          : pre-run reorder.  Before the step loop, a scheduler
@@ -152,7 +152,7 @@ class BaselineMode:
     ) -> dict:
         """Two-stage geometry check.
 
-        Stage 1: quick lateral-distance screen (threshold 0.12 m).
+        Stage 1: quick lateral-distance screen (threshold 0.110 m).
           → "safe"  : return joints unchanged.
           → "risky" : proceed to Stage 2.
 

@@ -143,7 +143,7 @@ def _j4_for_contention_step(step: dict) -> float:
 
 
 def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
-    """Must have at least 1 paired step with j4 gap < 0.05 m and 1 with j4 gap > 0.08 m."""
+    """Must have at least 1 paired step with j4 gap < 0.05 m and 1 with j4 gap > 0.110 m."""
     step_map: dict[int, dict] = {}
     for step in contention_pack["steps"]:
         step_map.setdefault(step["step_id"], {})[step["arm_id"]] = step
@@ -158,7 +158,7 @@ def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
         gap = j4_collision_gap(j4_arm1, j4_arm2)
         if gap < 0.05:
             colliding += 1
-        if gap > 0.08:
+        if gap > 0.110:
             safe += 1
 
     assert colliding >= 1, (
@@ -166,7 +166,7 @@ def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
         f"gaps: {[round(j4_collision_gap(_j4_for_contention_step(arms['arm1']), _j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
     assert safe >= 1, (
-        f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
+        f"Must have >= 1 paired step with j4 gap > 0.110 m (safe zone); "
         f"gaps: {[round(j4_collision_gap(_j4_for_contention_step(arms['arm1']), _j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
 

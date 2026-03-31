@@ -4,9 +4,9 @@ geometry_check.py — two-stage geometry collision avoidance for dual-arm cotton
 Stage 1: GeometryStage1Screen
     Quick end-effector distance screen.
     Uses the lateral (j4) distance as a proxy for 3D end-effector proximity.
-    Threshold: 0.08 m (safe/risky split).
-    - distance >= 0.08 m → "safe"  (Stage 2 skipped)
-    - distance <  0.08 m → "risky" (proceed to Stage 2)
+    Threshold: 0.110 m (safe/risky split).
+    - distance >= 0.110 m → "safe"  (Stage 2 skipped)
+    - distance <  0.110 m → "risky" (proceed to Stage 2)
 
 Stage 2: GeometryStage2Check
     Better geometry / link-level unsafe-case check.
@@ -23,7 +23,7 @@ from collision_math import j4_collision_gap
 # ---------------------------------------------------------------------------
 # Stage 1 thresholds
 # ---------------------------------------------------------------------------
-_STAGE1_SAFE_THRESHOLD = 0.08  # m — lateral gap below this is "risky"
+_STAGE1_SAFE_THRESHOLD = 0.110  # m — lateral gap below this is "risky"
 
 # ---------------------------------------------------------------------------
 # Stage 2 thresholds

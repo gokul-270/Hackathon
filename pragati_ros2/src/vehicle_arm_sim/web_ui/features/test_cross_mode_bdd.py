@@ -298,11 +298,11 @@ def then_mode1_no_block_cosine(ctx):
     assert ctx["mode1_result"]["j5"] == ctx["arm1_joints"]["j5"]
 
 
-@then(parsers.re(r'mode 3 does NOT detect contention \(j4 gap >= 0\.10m\)'))
+@then(parsers.re(r'mode 3 does NOT detect contention \(j4 gap >= 0\.110m\)'))
 def then_mode3_no_contention_gap(ctx):
     assert ctx["mode3_contention"] is False
 
 
-@then(parsers.re(r'mode 3 detects contention \(j4 gap < 0\.10m\)'))
+@then(parsers.re(r'mode 3 detects contention \(j4 gap < 0\.110m\)'))
 def then_mode3_contention_gap(ctx):
     assert ctx["mode3_contention"] is True

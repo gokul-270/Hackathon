@@ -1,5 +1,5 @@
 {
-  "description": "Geometry pack: 2 safe (steps 0-1, J4 gap >0.08 m) + 3 collision (steps 2-4, J4 gap <0.05 m). Real field data 2026-03-25.",
+  "description": "Geometry pack: 2 safe (steps 0-1, J4 gap >0.110 m) + 3 collision (steps 2-4, J4 gap <0.05 m). Real field data 2026-03-25.",
   "steps": [
     {"step_id": 0, "arm_id": "arm1", "cam_x": 0.494, "cam_y": -0.001, "cam_z": 0.004},
     {"step_id": 0, "arm_id": "arm2", "cam_x": 0.598, "cam_y":  0.020, "cam_z": 0.178},

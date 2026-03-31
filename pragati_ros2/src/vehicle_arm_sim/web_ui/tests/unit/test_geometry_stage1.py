@@ -13,15 +13,15 @@ GeometryStage1Screen.screen(own_joints, peer_joints) -> "safe" | "risky"
   peer_joints : {"j3": float, "j4": float, "j5": float}
 
 The screen uses the lateral gap j4_collision_gap(j4_own, j4_peer)
-as the end-effector proxy.  The Stage 1 threshold is 0.08 m.
-  distance < 0.08  → "risky"
-  distance >= 0.08 → "safe"
+as the end-effector proxy.  The Stage 1 threshold is 0.110 m.
+  distance < 0.110  → "risky"
+  distance >= 0.110 → "safe"
 """
 import pytest
 
 from geometry_check import GeometryStage1Screen
 
-THRESHOLD = 0.08  # Stage 1 screen threshold
+THRESHOLD = 0.110  # Stage 1 screen threshold
 
 
 # ---------------------------------------------------------------------------
@@ -41,8 +41,8 @@ def test_stage1_screen_returns_safe_when_j4_distance_equals_threshold():
     """Distance exactly at threshold → safe (boundary is inclusive on safe side)."""
     screen = GeometryStage1Screen()
     own = {"j3": 0.0, "j4": 0.00, "j5": 0.3}
-    peer = {"j3": 0.0, "j4": -0.08, "j5": 0.3}
-    # gap(0.00, -0.08) = |0.00 + (-0.08)| = 0.08 >= 0.08 → safe
+    peer = {"j3": 0.0, "j4": -0.110, "j5": 0.3}
+    # gap(0.00, -0.110) = |0.00 + (-0.110)| = 0.110 >= 0.110 → safe
     assert screen.screen(own, peer) == "safe"
 
 
@@ -71,8 +71,8 @@ def test_stage1_screen_returns_risky_when_j4_distance_just_below_threshold():
     """Distance just under threshold → risky (boundary exclusive on risky side)."""
     screen = GeometryStage1Screen()
     own = {"j3": 0.0, "j4": 0.000, "j5": 0.3}
-    peer = {"j3": 0.0, "j4": -0.079, "j5": 0.3}
-    # gap(0.000, -0.079) = |0.000 + (-0.079)| = 0.079 < 0.08 → risky
+    peer = {"j3": 0.0, "j4": -0.109, "j5": 0.3}
+    # gap(0.000, -0.109) = |0.000 + (-0.109)| = 0.109 < 0.110 → risky
     assert screen.screen(own, peer) == "risky"
 
 
@@ -97,28 +97,28 @@ def test_stage1_screen_result_is_symmetric_when_arms_swapped_risky():
 
 
 # ---------------------------------------------------------------------------
-# threshold value — must be 0.08 m
+# threshold value — must be 0.110 m
 # ---------------------------------------------------------------------------
 
-def test_stage1_safe_threshold_constant_is_008m():
-    """Stage 1 safe threshold must be 0.08 m."""
+def test_stage1_safe_threshold_constant_is_0110m():
+    """Stage 1 safe threshold must be 0.110 m."""
     from geometry_check import _STAGE1_SAFE_THRESHOLD
-    assert _STAGE1_SAFE_THRESHOLD == 0.08
+    assert _STAGE1_SAFE_THRESHOLD == 0.110
 
 
-def test_stage1_screen_returns_safe_when_j4_distance_equals_008m():
-    """Distance exactly at 0.08 m → safe (boundary inclusive on safe side)."""
+def test_stage1_screen_returns_safe_when_j4_distance_equals_0110m():
+    """Distance exactly at 0.110 m → safe (boundary inclusive on safe side)."""
     screen = GeometryStage1Screen()
     own = {"j3": 0.0, "j4": 0.00, "j5": 0.3}
-    peer = {"j3": 0.0, "j4": -0.08, "j5": 0.3}
-    # gap(0.00, -0.08) = |0.00 + (-0.08)| = 0.08 >= 0.08 → safe
+    peer = {"j3": 0.0, "j4": -0.110, "j5": 0.3}
+    # gap(0.00, -0.110) = |0.00 + (-0.110)| = 0.110 >= 0.110 → safe
     assert screen.screen(own, peer) == "safe"
 
 
-def test_stage1_screen_returns_risky_when_j4_distance_just_below_008m():
-    """Distance just under 0.08 m → risky."""
+def test_stage1_screen_returns_risky_when_j4_distance_just_below_0110m():
+    """Distance just under 0.110 m → risky."""
     screen = GeometryStage1Screen()
     own = {"j3": 0.0, "j4": 0.000, "j5": 0.3}
-    peer = {"j3": 0.0, "j4": -0.079, "j5": 0.3}
-    # gap(0.000, -0.079) = |0.000 + (-0.079)| = 0.079 < 0.08 → risky
+    peer = {"j3": 0.0, "j4": -0.109, "j5": 0.3}
+    # gap(0.000, -0.109) = |0.000 + (-0.109)| = 0.109 < 0.110 → risky
     assert screen.screen(own, peer) == "risky"

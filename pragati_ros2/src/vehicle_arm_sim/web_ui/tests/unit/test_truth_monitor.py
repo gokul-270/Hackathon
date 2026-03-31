@@ -83,7 +83,7 @@ def test_get_all_records_returns_sorted_by_step_id():
 def test_observe_collision_distance_also_sets_near_collision_true():
     """When distance < COLLISION_THRESHOLD, near_collision MUST also be True.
 
-    Since COLLISION_THRESHOLD (0.05) < NEAR_COLLISION_THRESHOLD (0.08), any
+    Since COLLISION_THRESHOLD (0.05) < NEAR_COLLISION_THRESHOLD (0.110), any
     collision observation is also a near-collision.  Both flags must be True.
     """
     monitor = TruthMonitor()

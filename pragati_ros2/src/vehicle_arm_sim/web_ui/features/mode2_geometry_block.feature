@@ -1,11 +1,11 @@
 Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Mode 2 uses a two-stage geometry evaluation:
-    Stage 1: lateral j4 gap < 0.12m → risky (proceed to Stage 2)
+    Stage 1: lateral j4 gap < 0.110m → risky (proceed to Stage 2)
     Stage 2: lateral j4 gap < 0.06m AND combined j5 > 0.5 → unsafe (zero j5)
   If Stage 1 is safe, Stage 2 is skipped entirely.
 
   # -------------------------------------------------------------------
-  # Stage 1 SAFE — j4 gap >= 0.12m, Stage 2 skipped
+  # Stage 1 SAFE — j4 gap >= 0.110m, Stage 2 skipped
   # -------------------------------------------------------------------
 
   Scenario: Joints unchanged when stage-1 gap is 0.15m (safe)
@@ -16,10 +16,10 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
     Then j5 is not zeroed
     And the returned joints are j3=1.0 j4=0.100 j5=0.5
 
-  Scenario: Joints unchanged when stage-1 gap is exactly 0.12m (boundary safe)
+  Scenario: Joints unchanged when stage-1 gap is exactly 0.110m (boundary safe)
     Given the collision avoidance mode is 2 (geometry_block)
-    And arm1 has joints j3=1.0 j4=0.100 j5=0.5
-    And arm2 has joints j3=0.8 j4=-0.220 j5=0.4
+    And arm1 has joints j3=1.0 j4=0.050 j5=0.5
+    And arm2 has joints j3=0.8 j4=-0.160 j5=0.4
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 

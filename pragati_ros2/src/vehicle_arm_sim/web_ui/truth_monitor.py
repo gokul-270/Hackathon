@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from collision_math import j4_collision_gap
 
-NEAR_COLLISION_THRESHOLD = 0.08  # meters, j4_collision_gap(j4_arm1, j4_arm2)
+NEAR_COLLISION_THRESHOLD = 0.110  # meters, j4_collision_gap(j4_arm1, j4_arm2)
 COLLISION_THRESHOLD = 0.05       # meters
 
 

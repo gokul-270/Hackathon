@@ -5,7 +5,7 @@ from collision_math import j4_collision_gap
 class OverlapZoneState:
     """Tracks which arm currently occupies the overlap zone and detects contention."""
 
-    OVERLAP_THRESHOLD = 0.08  # meters, |j4_own - j4_peer| < this means overlap zone
+    OVERLAP_THRESHOLD = 0.110  # meters, |j4_own - j4_peer| < this means overlap zone
 
     def is_in_overlap_zone(self, own_joints: dict, peer_joints: dict) -> bool:
         """Returns True if both arms are within the overlap zone."""

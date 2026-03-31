@@ -1427,10 +1427,10 @@ def test_run_controller_emits_no_events_when_no_event_bus():
 # Group 5 — Mode 3 Sequential Pick: two-phase dispatch at contention steps
 # ---------------------------------------------------------------------------
 
-# Contention scenario: both arms at same step_id with j4 gap < 0.10m and j5 > 0.
+# Contention scenario: both arms at same step_id with j4 gap < 0.110m and j5 > 0.
 # cam_z=0.080 → j4 = 0.1005 - 0.080 = 0.0205
 # cam_z=0.090 → j4 = 0.1005 - 0.090 = 0.0105
-# gap = |0.0205 - 0.0105| = 0.01 < 0.10 → contention
+# gap = |0.0205 - 0.0105| = 0.01 < 0.110 → contention
 # cam_y=-0.001 keeps j5 positive (small positive extension)
 _CONTENTION_SCENARIO = {
     "steps": [
@@ -1439,10 +1439,10 @@ _CONTENTION_SCENARIO = {
     ]
 }
 
-# No-contention scenario: j4 gap >= 0.10m
+# No-contention scenario: j4 gap >= 0.110m
 # cam_z=0.050 → j4 = 0.1005 - 0.050 = 0.0505
 # cam_z=0.300 → j4 = 0.1005 - 0.300 = -0.1995
-# gap = |0.0505 - (-0.1995)| = 0.25 > 0.10 → no contention
+# gap = |0.0505 - (-0.1995)| = 0.25 > 0.110 → no contention
 _NO_CONTENTION_SCENARIO = {
     "steps": [
         {"step_id": 0, "arm_id": "arm1", "cam_x": 0.65, "cam_y": -0.001, "cam_z": 0.050},
@@ -1761,7 +1761,7 @@ def test_contention_detected_event_emitted():
     assert "loser_arm" in evt
     assert "j4_gap" in evt
     assert evt["winner_arm"] != evt["loser_arm"]
-    assert evt["j4_gap"] < 0.10
+    assert evt["j4_gap"] < 0.110
 
 
 def test_contention_detected_not_emitted_safe_gap():

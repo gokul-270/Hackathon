@@ -31,7 +31,7 @@ def test_contention_000():
     pass
 
 
-@scenario(FEATURE, "Contention detected when j4 gap is 0.099m (just below threshold)")
+@scenario(FEATURE, "Contention detected when j4 gap is 0.109m (just below threshold)")
 def test_contention_099():
     pass
 
@@ -43,7 +43,7 @@ def test_no_contention_015():
     pass
 
 
-@scenario(FEATURE, "No contention when j4 gap is exactly 0.10m (boundary — at threshold)")
+@scenario(FEATURE, "No contention when j4 gap is exactly 0.110m (boundary — at threshold)")
 def test_no_contention_boundary():
     pass
 

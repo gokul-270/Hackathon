@@ -11,7 +11,7 @@ def test_stage1_safe_015():
     pass
 
 
-@scenario(FEATURE, "Joints unchanged when stage-1 gap is exactly 0.12m (boundary safe)")
+@scenario(FEATURE, "Joints unchanged when stage-1 gap is exactly 0.110m (boundary safe)")
 def test_stage1_boundary_012():
     pass
 

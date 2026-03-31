@@ -161,11 +161,11 @@ def test_baselinemode_geometry_block_returns_joints_unchanged_when_peer_candidat
 
 
 def test_baselinemode_geometry_block_returns_joints_unchanged_when_stage1_is_safe():
-    """Mode 2 must not modify joints when Stage 1 lateral gap >= 0.12 m (safe)."""
+    """Mode 2 must not modify joints when Stage 1 lateral gap >= 0.110 m (safe)."""
     mode = BaselineMode()
     own = {"j3": 0.0, "j4": 0.00, "j5": 0.4}
     peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.15, "j5": 0.4})
-    # |j4 gap| = 0.15 >= 0.12 → Stage 1 safe, no blocking
+    # |j4 gap| = 0.15 >= 0.110 → Stage 1 safe, no blocking
     result = mode.apply(BaselineMode.GEOMETRY_BLOCK, own, peer_state=peer)
     assert result["j5"] == 0.4
 
@@ -175,7 +175,7 @@ def test_baselinemode_geometry_block_zeros_j5_when_stage2_returns_unsafe():
     mode = BaselineMode()
     own = {"j3": 0.0, "j4": 0.30, "j5": 0.4}
     peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": -0.34, "j5": 0.3})
-    # j4_collision_gap(0.30, -0.34) = abs(0.30 + (-0.34)) = 0.04 < 0.12 → Stage 1 risky
+    # j4_collision_gap(0.30, -0.34) = abs(0.30 + (-0.34)) = 0.04 < 0.110 → Stage 1 risky
     # 0.04 < 0.06 AND combined j5 = 0.7 > 0.5 → Stage 2 unsafe
     result = mode.apply(BaselineMode.GEOMETRY_BLOCK, own, peer_state=peer)
     assert result["j5"] == 0.0
@@ -188,7 +188,7 @@ def test_baselinemode_geometry_block_returns_joints_unchanged_when_stage2_is_saf
     mode = BaselineMode()
     own = {"j3": 0.0, "j4": 0.30, "j5": 0.2}
     peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.34, "j5": 0.2})
-    # |j4 gap| = 0.04 < 0.12 → Stage 1 risky
+    # |j4 gap| = 0.04 < 0.110 → Stage 1 risky
     # |j4 gap| = 0.04 < 0.06 but combined j5 = 0.4 <= 0.5 → Stage 2 safe
     result = mode.apply(BaselineMode.GEOMETRY_BLOCK, own, peer_state=peer)
     assert result["j5"] == 0.2
@@ -217,7 +217,7 @@ def test_baselinemode_sequential_pick_delegates_to_policy():
     mode = BaselineMode()
     own = {"j3": 0.0, "j4": 0.0, "j5": 1.0}
     peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.0, "j5": 1.0})
-    # Contention: gap 0.0 < 0.10, both j5 > 0
+    # Contention: gap 0.0 < 0.110, both j5 > 0
     applied, skipped = mode.apply_with_skip(
         BaselineMode.SEQUENTIAL_PICK, own, peer, step_id=0, arm_id="arm1"
     )
