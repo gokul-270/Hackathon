@@ -174,9 +174,9 @@ def test_baselinemode_geometry_block_zeros_j5_when_stage2_returns_unsafe():
     """Mode 2 must zero j5 when Stage 1 is risky and Stage 2 is unsafe."""
     mode = BaselineMode()
     own = {"j3": 0.0, "j4": 0.30, "j5": 0.4}
-    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": 0.34, "j5": 0.3})
-    # |j4 gap| = 0.04 < 0.12 → Stage 1 risky
-    # |j4 gap| = 0.04 < 0.06 AND combined j5 = 0.7 > 0.5 → Stage 2 unsafe
+    peer = PeerStatePacket(candidate_joints={"j3": 0.0, "j4": -0.34, "j5": 0.3})
+    # j4_collision_gap(0.30, -0.34) = abs(0.30 + (-0.34)) = 0.04 < 0.12 → Stage 1 risky
+    # 0.04 < 0.06 AND combined j5 = 0.7 > 0.5 → Stage 2 unsafe
     result = mode.apply(BaselineMode.GEOMETRY_BLOCK, own, peer_state=peer)
     assert result["j5"] == 0.0
     assert result["j3"] == own["j3"]

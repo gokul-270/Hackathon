@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 from arm_runtime import ArmRuntime
 from baseline_mode import BaselineMode
+from collision_math import j4_collision_gap
 from json_reporter import JsonReporter, StepReport
 from peer_transport import LocalPeerTransport
 from run_step_executor import _noop_spawn, _noop_remove, RunStepExecutor
@@ -242,9 +243,9 @@ class RunController:
             for _sid, _arms in step_map.items():
                 _steps = list(_arms.values())
                 if len(_steps) == 2:
-                    _g = abs(
-                        (_FK_OFFSET - _steps[0].cam_z)
-                        - (_FK_OFFSET - _steps[1].cam_z)
+                    _g = j4_collision_gap(
+                        _FK_OFFSET - _steps[0].cam_z,
+                        _FK_OFFSET - _steps[1].cam_z,
                     )
                     if _g < _min_gap:
                         _min_gap = _g

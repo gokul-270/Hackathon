@@ -261,8 +261,8 @@ def then_both_arms_in_reports(ctx):
 # ===================================================================
 
 @given(parsers.re(
-    r'arms with j3=(?P<j3a>[+-]?[\d.]+) j4=(?P<j4a>[\d.]+) j5=(?P<j5a>[\d.]+) '
-    r'vs j3=(?P<j3b>[+-]?[\d.]+) j4=(?P<j4b>[\d.]+) j5=(?P<j5b>[\d.]+)'
+    r'arms with j3=(?P<j3a>[+-]?[\d.]+) j4=(?P<j4a>-?[\d.]+) j5=(?P<j5a>[\d.]+) '
+    r'vs j3=(?P<j3b>[+-]?[\d.]+) j4=(?P<j4b>-?[\d.]+) j5=(?P<j5b>[\d.]+)'
 ))
 def given_arms_with_joints(ctx, j3a, j4a, j5a, j3b, j4b, j5b):
     ctx["arm1_joints"] = {"j3": float(j3a), "j4": float(j4a), "j5": float(j5a)}

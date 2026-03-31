@@ -260,7 +260,7 @@ def then_arm1_joints_match(ctx, j3, j4, j5):
 
 
 @then(parsers.re(
-    r'the returned joints for arm2 are j3=(?P<j3>[\d.]+) j4=(?P<j4>[\d.]+) j5=(?P<j5>[\d.]+)'
+    r'the returned joints for arm2 are j3=(?P<j3>-?[\d.]+) j4=(?P<j4>-?[\d.]+) j5=(?P<j5>-?[\d.]+)'
 ))
 def then_arm2_joints_match(ctx, j3, j4, j5):
     result = ctx["arm_results"]["arm2"]["joints"]

@@ -11,7 +11,7 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: Joints unchanged when stage-1 gap is 0.15m (safe)
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.100 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.250 j5=0.4
+    And arm2 has joints j3=0.8 j4=-0.250 j5=0.4
     When the algorithm is applied for arm1
     Then j5 is not zeroed
     And the returned joints are j3=1.0 j4=0.100 j5=0.5
@@ -19,14 +19,14 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: Joints unchanged when stage-1 gap is exactly 0.12m (boundary safe)
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.100 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.220 j5=0.4
+    And arm2 has joints j3=0.8 j4=-0.220 j5=0.4
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
   Scenario: Joints unchanged when stage-1 gap is 0.50m (well separated)
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.100 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.600 j5=0.4
+    And arm2 has joints j3=0.8 j4=-0.600 j5=0.4
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
@@ -37,7 +37,7 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: j5 zeroed when stage-1 risky and stage-2 unsafe
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.4
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.3
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.3
     When the algorithm is applied for arm1
     Then j5 is zeroed
     And j3 is unchanged at 1.0
@@ -46,21 +46,21 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: j5 zeroed when j4 gap is 0.01m and combined j5 is 0.9
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.5
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.5
     When the algorithm is applied for arm1
     Then j5 is zeroed
 
   Scenario: j5 zeroed when j4 gap is exactly 0.0m and combined j5 is 0.8
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.300 j5=0.3
+    And arm2 has joints j3=0.8 j4=-0.300 j5=0.3
     When the algorithm is applied for arm1
     Then j5 is zeroed
 
   Scenario: j5 zeroed when j4 gap is 0.059m (just under stage-2 lateral) and combined j5 is 0.6
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.4
-    And arm2 has joints j3=0.8 j4=0.359 j5=0.3
+    And arm2 has joints j3=0.8 j4=-0.359 j5=0.3
     When the algorithm is applied for arm1
     Then j5 is zeroed
 
@@ -71,28 +71,28 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: Joints unchanged when stage-1 risky but stage-2 lateral gap >= 0.06m
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.370 j5=0.5
+    And arm2 has joints j3=0.8 j4=-0.370 j5=0.5
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
   Scenario: Joints unchanged when stage-1 risky but combined j5 <= 0.5
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.2
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.2
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.2
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
   Scenario: Joints unchanged when stage-2 lateral gap exactly 0.06m (boundary safe)
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.5
-    And arm2 has joints j3=0.8 j4=0.360 j5=0.5
+    And arm2 has joints j3=0.8 j4=-0.360 j5=0.5
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
   Scenario: Joints unchanged when combined j5 exactly 0.5 (boundary safe)
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.25
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.25
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.25
     When the algorithm is applied for arm1
     Then j5 is not zeroed
 
@@ -121,13 +121,13 @@ Feature: Mode 2 — Geometry Block (Two-Stage Check)
   Scenario: j5 already zero is not modified even in unsafe zone
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.0
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.6
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.6
     When the algorithm is applied for arm1
     Then the returned j5 is 0.0
 
   Scenario: Both arms zero j5 combined extension is 0.0 — stage-2 safe
     Given the collision avoidance mode is 2 (geometry_block)
     And arm1 has joints j3=1.0 j4=0.300 j5=0.0
-    And arm2 has joints j3=0.8 j4=0.310 j5=0.0
+    And arm2 has joints j3=0.8 j4=-0.310 j5=0.0
     When the algorithm is applied for arm1
     Then j5 is not zeroed

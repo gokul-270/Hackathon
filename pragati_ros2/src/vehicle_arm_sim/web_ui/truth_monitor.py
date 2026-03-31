@@ -2,7 +2,9 @@
 import threading
 from dataclasses import dataclass
 
-NEAR_COLLISION_THRESHOLD = 0.08  # meters, abs(j4_arm1 - j4_arm2)
+from collision_math import j4_collision_gap
+
+NEAR_COLLISION_THRESHOLD = 0.08  # meters, j4_collision_gap(j4_arm1, j4_arm2)
 COLLISION_THRESHOLD = 0.05       # meters
 
 
@@ -23,7 +25,7 @@ class TruthMonitor:
 
     def observe(self, step_id: int, j4_arm1: float, j4_arm2: float) -> None:
         """Record an observation for a step. Can be called multiple times per step."""
-        distance = abs(j4_arm1 - j4_arm2)
+        distance = j4_collision_gap(j4_arm1, j4_arm2)
         with self._lock:
             existing = self._records.get(step_id)
             if existing is None or distance < existing.min_j4_distance:

@@ -16,6 +16,8 @@ built on first contention contact, rather than hardcoded "arm1"/"arm2" strings.
 This makes the policy correct for any arm pair (arm1+arm2, arm2+arm3, etc.).
 """
 
+from collision_math import j4_collision_gap
+
 
 class SequentialPickPolicy:
     """Alternating-turn contention arbitration for sequential pick mode."""
@@ -46,7 +48,7 @@ class SequentialPickPolicy:
             return (own_joints, False, False, False)
 
         # Compute j4 gap
-        gap = abs(own_joints["j4"] - peer_joints["j4"])
+        gap = j4_collision_gap(own_joints["j4"], peer_joints["j4"])
 
         # No contention if gap at or above threshold, or either arm not extending
         if (

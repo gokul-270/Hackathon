@@ -109,14 +109,14 @@ def given_mode(ctx, mode):
 # ===================================================================
 
 @given(parsers.re(
-    r'arm1 has joints j3=(?P<j3>[\d.]+) j4=(?P<j4>[\d.]+) j5=(?P<j5>[\d.]+)'
+    r'arm1 has joints j3=(?P<j3>-?[\d.]+) j4=(?P<j4>-?[\d.]+) j5=(?P<j5>-?[\d.]+)'
 ))
 def given_arm1_joints(ctx, j3, j4, j5):
     ctx["arm1_joints"] = {"j3": float(j3), "j4": float(j4), "j5": float(j5)}
 
 
 @given(parsers.re(
-    r'arm2 has joints j3=(?P<j3>[\d.]+) j4=(?P<j4>[\d.]+) j5=(?P<j5>[\d.]+)'
+    r'arm2 has joints j3=(?P<j3>-?[\d.]+) j4=(?P<j4>-?[\d.]+) j5=(?P<j5>-?[\d.]+)'
 ))
 def given_arm2_joints(ctx, j3, j4, j5):
     ctx["arm2_joints"] = {"j3": float(j3), "j4": float(j4), "j5": float(j5)}

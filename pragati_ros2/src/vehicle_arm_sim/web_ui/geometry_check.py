@@ -12,11 +12,13 @@ Stage 2: GeometryStage2Check
     Better geometry / link-level unsafe-case check.
     Examines both the lateral gap AND the combined j5 extension.
     Two conditions must BOTH be true for "unsafe":
-      1. |j4_own - j4_peer| < 0.06 m  (laterally close)
+      1. j4_collision_gap(j4_own, j4_peer) < 0.06 m  (laterally close)
       2. (j5_own + j5_peer)  > 0.5    (combined extension large enough to collide)
     If either condition is false → "safe".
 """
 from __future__ import annotations
+
+from collision_math import j4_collision_gap
 
 # ---------------------------------------------------------------------------
 # Stage 1 thresholds
@@ -48,7 +50,7 @@ class GeometryStage1Screen:
             "safe"  if lateral distance >= _STAGE1_SAFE_THRESHOLD
             "risky" if lateral distance <  _STAGE1_SAFE_THRESHOLD
         """
-        lateral_gap = abs(own_joints["j4"] - peer_joints["j4"])
+        lateral_gap = j4_collision_gap(own_joints["j4"], peer_joints["j4"])
         if lateral_gap >= _STAGE1_SAFE_THRESHOLD:
             return "safe"
         return "risky"
@@ -72,7 +74,7 @@ class GeometryStage2Check:
             "unsafe" if the combined geometry indicates imminent collision
             "safe"   otherwise
         """
-        lateral_gap = abs(own_joints["j4"] - peer_joints["j4"])
+        lateral_gap = j4_collision_gap(own_joints["j4"], peer_joints["j4"])
         combined_extension = own_joints["j5"] + peer_joints["j5"]
 
         laterally_close = lateral_gap < _STAGE2_LATERAL_UNSAFE

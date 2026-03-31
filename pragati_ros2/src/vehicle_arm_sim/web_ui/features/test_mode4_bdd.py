@@ -7,6 +7,7 @@ import copy
 import pytest
 from pytest_bdd import given, parsers, scenario, then, when
 
+from collision_math import j4_collision_gap
 from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
 FEATURE = "mode4_smart_reorder.feature"
@@ -184,7 +185,7 @@ def when_reorder(ctx):
             if a1_data and a2_data:
                 j4_a1 = FK_OFFSET - a1_data["cam_z"]
                 j4_a2 = FK_OFFSET - a2_data["cam_z"]
-                orig_gaps.append(abs(j4_a1 - j4_a2))
+                orig_gaps.append(j4_collision_gap(j4_a1, j4_a2))
         ctx["original_min_gap"] = min(orig_gaps) if orig_gaps else 0.0
     else:
         ctx["original_min_gap"] = 0.0
@@ -233,7 +234,7 @@ def then_gap_improved(ctx):
         if "arm1" in arms and "arm2" in arms:
             j4_a1 = FK_OFFSET - arms["arm1"]["cam_z"]
             j4_a2 = FK_OFFSET - arms["arm2"]["cam_z"]
-            new_gaps.append(abs(j4_a1 - j4_a2))
+            new_gaps.append(j4_collision_gap(j4_a1, j4_a2))
 
     if new_gaps:
         new_min = min(new_gaps)

@@ -31,6 +31,7 @@ import pytest
 # web_ui/ is injected by tests/conftest.py; no per-file sys.path hack needed
 _WEB_UI = str(Path(__file__).resolve().parent.parent.parent)
 
+from collision_math import j4_collision_gap
 from fk_chain import camera_to_arm, polar_decompose
 
 _SCENARIO_PATH = os.path.join(
@@ -120,7 +121,7 @@ def test_geometry_pack_has_at_least_two_overlap_heavy_paired_steps(geometry_pack
             continue
         j4_arm1 = _j4_for_step(arms["arm1"])
         j4_arm2 = _j4_for_step(arms["arm2"])
-        if abs(j4_arm1 - j4_arm2) < 0.12:
+        if j4_collision_gap(j4_arm1, j4_arm2) < 0.12:
             overlap_count += 1
 
     assert overlap_count >= 2, (
@@ -158,7 +159,7 @@ def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
             continue
         j4_arm1 = _j4_for_step(arms["arm1"])
         j4_arm2 = _j4_for_step(arms["arm2"])
-        gap = abs(j4_arm1 - j4_arm2)
+        gap = j4_collision_gap(j4_arm1, j4_arm2)
         if gap < 0.05:
             colliding += 1
         if gap > 0.08:
@@ -167,12 +168,12 @@ def test_geometry_pack_contains_colliding_and_safe_steps(geometry_pack):
     assert colliding >= 1, (
         f"Must have >= 1 paired step with j4 gap < 0.05 m (collision zone); "
         f"step_map j4 gaps: "
-        f"{[round(abs(_j4_for_step(arms['arm1'])-_j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+        f"{[round(j4_collision_gap(_j4_for_step(arms['arm1']), _j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
     assert safe >= 1, (
         f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
         f"step_map j4 gaps: "
-        f"{[round(abs(_j4_for_step(arms['arm1'])-_j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+        f"{[round(j4_collision_gap(_j4_for_step(arms['arm1']), _j4_for_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
 
 

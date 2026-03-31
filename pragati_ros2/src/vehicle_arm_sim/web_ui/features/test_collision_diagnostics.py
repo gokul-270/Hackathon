@@ -34,6 +34,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from collision_diagnostics import MODE1_ADJ, MODE2_STAGE1_THRESHOLD, MODE3_THRESHOLD, diagnose_collision
+from collision_math import j4_collision_gap
 from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 from smart_reorder_scheduler import FK_OFFSET, SmartReorderScheduler
 
@@ -263,7 +264,7 @@ def _assert_paired_mode(report, mode_key, mode):
             assert key in report[arm]
 
     assert report["j4_gap"] == pytest.approx(
-        abs(report["arm1_joints"]["j4"] - report["arm2_joints"]["j4"]),
+        j4_collision_gap(report["arm1_joints"]["j4"], report["arm2_joints"]["j4"]),
         abs=1e-9,
     )
     assert report["combined_j5"] == pytest.approx(
@@ -400,7 +401,7 @@ def _compute_min_gap(step_map: dict, paired_count: int) -> float:
         if "arm1" in row and "arm2" in row:
             j4_a1 = FK_OFFSET - row["arm1"]["cam_z"]
             j4_a2 = FK_OFFSET - row["arm2"]["cam_z"]
-            gaps.append(abs(j4_a1 - j4_a2))
+            gaps.append(j4_collision_gap(j4_a1, j4_a2))
     return min(gaps) if gaps else 0.0
 
 
@@ -441,7 +442,7 @@ def _print_reorder_table(title: str, step_map: dict, paired_count: int) -> None:
             s_j4_2 = f"{'---':>8}"
 
         if has_a1 and has_a2 and i < paired_count:
-            gap = abs((FK_OFFSET - cz1) - (FK_OFFSET - cz2))
+            gap = j4_collision_gap(FK_OFFSET - cz1, FK_OFFSET - cz2)
             gaps.append(gap)
             s_gap = f"{gap:>8.4f}"
             label = ""

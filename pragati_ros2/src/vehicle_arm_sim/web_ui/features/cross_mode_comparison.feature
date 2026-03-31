@@ -105,19 +105,19 @@ Feature: Cross-Mode Algorithm Comparison
   # -------------------------------------------------------------------
 
   Scenario: Mode 1 blocks when j5 exceeds cosine limit but Mode 3 is safe (large j4 gap)
-    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=0.450 j5=0.4
+    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=-0.450 j5=0.4
     When mode 1 and mode 3 are both applied
     Then mode 1 blocks j5 (j5 exceeds cosine limit)
     And mode 3 does NOT detect contention (j4 gap >= 0.10m)
 
   Scenario: Both Mode 1 and Mode 3 trigger when j5 exceeds limit and j4 gap is small
-    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=0.360 j5=0.4
+    Given arms with j3=0.0 j4=0.300 j5=0.25 vs j3=0.0 j4=-0.360 j5=0.4
     When mode 1 and mode 3 are both applied
     Then mode 1 blocks j5 (j5 exceeds cosine limit)
     And mode 3 detects contention (j4 gap < 0.10m)
 
   Scenario: Neither Mode 1 nor Mode 3 triggers when j5 is safe and j4 gap is large
-    Given arms with j3=0.0 j4=0.300 j5=0.19 vs j3=0.0 j4=0.450 j5=0.4
+    Given arms with j3=0.0 j4=0.300 j5=0.19 vs j3=0.0 j4=-0.450 j5=0.4
     When mode 1 and mode 3 are both applied
     Then mode 1 does NOT block (j5 within cosine limit)
     And mode 3 does NOT detect contention (j4 gap >= 0.10m)

@@ -21,6 +21,7 @@ import math
 from typing import Optional
 
 from baseline_mode import BaselineMode
+from collision_math import j4_collision_gap
 from fk_chain import camera_to_arm, phi_compensation, polar_decompose
 from sequential_pick_policy import SequentialPickPolicy
 
@@ -192,7 +193,7 @@ def _diagnose_paired(
 
     arm1_j5 = fk1["j5"]
     arm2_j5 = fk2["j5"]
-    j4_gap = abs(fk1["j4"] - fk2["j4"])
+    j4_gap = j4_collision_gap(fk1["j4"], fk2["j4"])
     combined_j5 = arm1_j5 + arm2_j5
 
     peer_state = PeerStatePacket(candidate_joints=dict(arm2_joints))

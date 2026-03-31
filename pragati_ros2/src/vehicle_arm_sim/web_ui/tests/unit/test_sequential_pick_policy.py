@@ -11,9 +11,9 @@ from sequential_pick_policy import SequentialPickPolicy
 OWN_CONTENTION = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
 PEER_CONTENTION = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
 
-# Far apart: |0.0 - 0.20| = 0.20 >= 0.08 → no contention
+# Far apart: |0.0 + (-0.20)| = 0.20 >= 0.08 → no contention
 OWN_FAR = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
-PEER_FAR = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.20, "j5": 1.0}
+PEER_FAR = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.20, "j5": 1.0}
 
 # Peer not extending (j5 == 0) → no contention even when gap < 0.08
 PEER_J5_ZERO = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 0.0}
@@ -23,10 +23,10 @@ OWN_J5_ZERO = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 0.0}
 
 # Boundary: gap exactly 0.08 → NOT contention (strictly less than)
 OWN_BOUNDARY = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
-PEER_BOUNDARY_AT = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.08, "j5": 1.0}
+PEER_BOUNDARY_AT = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.08, "j5": 1.0}
 
 # Boundary: gap 0.079 → IS contention
-PEER_BOUNDARY_BELOW = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.079, "j5": 1.0}
+PEER_BOUNDARY_BELOW = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.079, "j5": 1.0}
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +211,7 @@ def test_winner_joints_unmodified():
     """Winner gets exact same joints passed in — no j5 zeroing."""
     policy = SequentialPickPolicy()
     own = {"j1": 10, "j2": 20, "j3": 30, "j4": 0.05, "j5": 2.5}
-    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.05, "j5": 1.0}
+    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.05, "j5": 1.0}
 
     applied, _, is_contention, is_winner = policy.apply(
         step_id=0, arm_id="arm1", own_joints=own, peer_joints=peer
@@ -231,13 +231,13 @@ def test_loser_joints_unmodified():
     ordering, policy doesn't modify joints."""
     policy = SequentialPickPolicy()
     own_arm2 = {"j1": 5, "j2": 15, "j3": 25, "j4": 0.02, "j5": 3.0}
-    peer_arm2 = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.02, "j5": 1.0}
+    peer_arm2 = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.02, "j5": 1.0}
 
     # arm1 goes first to claim the win
     policy.apply(
         step_id=0,
         arm_id="arm1",
-        own_joints={"j1": 0, "j2": 0, "j3": 0, "j4": 0.02, "j5": 1.0},
+        own_joints={"j1": 0, "j2": 0, "j3": 0, "j4": -0.02, "j5": 1.0},
         peer_joints=own_arm2,
     )
 
@@ -385,7 +385,7 @@ def test_contention_threshold_boundary_at_008():
     """Gap of exactly 0.08 is NOT contention (strictly less than)."""
     policy = SequentialPickPolicy()
     own = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
-    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.08, "j5": 1.0}
+    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.08, "j5": 1.0}
     result = policy.apply(step_id=0, arm_id="arm1", own_joints=own, peer_joints=peer)
     assert result == (own, False, False, False)
 
@@ -394,7 +394,7 @@ def test_contention_threshold_boundary_below_008():
     """Gap of 0.079 IS contention."""
     policy = SequentialPickPolicy()
     own = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.0, "j5": 1.0}
-    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": 0.079, "j5": 1.0}
+    peer = {"j1": 0, "j2": 0, "j3": 0, "j4": -0.079, "j5": 1.0}
     result = policy.apply(step_id=0, arm_id="arm1", own_joints=own, peer_joints=peer)
     applied, skipped, is_contention, is_winner = result
     assert is_contention is True

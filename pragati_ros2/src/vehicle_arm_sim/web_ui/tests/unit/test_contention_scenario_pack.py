@@ -30,6 +30,7 @@ import pytest
 _WEB_UI = str(Path(__file__).resolve().parent.parent.parent)
 
 from baseline_mode import BaselineMode
+from collision_math import j4_collision_gap
 from run_controller import RunController
 
 _SCENARIO_PATH = os.path.join(
@@ -154,7 +155,7 @@ def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
             continue
         j4_arm1 = _j4_for_contention_step(arms["arm1"])
         j4_arm2 = _j4_for_contention_step(arms["arm2"])
-        gap = abs(j4_arm1 - j4_arm2)
+        gap = j4_collision_gap(j4_arm1, j4_arm2)
         if gap < 0.05:
             colliding += 1
         if gap > 0.08:
@@ -162,11 +163,11 @@ def test_contention_pack_contains_colliding_and_safe_steps(contention_pack):
 
     assert colliding >= 1, (
         f"Must have >= 1 paired step with j4 gap < 0.05 m (collision zone); "
-        f"gaps: {[round(abs(_j4_for_contention_step(arms['arm1'])-_j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+        f"gaps: {[round(j4_collision_gap(_j4_for_contention_step(arms['arm1']), _j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
     assert safe >= 1, (
         f"Must have >= 1 paired step with j4 gap > 0.08 m (safe zone); "
-        f"gaps: {[round(abs(_j4_for_contention_step(arms['arm1'])-_j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
+        f"gaps: {[round(j4_collision_gap(_j4_for_contention_step(arms['arm1']), _j4_for_contention_step(arms['arm2'])),4) for arms in step_map.values() if 'arm1' in arms and 'arm2' in arms]}"
     )
 
 

@@ -12,6 +12,8 @@ FK formula: j4 = 0.1005 - cam_z
 import copy
 from itertools import permutations
 
+from collision_math import j4_collision_gap
+
 
 FK_OFFSET = 0.1005
 BRUTE_FORCE_LIMIT = 8
@@ -117,8 +119,8 @@ class SmartReorderScheduler:
         arm2_j4s: list[float],
         perm: tuple[int, ...],
     ) -> float:
-        """Compute minimum |j4_arm1[i] - j4_arm2[perm[i]]| across all pairs."""
-        return min(abs(arm1_j4s[i] - arm2_j4s[perm[i]]) for i in range(len(arm1_j4s)))
+        """Compute minimum j4 collision gap across all pairs."""
+        return min(j4_collision_gap(arm1_j4s[i], arm2_j4s[perm[i]]) for i in range(len(arm1_j4s)))
 
     def _brute_force(
         self, arm1_j4s: list[float], arm2_j4s: list[float]

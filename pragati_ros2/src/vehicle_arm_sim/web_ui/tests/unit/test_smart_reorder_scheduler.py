@@ -23,7 +23,7 @@ def _make_step_data(cam_z: float, cam_x: float = 0.0, cam_y: float = 0.0) -> dic
 
 
 def _min_j4_gap(step_map: dict, arm1_steps: list, arm2_steps: list) -> float:
-    """Compute the minimum |j4_arm1 - j4_arm2| across all paired steps."""
+    """Compute the minimum |j4_arm1 + j4_arm2| across all paired steps."""
     paired_count = min(len(arm1_steps), len(arm2_steps))
     if paired_count == 0:
         return float("inf")
@@ -34,7 +34,7 @@ def _min_j4_gap(step_map: dict, arm1_steps: list, arm2_steps: list) -> float:
         a2 = step_map[sid]["arm2"]
         j4_a1 = _j4(a1["cam_z"])
         j4_a2 = _j4(a2["cam_z"])
-        gaps.append(abs(j4_a1 - j4_a2))
+        gaps.append(abs(j4_a1 + j4_a2))
     return min(gaps)
 
 
@@ -118,10 +118,10 @@ def test_reorder_improves_min_gap():
     After reorder, min j4 gap across all paired steps should be >= original.
     """
     # Original pairing: step 0 has arm1 cam_z=0.15 (j4=-0.0495) and
-    # arm2 cam_z=0.16 (j4=-0.0595) -> gap = 0.01 (tiny!)
-    # step 1: arm1 cam_z=0.30 (j4=-0.1995), arm2 cam_z=0.10 (j4=0.0005) -> gap=0.20
-    # step 2: arm1 cam_z=0.25 (j4=-0.1495), arm2 cam_z=0.35 (j4=-0.2495) -> gap=0.10
-    # Original min gap = 0.01
+    # arm2 cam_z=0.16 (j4=-0.0595) -> gap = abs(-0.0495 + -0.0595) = 0.109
+    # step 1: arm1 cam_z=0.30 (j4=-0.1995), arm2 cam_z=0.10 (j4=0.0005) -> gap=0.199
+    # step 2: arm1 cam_z=0.25 (j4=-0.1495), arm2 cam_z=0.35 (j4=-0.2495) -> gap=0.399
+    # Original min gap = 0.109
     step_map = {
         0: {
             "arm1": _make_step_data(cam_z=0.15),
@@ -144,9 +144,9 @@ def test_reorder_improves_min_gap():
     for s in range(3):
         j4_a1 = _j4(step_map[s]["arm1"]["cam_z"])
         j4_a2 = _j4(step_map[s]["arm2"]["cam_z"])
-        orig_gaps.append(abs(j4_a1 - j4_a2))
+        orig_gaps.append(abs(j4_a1 + j4_a2))
     orig_min_gap = min(orig_gaps)
-    assert orig_min_gap == pytest.approx(0.01, abs=1e-6)  # sanity check
+    assert orig_min_gap == pytest.approx(0.109, abs=1e-6)  # sanity check
 
     scheduler = SmartReorderScheduler()
     result = scheduler.reorder(step_map, arm1_steps, arm2_steps)
@@ -165,7 +165,7 @@ def test_already_optimal_unchanged():
     the min gap is already large. After reorder, min gap should be same or better.
     """
     # arm1 always cam_z=0.10 (j4=0.0005), arm2 always cam_z=0.30 (j4=-0.1995)
-    # gap = 0.20 at every step -- already very separated
+    # gap = abs(0.0005 + (-0.1995)) = 0.199 at every step -- already very separated
     step_map = {
         0: {
             "arm1": _make_step_data(cam_z=0.10),
@@ -183,7 +183,7 @@ def test_already_optimal_unchanged():
     arm1_steps = [0, 1, 2]
     arm2_steps = [0, 1, 2]
 
-    orig_min_gap = 0.20  # |0.0005 - (-0.1995)| = 0.20
+    orig_min_gap = 0.199  # |0.0005 + (-0.1995)| = 0.199
 
     scheduler = SmartReorderScheduler()
     result = scheduler.reorder(step_map, arm1_steps, arm2_steps)
@@ -202,7 +202,7 @@ def test_j4_computed_from_cam_z_via_fk():
 
     arm1 cam_z=0.15 -> j4 = 0.1005 - 0.15 = -0.0495
     arm2 cam_z=0.25 -> j4 = 0.1005 - 0.25 = -0.1495
-    gap = |-0.0495 - (-0.1495)| = 0.10
+    gap = |-0.0495 + (-0.1495)| = 0.199
     """
     step_map = {
         0: {
@@ -224,7 +224,7 @@ def test_j4_computed_from_cam_z_via_fk():
 
     assert j4_a1 == pytest.approx(-0.0495, abs=1e-9)
     assert j4_a2 == pytest.approx(-0.1495, abs=1e-9)
-    assert abs(j4_a1 - j4_a2) == pytest.approx(0.10, abs=1e-9)
+    assert abs(j4_a1 + j4_a2) == pytest.approx(0.199, abs=1e-9)
 
 
 # ---------------------------------------------------------------------------
@@ -322,7 +322,7 @@ def test_brute_force_small_n():
 
     best_min_gap = -1.0
     for perm in permutations(range(3)):
-        gaps = [abs(arm1_j4s[i] - arm2_j4s[perm[i]]) for i in range(3)]
+        gaps = [abs(arm1_j4s[i] + arm2_j4s[perm[i]]) for i in range(3)]
         mg = min(gaps)
         if mg > best_min_gap:
             best_min_gap = mg
@@ -366,7 +366,7 @@ def test_greedy_fallback_large_n():
     for i in range(n):
         j4_a1 = _j4(arm1_cam_z_vals[i])
         j4_a2 = _j4(arm2_cam_z_vals[i])
-        orig_gaps.append(abs(j4_a1 - j4_a2))
+        orig_gaps.append(abs(j4_a1 + j4_a2))
     orig_min_gap = min(orig_gaps)
 
     scheduler = SmartReorderScheduler()

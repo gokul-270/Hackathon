@@ -1,4 +1,5 @@
 """Overlap zone state model for contention detection."""
+from collision_math import j4_collision_gap
 
 
 class OverlapZoneState:
@@ -8,7 +9,7 @@ class OverlapZoneState:
 
     def is_in_overlap_zone(self, own_joints: dict, peer_joints: dict) -> bool:
         """Returns True if both arms are within the overlap zone."""
-        return abs(own_joints["j4"] - peer_joints["j4"]) < self.OVERLAP_THRESHOLD
+        return j4_collision_gap(own_joints["j4"], peer_joints["j4"]) < self.OVERLAP_THRESHOLD
 
     def detect_contention(self, own_joints: dict, peer_joints: dict) -> bool:
         """Returns True if both arms have non-zero j5 (extension) in the overlap zone."""
